@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.gercho.findmybuddies.R;
+import com.gercho.findmybuddies.services.UserService;
 
 /**
  * Created by Gercho on 11/7/13.
@@ -67,6 +68,16 @@ public class NavigationDrawer {
         this.mDrawerListView.setItemChecked(option, true);
     }
 
+    public void setupDrawerVisibility() {
+        UserService userService = new UserService();
+        if (userService.isUserLoggedIn()) {
+            this.mDrawerLayout.setVisibility(DrawerLayout.VISIBLE);
+
+        } else {
+            this.mDrawerLayout.setVisibility(DrawerLayout.INVISIBLE);
+        }
+    }
+
     private void setupActionBar(Activity theActivity) {
         final Activity activity = theActivity;
 
@@ -93,9 +104,5 @@ public class NavigationDrawer {
                 activity.invalidateOptionsMenu();
             }
         };
-    }
-
-    private void setupDrawerVisibility() {
-        this.mDrawerLayout.setVisibility(DrawerLayout.INVISIBLE);
     }
 }

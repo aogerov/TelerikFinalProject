@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
+import com.gercho.findmybuddies.services.UserService;
 
 public class MainActivity extends FragmentActivity implements ListView.OnItemClickListener {
 
@@ -27,6 +28,8 @@ public class MainActivity extends FragmentActivity implements ListView.OnItemCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.activity_main);
+
+        this.startServices();
 
 //        this.mCoursePagerAdapter = new CoursePagerAdapter(
 //                this.getSupportFragmentManager(), this);
@@ -79,5 +82,11 @@ public class MainActivity extends FragmentActivity implements ListView.OnItemCli
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         this.mNavigationDrawer.syncState();
+    }
+
+    private void startServices() {
+        Intent intent = new Intent();
+        intent.setAction(UserService.START_SERVICE);
+        this.startService(intent);
     }
 }

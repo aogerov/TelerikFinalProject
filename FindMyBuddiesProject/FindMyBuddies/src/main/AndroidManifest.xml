@@ -26,6 +26,9 @@
             <intent-filter>
                 <action android:name="com.gercho.action.START_USER_SERVICE" />
                 <action android:name="com.gercho.action.STOP_USER_SERVICE" />
+                <action android:name="com.gercho.action.LOGIN_USER_SERVICE" />
+                <action android:name="com.gercho.action.REGISTER_USER_SERVICE" />
+                <action android:name="com.gercho.action.LOGOUT_USER_SERVICE" />
             </intent-filter>
         </service>
     </application>
