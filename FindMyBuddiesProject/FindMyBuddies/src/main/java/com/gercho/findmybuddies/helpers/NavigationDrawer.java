@@ -16,7 +16,7 @@ import com.gercho.findmybuddies.R;
 /**
  * Created by Gercho on 11/7/13.
  */
-public class NavigationDrawerHelper {
+public class NavigationDrawer {
 
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerListView;
@@ -38,6 +38,7 @@ public class NavigationDrawerHelper {
 //        this.mDrawerListView.setItemChecked(CoursePagerAdapter.COURSE_LIB_ANDROID, true);
 
         this.setupActionBar(theActivity);
+        this.setupDrawerVisibility();
     }
 
     public void handleSelect(int option) {
@@ -92,5 +93,9 @@ public class NavigationDrawerHelper {
                 activity.invalidateOptionsMenu();
             }
         };
+    }
+
+    private void setupDrawerVisibility() {
+        this.mDrawerLayout.setVisibility(DrawerLayout.INVISIBLE);
     }
 }

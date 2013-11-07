@@ -11,7 +11,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.gercho.findmybuddies.helpers.NavigationDrawerHelper;
+import com.gercho.findmybuddies.helpers.NavigationDrawer;
 
 public class MainActivity extends FragmentActivity implements ListView.OnItemClickListener {
 
@@ -21,7 +21,7 @@ public class MainActivity extends FragmentActivity implements ListView.OnItemCli
 
 //    private CoursePagerAdapter mCoursePagerAdapter;
     private ViewPager mViewPager;
-    private NavigationDrawerHelper mNavigationDrawerHelper;
+    private NavigationDrawer mNavigationDrawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,14 +34,14 @@ public class MainActivity extends FragmentActivity implements ListView.OnItemCli
 //        this.mViewPager = (ViewPager) findViewById(R.id.pager);
 //        this.mViewPager.setAdapter(this.mCoursePagerAdapter);
 
-        this.mNavigationDrawerHelper = new NavigationDrawerHelper();
-        this.mNavigationDrawerHelper.init(this, this);
+        this.mNavigationDrawer = new NavigationDrawer();
+        this.mNavigationDrawer.init(this, this);
 
         Intent startupIntent = this.getIntent();
         int courseLib = startupIntent.getIntExtra(EXTRA_COURSE_LIB, COURSE_LIB_NOT_SET);
         if (courseLib != COURSE_LIB_NOT_SET) {
 //            this.mCoursePagerAdapter.setCourseLib(courseLib);
-            this.mNavigationDrawerHelper.setSelection(courseLib);
+            this.mNavigationDrawer.setSelection(courseLib);
         }
     }
 
@@ -52,32 +52,32 @@ public class MainActivity extends FragmentActivity implements ListView.OnItemCli
     }
 
     @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int optionsLib, long l) {
-//        this.mCoursePagerAdapter.setCourseLib(optionsLib);
-        this.mNavigationDrawerHelper.handleSelect(optionsLib);
-    }
-
-    @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        this.mNavigationDrawerHelper.syncState();
+        this.mNavigationDrawer.syncState();
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        this.mNavigationDrawerHelper.handleOnPrepareOptionsMenu(menu);
+        this.mNavigationDrawer.handleOnPrepareOptionsMenu(menu);
         return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        this.mNavigationDrawerHelper.handleOnOptionsItemSelected(item);
+        this.mNavigationDrawer.handleOnOptionsItemSelected(item);
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int optionsLib, long l) {
+//        this.mCoursePagerAdapter.setCourseLib(optionsLib);
+        this.mNavigationDrawer.handleSelect(optionsLib);
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        this.mNavigationDrawerHelper.syncState();
+        this.mNavigationDrawer.syncState();
     }
 }
