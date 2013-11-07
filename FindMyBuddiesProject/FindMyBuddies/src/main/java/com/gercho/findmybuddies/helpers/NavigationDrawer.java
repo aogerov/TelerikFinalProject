@@ -70,7 +70,7 @@ public class NavigationDrawer {
 
     public void setupDrawerVisibility() {
         UserService userService = new UserService();
-        if (userService.isUserLoggedIn()) {
+        if (userService.getIsUserLoggedIn()) {
             this.mDrawerLayout.setVisibility(DrawerLayout.VISIBLE);
 
         } else {
