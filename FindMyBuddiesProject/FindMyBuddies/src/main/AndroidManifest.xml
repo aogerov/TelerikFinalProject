@@ -25,7 +25,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".BuddiesActivity" />
+        <activity android:name="com.gercho.findmybuddies.BuddiesActivity" />
 
         <service android:name=".services.UserService">
             <intent-filter>
@@ -34,11 +34,8 @@
                 <action android:name="com.gercho.action.LOGIN_USER_SERVICE" />
                 <action android:name="com.gercho.action.REGISTER_USER_SERVICE" />
                 <action android:name="com.gercho.action.LOGOUT_USER_SERVICE" />
+                <action android:name="com.gercho.action.IS_LOGGED_IN_USER_SERVICE" />
             </intent-filter>
-        </service>
-        <service android:name=".services.ProgressBarService">
-            <action android:name="com.gercho.action.START_PROGRESS_BAR_SERVICE" />
-            <action android:name="com.gercho.action.STOP_PROGRESS_BAR_SERVICE" />
         </service>
     </application>
 

@@ -19,6 +19,7 @@ public class UserService extends Service {
     public static final String LOGIN_USER_SERVICE = "com.gercho.action.LOGIN_USER_SERVICE";
     public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
     public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
+    public static final String IS_LOGGED_IN_USER_SERVICE = "com.gercho.action.IS_LOGGED_IN_USER_SERVICE";
 
     private static final String STORAGE = "Storage";
     private static final String SESSION_KEY = "SessionKey";
