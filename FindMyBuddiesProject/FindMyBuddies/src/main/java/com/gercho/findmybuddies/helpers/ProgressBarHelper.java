@@ -24,7 +24,7 @@ public class ProgressBarHelper {
     }
 
     public void startProgressBar() {
-        ToastHelper.makeToast(this.mContext, "Logging, please wait...");
+        ToastHelper.makeToast(this.mContext, "Connecting, please wait...");
         this.mIsProgressBarActive = true;
 
         final ProgressBar progressBar = this.mProgressBar;
@@ -61,7 +61,7 @@ public class ProgressBarHelper {
             @Override
             protected void onPostExecute(Void aVoid) {
                 progressBar.setVisibility(View.INVISIBLE);
-                ToastHelper.makeToast(ProgressBarHelper.this.mContext, "Login successful");
+                ToastHelper.makeToast(ProgressBarHelper.this.mContext, "Successful connected");
             }
         }.execute();
     }

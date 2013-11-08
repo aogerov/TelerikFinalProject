@@ -23,22 +23,22 @@ public class NavigationDrawer {
     private ListView mDrawerListView;
     private ActionBarDrawerToggle mDrawerToggle;
 
-    public void init(Activity theActivity, ListView.OnItemClickListener listener) {
-        this.mDrawerLayout = (DrawerLayout) theActivity.findViewById(R.id.drawer_layout);
-        this.mDrawerListView = (ListView) theActivity.findViewById(R.id.left_drawer);
+    public void init(Activity activity, ListView.OnItemClickListener listener) {
+        this.mDrawerLayout = (DrawerLayout) activity.findViewById(R.id.drawer_layout);
+        this.mDrawerListView = (ListView) activity.findViewById(R.id.left_drawer);
 
         this.mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
 
         String[] navigationDrawerOptions =
-                theActivity.getResources().getStringArray(R.array.navigation_drawer_options);
+                activity.getResources().getStringArray(R.array.navigation_drawer_options);
         ArrayAdapter<String> navigationDrawerAdapter =
-                new ArrayAdapter<String>(theActivity, R.layout.drawer_option_item, navigationDrawerOptions);
+                new ArrayAdapter<String>(activity, R.layout.drawer_option_item, navigationDrawerOptions);
 
         this.mDrawerListView.setAdapter(navigationDrawerAdapter);
         this.mDrawerListView.setOnItemClickListener(listener);
 //        this.mDrawerListView.setItemChecked(CoursePagerAdapter.COURSE_LIB_ANDROID, true);
 
-        this.setupActionBar(theActivity);
+        this.setupActionBar(activity);
         this.setupDrawerVisibility();
     }
 

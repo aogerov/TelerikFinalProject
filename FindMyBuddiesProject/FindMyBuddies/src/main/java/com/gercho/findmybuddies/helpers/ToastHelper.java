@@ -8,8 +8,14 @@ import android.widget.Toast;
  */
 public class ToastHelper {
 
+    private static Toast mToast;
+
     public static void makeToast(Context context, String message) {
-        Toast toast = Toast.makeText(context, message, Toast.LENGTH_LONG);
-        toast.show();
+        if (mToast != null) {
+            mToast.cancel();
+        }
+
+        mToast = Toast.makeText(context, message, Toast.LENGTH_LONG);
+        mToast.show();
     }
 }
