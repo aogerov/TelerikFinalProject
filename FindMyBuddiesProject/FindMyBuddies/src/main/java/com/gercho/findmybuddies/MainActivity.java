@@ -1,8 +1,12 @@
 package com.gercho.findmybuddies;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -11,10 +15,15 @@ import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.ProgressBarHelper;
 import com.gercho.findmybuddies.helpers.ToastHelper;
 import com.gercho.findmybuddies.services.UserService;
+import com.gercho.findmybuddies.services.UserServiceBinder;
 
 public class MainActivity extends Activity {
 
     private static final String IS_PROGRESS_BAR_ACTIVE = "IsProgressBarActive";
+
+    private UserService mUserService;
+    private boolean mIsBoundToUserService;
+    private ServiceConnection mUserServiceConnection;
 
     private ProgressBarHelper mProgressBarHelper;
     private boolean mIsProgressBarActive;
@@ -33,10 +42,16 @@ public class MainActivity extends Activity {
             this.mIsProgressBarActive = savedInstanceState.getBoolean(IS_PROGRESS_BAR_ACTIVE, false);
         }
 
-        this.startServices();
         this.setupButtons();
+        this.startServices();
+        this.connectToServices();
+    }
 
-        // TODO: bind to user service and use it at onResume() to check user status
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this, UserService.class);
+        bindService(intent, mUserServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -60,6 +75,15 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        if (mIsBoundToUserService) {
+            unbindService(mUserServiceConnection);
+            mIsBoundToUserService = false;
+        }
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         LogHelper.logThreadId("onSaveInstanceState");
 
@@ -73,30 +97,56 @@ public class MainActivity extends Activity {
         return true;
     }
 
-    private void startServices() {
-        this.startUserService();
-    }
-
     private void setupButtons() {
         this.findViewById(R.id.btn_startProgressBar).setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
-                MainActivity.this.startProgressBarHelper();
+//                MainActivity.this.startProgressBarHelper();
+//                ToastHelper.makeToast(MainActivity.this, MainActivity.this.mUserService.getIsUserLoggedIn() + "");
+                MainActivity.this.mUserService.changeUserLoginStatus();
             }
         });
 
         this.findViewById(R.id.btn_stopProgressBar).setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
-                MainActivity.this.stopProgressBarHelper();
+//                MainActivity.this.stopProgressBarHelper();
+                ToastHelper.makeToast(MainActivity.this, MainActivity.this.mUserService.getIsUserLoggedIn() + "");
             }
         });
+    }
+
+    private void startServices() {
+        this.startUserService();
+    }
+
+    private void connectToServices() {
+        this.connectToUserService();
     }
 
     private void startUserService() {
         Intent serviceIntent = new Intent();
         serviceIntent.setAction(UserService.START_USER_SERVICE);
         this.startService(serviceIntent);
+    }
+
+    private void connectToUserService() {
+        this.mUserServiceConnection = new ServiceConnection() {
+
+            @Override
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                UserServiceBinder binder = (UserServiceBinder) service;
+                MainActivity.this.mUserService = binder.getService();
+                MainActivity.this.mIsBoundToUserService = true;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName arg0) {
+                MainActivity.this.mIsBoundToUserService = false;
+            }
+        };
     }
 
     private void startProgressBarHelper() {

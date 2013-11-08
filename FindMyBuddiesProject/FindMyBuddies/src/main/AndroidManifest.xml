@@ -34,7 +34,6 @@
                 <action android:name="com.gercho.action.LOGIN_USER_SERVICE" />
                 <action android:name="com.gercho.action.REGISTER_USER_SERVICE" />
                 <action android:name="com.gercho.action.LOGOUT_USER_SERVICE" />
-                <action android:name="com.gercho.action.IS_LOGGED_IN_USER_SERVICE" />
             </intent-filter>
         </service>
     </application>

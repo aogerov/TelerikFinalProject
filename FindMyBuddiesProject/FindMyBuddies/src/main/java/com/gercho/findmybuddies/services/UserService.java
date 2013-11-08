@@ -19,7 +19,6 @@ public class UserService extends Service {
     public static final String LOGIN_USER_SERVICE = "com.gercho.action.LOGIN_USER_SERVICE";
     public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
     public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
-    public static final String IS_LOGGED_IN_USER_SERVICE = "com.gercho.action.IS_LOGGED_IN_USER_SERVICE";
 
     private static final String STORAGE = "Storage";
     private static final String SESSION_KEY = "SessionKey";
@@ -31,6 +30,7 @@ public class UserService extends Service {
     private static final int MIN_PASSWORD_LENGTH = 6;
     private static final int MAX_INPUT_FIELDS_LENGTH = 30;
 
+    private IBinder mBinder;
     private HandlerThread mHandlerThread;
     private boolean mIsUserLoggedIn;
     private String mSessionKey;
@@ -44,12 +44,8 @@ public class UserService extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    @Override
     public void onCreate() {
+        this.mBinder = new UserServiceBinder(this);
         this.mHandlerThread = new HandlerThread("UserService");
         this.mHandlerThread.start();
         this.getAuthCode("Fanta", "12049uas");
@@ -78,6 +74,11 @@ public class UserService extends Service {
     public void onDestroy() {
         this.mHandlerThread.quit();
         this.mHandlerThread = null;
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return this.mBinder;
     }
 
     private void readDataFromStorage() {
@@ -179,5 +180,9 @@ public class UserService extends Service {
         }
 
         throw new NumberFormatException("AuthCode failed on create");
+    }
+
+    public void changeUserLoginStatus(){
+        this.mIsUserLoggedIn = !this.mIsUserLoggedIn;
     }
 }
