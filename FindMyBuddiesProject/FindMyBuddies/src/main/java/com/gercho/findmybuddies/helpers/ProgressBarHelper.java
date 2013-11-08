@@ -2,6 +2,7 @@ package com.gercho.findmybuddies.helpers;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.view.View;
 import android.widget.ProgressBar;
 
@@ -10,13 +11,13 @@ import android.widget.ProgressBar;
  */
 public class ProgressBarHelper {
 
-    private static final int MAX_PROGRESS_BAR_WRITES = 1000;
+    private static final int MAX_PROGRESS_BAR_WRITES = 300;
 
     private Context mContext;
     private ProgressBar mProgressBar;
     private boolean mIsProgressBarActive;
 
-    public ProgressBarHelper(Context context, ProgressBar progressBar) {
+    public ProgressBarHelper(Context context, ProgressBar progressBar){
         this.mContext = context;
         this.mProgressBar = progressBar;
         this.mProgressBar.setMax(MAX_PROGRESS_BAR_WRITES);
@@ -24,17 +25,31 @@ public class ProgressBarHelper {
     }
 
     public void startProgressBar() {
-        ToastHelper.makeToast(this.mContext, "Connecting, please wait...");
         this.mIsProgressBarActive = true;
+        this.executeProcess();
+    }
 
+    public void stopProgressBar() {
+        this.mIsProgressBarActive = false;
+    }
+
+    private void executeProcess() {
+        final Handler handler = new Handler(this.mContext.getMainLooper());
         final ProgressBar progressBar = this.mProgressBar;
-        this.mProgressBar.setProgress(0);
+        progressBar.setProgress(0);
         progressBar.setVisibility(View.VISIBLE);
 
         new AsyncTask<String, Integer, Void>() {
             @Override
             protected Void doInBackground(String... strings) {
                 while (ProgressBarHelper.this.mIsProgressBarActive) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            ToastHelper.makeToast(ProgressBarHelper.this.mContext, "Connecting, please wait...");
+                        }
+                    });
+
                     for (int i = 1; i <= MAX_PROGRESS_BAR_WRITES; i++) {
                         try {
                             this.publishProgress(i);
@@ -61,12 +76,7 @@ public class ProgressBarHelper {
             @Override
             protected void onPostExecute(Void aVoid) {
                 progressBar.setVisibility(View.INVISIBLE);
-                ToastHelper.makeToast(ProgressBarHelper.this.mContext, "Successful connected");
             }
         }.execute();
-    }
-
-    public void stopProgressBar() {
-        this.mIsProgressBarActive = false;
     }
 }
