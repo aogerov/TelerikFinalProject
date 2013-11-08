@@ -14,15 +14,15 @@ import java.security.NoSuchAlgorithmException;
  */
 public class UserService extends Service {
 
-    public static final String START_SERVICE = "com.gercho.action.START_USER_SERVICE";
-    public static final String STOP_SERVICE = "com.gercho.action.STOP_USER_SERVICE";
-    public static final String LOGIN_SERVICE = "com.gercho.action.LOGIN_USER_SERVICE";
-    public static final String REGISTER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
-    public static final String LOGOUT_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
+    public static final String START_USER_SERVICE = "com.gercho.action.START_USER_SERVICE";
+    public static final String STOP_USER_SERVICE = "com.gercho.action.STOP_USER_SERVICE";
+    public static final String LOGIN_USER_SERVICE = "com.gercho.action.LOGIN_USER_SERVICE";
+    public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
+    public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
 
-    private static final String USER_STORAGE = "UserStorage";
-    private static final String USER_SESSION_KEY = "UserSessionKey";
-    private static final String USER_LOGGED_IN = "UserLoggedIn";
+    private static final String STORAGE = "Storage";
+    private static final String SESSION_KEY = "SessionKey";
+    private static final String LOGGED_IN = "LoggedIn";
     private static final String USERNAME = "Username";
     private static final String NICKNAME = "Nickname";
     private static final String PASSWORD = "Password";
@@ -58,15 +58,15 @@ public class UserService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
 
-        if (START_SERVICE.equalsIgnoreCase(action)) {
+        if (START_USER_SERVICE.equalsIgnoreCase(action)) {
             this.readDataFromStorage();
-        } else if (STOP_SERVICE.equalsIgnoreCase(action)) {
+        } else if (STOP_USER_SERVICE.equalsIgnoreCase(action)) {
             this.stopSelf();
-        } else if (LOGIN_SERVICE.equalsIgnoreCase(action)) {
+        } else if (LOGIN_USER_SERVICE.equalsIgnoreCase(action)) {
             this.login(intent);
-        } else if (REGISTER_SERVICE.equalsIgnoreCase(action)) {
+        } else if (REGISTER_USER_SERVICE.equalsIgnoreCase(action)) {
             this.register(intent);
-        } else if (LOGOUT_SERVICE.equalsIgnoreCase(action)) {
+        } else if (LOGOUT_USER_SERVICE.equalsIgnoreCase(action)) {
             this.logout();
         }
 
@@ -80,10 +80,10 @@ public class UserService extends Service {
     }
 
     private void readDataFromStorage() {
-        SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
-        this.mIsUserLoggedIn = userStorage.getBoolean(USER_LOGGED_IN, false);
+        SharedPreferences userStorage = this.getSharedPreferences(STORAGE, 0);
+        this.mIsUserLoggedIn = userStorage.getBoolean(LOGGED_IN, false);
         if (this.mIsUserLoggedIn) {
-            this.mSessionKey = userStorage.getString(USER_SESSION_KEY, null);
+            this.mSessionKey = userStorage.getString(SESSION_KEY, null);
             if (this.mSessionKey == null) {
                 this.mIsUserLoggedIn = false;
             }
@@ -111,10 +111,10 @@ public class UserService extends Service {
         this.mIsUserLoggedIn = false;
         this.mSessionKey = null;
 
-        SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
+        SharedPreferences userStorage = this.getSharedPreferences(STORAGE, 0);
         SharedPreferences.Editor editor = userStorage.edit();
-        editor.putBoolean(USER_LOGGED_IN, false);
-        editor.putString(USER_SESSION_KEY, null);
+        editor.putBoolean(LOGGED_IN, false);
+        editor.putString(SESSION_KEY, null);
     }
 
     private String extractAndValidateUsername(Intent intent) {

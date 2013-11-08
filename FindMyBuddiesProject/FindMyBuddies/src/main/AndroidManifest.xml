@@ -4,6 +4,9 @@
     android:versionCode="1"
     android:versionName="1.0">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
     <uses-sdk
         android:minSdkVersion="10"
         android:targetSdkVersion="19" />
@@ -22,6 +25,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".BuddiesActivity" />
+
         <service android:name=".services.UserService">
             <intent-filter>
                 <action android:name="com.gercho.action.START_USER_SERVICE" />
@@ -30,6 +35,10 @@
                 <action android:name="com.gercho.action.REGISTER_USER_SERVICE" />
                 <action android:name="com.gercho.action.LOGOUT_USER_SERVICE" />
             </intent-filter>
+        </service>
+        <service android:name=".services.ProgressBarService">
+            <action android:name="com.gercho.action.START_PROGRESS_BAR_SERVICE" />
+            <action android:name="com.gercho.action.STOP_PROGRESS_BAR_SERVICE" />
         </service>
     </application>
 
