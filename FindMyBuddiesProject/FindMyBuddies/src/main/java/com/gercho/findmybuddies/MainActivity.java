@@ -1,14 +1,11 @@
 package com.gercho.findmybuddies;
 
 import android.app.Activity;
-import android.content.ComponentName;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.IBinder;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
@@ -17,21 +14,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.gercho.findmybuddies.helpers.ProgressBarHelper;
-import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.helpers.ToastHelper;
 import com.gercho.findmybuddies.services.UserService;
-import com.gercho.findmybuddies.services.UserServiceBinder;
 
 public class MainActivity extends Activity {
 
     private static final String IS_CONNECTING_ACTIVE = "IsConnectingActive";
-    private static final int THREAD_SLEEP_TIME = 100;
-    private static final int MAX_SERVICE_CALLBACKS = 300;
 
-    private UserService mUserService;
-    private boolean mIsBoundToUserService;
-    private ServiceConnection mUserServiceConnection;
-
+    private UserServiceUpdateReceiver mUserServiceUpdateReceiver;
     private ProgressBarHelper mProgressBarHelper;
     private boolean mIsConnectingActive;
 
@@ -48,40 +38,35 @@ public class MainActivity extends Activity {
         }
 
         this.startUserService();
-        this.connectToUserService();
         this.setupButtons();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Intent userServiceIntent = new Intent(this, UserService.class);
-        this.bindService(userServiceIntent, this.mUserServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
         if (this.mIsConnectingActive) {
             this.mProgressBarHelper.startProgressBar();
-            this.connectToServer();
         }
+
+        if (this.mUserServiceUpdateReceiver == null) {
+            this.mUserServiceUpdateReceiver = new UserServiceUpdateReceiver();
+        }
+
+        IntentFilter intentFilter = new IntentFilter(UserService.USER_SERVICE_UPDATE);
+        this.registerReceiver(this.mUserServiceUpdateReceiver, intentFilter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+
         if (this.mIsConnectingActive) {
             this.mProgressBarHelper.stopProgressBar();
         }
-    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (this.mIsBoundToUserService) {
-            this.unbindService(this.mUserServiceConnection);
-            this.mIsBoundToUserService = false;
+        if (this.mUserServiceUpdateReceiver != null) {
+            this.unregisterReceiver(this.mUserServiceUpdateReceiver);
         }
     }
 
@@ -101,23 +86,6 @@ public class MainActivity extends Activity {
         Intent userServiceIntent = new Intent();
         userServiceIntent.setAction(UserService.START_USER_SERVICE);
         this.startService(userServiceIntent);
-    }
-
-    private void connectToUserService() {
-        this.mUserServiceConnection = new ServiceConnection() {
-
-            @Override
-            public void onServiceConnected(ComponentName className, IBinder service) {
-                UserServiceBinder binder = (UserServiceBinder) service;
-                MainActivity.this.mUserService = binder.getService();
-                MainActivity.this.mIsBoundToUserService = true;
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName arg0) {
-                MainActivity.this.mIsBoundToUserService = false;
-            }
-        };
     }
 
     private void setupButtons() {
@@ -145,8 +113,6 @@ public class MainActivity extends Activity {
 
     private void handleLogin() {
         if (!this.mIsConnectingActive) {
-            this.setConnectingStart();
-
             Intent loginServiceIntent = new Intent();
             loginServiceIntent.setAction(UserService.LOGIN_USER_SERVICE);
             String username = this.getTextFromTextView(R.id.editText_username);
@@ -154,15 +120,12 @@ public class MainActivity extends Activity {
             String password = this.getTextFromTextView(R.id.editText_password);
             loginServiceIntent.putExtra(UserService.PASSWORD, password);
             this.startService(loginServiceIntent);
-
-            this.connectToServer();
+            this.setStartConnecting();
         }
     }
 
     private void handleRegister() {
         if (!this.mIsConnectingActive) {
-            this.setConnectingStart();
-
             Intent loginServiceIntent = new Intent();
             loginServiceIntent.setAction(UserService.REGISTER_USER_SERVICE);
             String username = this.getTextFromTextView(R.id.editText_username);
@@ -172,8 +135,7 @@ public class MainActivity extends Activity {
             String nickname = this.getTextFromTextView(R.id.editText_nickname);
             loginServiceIntent.putExtra(UserService.NICKNAME, nickname);
             this.startService(loginServiceIntent);
-
-            this.connectToServer();
+            this.setStartConnecting();
         }
     }
 
@@ -203,35 +165,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void connectToServer() {
-        HandlerThread handlerThread = new HandlerThread("ConnectToServerThread");
-        handlerThread.start();
-        Handler userHandler = new Handler(handlerThread.getLooper());
-        userHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < MAX_SERVICE_CALLBACKS; i++) {
-                    if (MainActivity.this.mUserService.getIsUserLoggedIn()) {
-                        break;
-                    } else {
-                        ThreadSleeper.sleep(THREAD_SLEEP_TIME);
-                    }
-                }
-
-                if (!MainActivity.this.mIsConnectingActive) {
-                    return;
-                }
-
-                MainActivity.this.setConnectingStop();
-                if (MainActivity.this.mUserService.getIsUserLoggedIn()) {
-                    ToastHelper.makeToast(MainActivity.this, "Connected successfully");
-                } else {
-                    ToastHelper.makeToast(MainActivity.this, "Connecting failed");
-                }
-            }
-        });
-    }
-
     private String getTextFromTextView(int id) {
         TextView textView = (TextView) this.findViewById(id);
         CharSequence text = textView.getText();
@@ -242,13 +175,40 @@ public class MainActivity extends Activity {
         return null;
     }
 
-    private void setConnectingStart() {
+    private void setStartConnecting() {
         this.mProgressBarHelper.startProgressBar();
         this.mIsConnectingActive = true;
     }
 
-    private void setConnectingStop() {
+    private void setStopConnecting() {
         this.mProgressBarHelper.stopProgressBar();
         this.mIsConnectingActive = false;
+    }
+
+    private class UserServiceUpdateReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                if (action.equals(UserService.USER_SERVICE_UPDATE)) {
+                    MainActivity.this.setStopConnecting();
+
+                    String serverResponseMessage = intent.getStringExtra(UserService.SERVER_RESPONSE_MESSAGE);
+                    ToastHelper.makeToast(MainActivity.this, serverResponseMessage);
+
+                    boolean isConnected = intent.getBooleanExtra(UserService.IS_CONNECTED, false);
+                    if (isConnected) {
+                        Intent buddiesIntent = new Intent(MainActivity.this, BuddiesActivity.class);
+                        MainActivity.this.startActivity(buddiesIntent);
+                    }
+
+                    boolean isServiceInitLoginActive = intent.getBooleanExtra(UserService.SERVICE_INIT_LOGIN, false);
+                    if (isServiceInitLoginActive) {
+                        MainActivity.this.setStartConnecting();
+                    }
+                }
+            }
+        }
     }
 }

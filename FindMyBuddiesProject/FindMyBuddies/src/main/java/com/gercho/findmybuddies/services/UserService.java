@@ -7,8 +7,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 
-import com.gercho.findmybuddies.helpers.ThreadSleeper;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -23,35 +21,35 @@ public class UserService extends Service {
     public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
     public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
 
+    public static final String USER_SERVICE_UPDATE = "UserServiceUpdate";
+    public static final String SERVICE_INIT_LOGIN = "ServiceInitLogin";
+    public static final String SERVER_RESPONSE_MESSAGE = "ServerResponseMessage";
+    public static final String IS_CONNECTED = "IsConnected";
     public static final String USERNAME = "Username";
     public static final String NICKNAME = "Nickname";
     public static final String PASSWORD = "Password";
 
-    private static final String STORAGE = "Storage";
-    private static final String SESSION_KEY = "SessionKey";
-    private static final String IS_LOGGED_IN = "IsLoggedIn";
+    private static final String USER_STORAGE = "UserStorage";
+    private static final String USER_STORAGE_USERNAME = "UserStorageUsername";
+    private static final String USER_STORAGE_NICKNAME = "UserStorageNickname";
+    private static final String USER_STORAGE_PASSWORD = "UserStoragePassword";
     private static final int MIN_USERNAME_AND_NICKNAME_LENGTH = 3;
     private static final int MIN_PASSWORD_LENGTH = 6;
     private static final int MAX_INPUT_FIELDS_LENGTH = 30;
 
     private boolean mIsServiceInitialized;
-    private IBinder mBinder;
-    private HandlerThread mUserThread;
-    private boolean mIsUserLoggedIn;
-    private String mSessionKey;
     private boolean mIsConnectingActive;
+    private HandlerThread mUserThread;
 
-    public boolean getIsUserLoggedIn() {
-        return this.mIsUserLoggedIn;
-    }
-
-    public String getSessionKey() {
-        return this.mSessionKey;
-    }
+    private boolean mIsConnected;
+    private String mSessionKey;
+    private String mUsername;
+    private String mNickname;
+    private String mPassword;
 
     @Override
     public void onCreate() {
-        this.mBinder = new UserServiceBinder(this);
+        this.mIsConnected = false;
         this.mUserThread = new HandlerThread("UserServiceThread");
         this.mUserThread.start();
     }
@@ -83,20 +81,23 @@ public class UserService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return this.mBinder;
+        return null;
     }
 
     private void initService() {
         if (!this.mIsServiceInitialized) {
             this.mIsServiceInitialized = true;
 
-            SharedPreferences userStorage = this.getSharedPreferences(STORAGE, 0);
-            this.mIsUserLoggedIn = userStorage.getBoolean(IS_LOGGED_IN, false);
-            if (this.mIsUserLoggedIn) {
-                this.mSessionKey = userStorage.getString(SESSION_KEY, null);
-                if (this.mSessionKey == null) {
-                    this.mIsUserLoggedIn = false;
-                }
+            SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
+            this.mUsername = userStorage.getString(USER_STORAGE_USERNAME, null);
+            this.mNickname = userStorage.getString(USER_STORAGE_NICKNAME, null);
+            this.mPassword = userStorage.getString(USER_STORAGE_PASSWORD, null);
+
+            if (this.mUsername != null && this.mPassword != null) {
+                this.sendInitLoginBroadcast();
+
+                String authCode = this.getAuthCode(this.mUsername, this.mPassword);
+                this.loginHttpRequest(this.mUsername, authCode);
             }
         }
     }
@@ -104,30 +105,72 @@ public class UserService extends Service {
     private void login(Intent intent) {
         String username = this.extractAndValidateUsername(intent);
         String password = this.extractAndValidatePassword(intent);
-        String authCode = this.getAuthCode(username, password);
 
-        // TODO Http request
+        if (username != null && password != null) {
+            String authCode = this.getAuthCode(username, password);
+            this.loginHttpRequest(username, authCode);
+        }
     }
 
     private void register(Intent intent) {
         String username = this.extractAndValidateUsername(intent);
         String nickname = this.extractAndValidateNickname(intent);
         String password = this.extractAndValidatePassword(intent);
-        String authCode = this.getAuthCode(username, password);
 
-        // TODO Http request
+        if (username != null && nickname != null && password != null) {
+            String authCode = this.getAuthCode(username, password);
+            this.registerHttpRequest(username, authCode, nickname);
+        }
     }
 
     private void logout() {
-        this.mIsUserLoggedIn = false;
+        this.mIsConnected = false;
+        this.mSessionKey = null;
+        this.mUsername = null;
+        this.mNickname = null;
+        this.mPassword = null;
+
+        SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
+        SharedPreferences.Editor editor = userStorage.edit();
+        editor.putString(USER_STORAGE_USERNAME, null);
+        editor.putString(USER_STORAGE_NICKNAME, null);
+        editor.putString(USER_STORAGE_PASSWORD, null);
+
+        this.logoutHttpRequest(this.mSessionKey);
+    }
+
+    private void loginHttpRequest(String username, String authCode) {
+        if (this.mIsConnectingActive) {
+            return;
+        }
+
+        this.mIsConnectingActive = true;
+        this.mIsConnected = false;
         this.mSessionKey = null;
 
-        SharedPreferences userStorage = this.getSharedPreferences(STORAGE, 0);
-        SharedPreferences.Editor editor = userStorage.edit();
-        editor.putBoolean(IS_LOGGED_IN, false);
-        editor.putString(SESSION_KEY, null);
+        Handler userHandler = new Handler(this.mUserThread.getLooper());
+        userHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                Intent intent = UserService.this.getBroadcastIntent();
+                intent.putExtra(SERVER_RESPONSE_MESSAGE, "Was unable to login");
+                UserService.this.sendBroadcast(intent);
+            }
+        });
+    }
 
-        // TODO Http request
+    private void registerHttpRequest(String username, String authCode, String nickname) {
+        if (this.mIsConnectingActive) {
+            return;
+        }
+
+        this.mIsConnectingActive = true;
+        this.mIsConnected = false;
+        this.mSessionKey = null;
+    }
+
+    private void logoutHttpRequest(String sessionKey) {
+
     }
 
     private String extractAndValidateUsername(Intent intent) {
@@ -140,7 +183,8 @@ public class UserService extends Service {
             }
         }
 
-        throw new IllegalArgumentException("Username is invalid");
+        this.sendConnectionErrorBroadcast("Username is invalid");
+        return null;
     }
 
     private String extractAndValidateNickname(Intent intent) {
@@ -153,7 +197,8 @@ public class UserService extends Service {
             }
         }
 
-        throw new IllegalArgumentException("Nickname is invalid");
+        this.sendConnectionErrorBroadcast("Nickname is invalid");
+        return null;
     }
 
     private String extractAndValidatePassword(Intent intent) {
@@ -166,7 +211,8 @@ public class UserService extends Service {
             }
         }
 
-        throw new IllegalArgumentException("Password is invalid");
+        this.sendConnectionErrorBroadcast("Password is invalid");
+        return null;
     }
 
     private String getAuthCode(String username, String password) {
@@ -193,24 +239,21 @@ public class UserService extends Service {
         throw new NumberFormatException("AuthCode failed on create");
     }
 
-    // this is just test method, remove it on release
-    public void changeUserLoginStatus() {
-        if (this.mIsConnectingActive) {
-            return;
-        }
+    private void sendInitLoginBroadcast(){
+        Intent intent = this.getBroadcastIntent();
+        intent.putExtra(SERVICE_INIT_LOGIN, true);
+        this.sendBroadcast(intent);
+    }
 
-        this.mIsConnectingActive = true;
-        this.mIsUserLoggedIn = false;
-        this.mSessionKey = null;
+    private void sendConnectionErrorBroadcast(String message) {
+        Intent intent = this.getBroadcastIntent();
+        intent.putExtra(SERVER_RESPONSE_MESSAGE, message);
+        this.sendBroadcast(intent);
+    }
 
-        Handler userHandler = new Handler(this.mUserThread.getLooper());
-        userHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                ThreadSleeper.sleep(15000);
-                UserService.this.mIsConnectingActive = false;
-                UserService.this.mIsUserLoggedIn = true;
-            }
-        });
+    private Intent getBroadcastIntent() {
+        Intent intent = new Intent(USER_SERVICE_UPDATE);
+        intent.putExtra(IS_CONNECTED, UserService.this.mIsConnected);
+        return intent;
     }
 }
