@@ -23,16 +23,18 @@ public class UserService extends Service {
     public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
     public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
 
+    public static final String USERNAME = "Username";
+    public static final String NICKNAME = "Nickname";
+    public static final String PASSWORD = "Password";
+
     private static final String STORAGE = "Storage";
     private static final String SESSION_KEY = "SessionKey";
-    private static final String LOGGED_IN = "LoggedIn";
-    private static final String USERNAME = "Username";
-    private static final String NICKNAME = "Nickname";
-    private static final String PASSWORD = "Password";
+    private static final String IS_LOGGED_IN = "IsLoggedIn";
     private static final int MIN_USERNAME_AND_NICKNAME_LENGTH = 3;
     private static final int MIN_PASSWORD_LENGTH = 6;
     private static final int MAX_INPUT_FIELDS_LENGTH = 30;
 
+    private boolean mIsServiceInitialized;
     private IBinder mBinder;
     private HandlerThread mUserThread;
     private boolean mIsUserLoggedIn;
@@ -52,7 +54,6 @@ public class UserService extends Service {
         this.mBinder = new UserServiceBinder(this);
         this.mUserThread = new HandlerThread("UserServiceThread");
         this.mUserThread.start();
-        this.getAuthCode("Fanta", "12049uas");
     }
 
     @Override
@@ -60,7 +61,7 @@ public class UserService extends Service {
         String action = intent.getAction();
 
         if (START_USER_SERVICE.equalsIgnoreCase(action)) {
-            this.readDataFromStorage();
+            this.initService();
         } else if (STOP_USER_SERVICE.equalsIgnoreCase(action)) {
             this.stopSelf();
         } else if (LOGIN_USER_SERVICE.equalsIgnoreCase(action)) {
@@ -85,13 +86,17 @@ public class UserService extends Service {
         return this.mBinder;
     }
 
-    private void readDataFromStorage() {
-        SharedPreferences userStorage = this.getSharedPreferences(STORAGE, 0);
-        this.mIsUserLoggedIn = userStorage.getBoolean(LOGGED_IN, false);
-        if (this.mIsUserLoggedIn) {
-            this.mSessionKey = userStorage.getString(SESSION_KEY, null);
-            if (this.mSessionKey == null) {
-                this.mIsUserLoggedIn = false;
+    private void initService() {
+        if (!this.mIsServiceInitialized) {
+            this.mIsServiceInitialized = true;
+
+            SharedPreferences userStorage = this.getSharedPreferences(STORAGE, 0);
+            this.mIsUserLoggedIn = userStorage.getBoolean(IS_LOGGED_IN, false);
+            if (this.mIsUserLoggedIn) {
+                this.mSessionKey = userStorage.getString(SESSION_KEY, null);
+                if (this.mSessionKey == null) {
+                    this.mIsUserLoggedIn = false;
+                }
             }
         }
     }
@@ -119,8 +124,10 @@ public class UserService extends Service {
 
         SharedPreferences userStorage = this.getSharedPreferences(STORAGE, 0);
         SharedPreferences.Editor editor = userStorage.edit();
-        editor.putBoolean(LOGGED_IN, false);
+        editor.putBoolean(IS_LOGGED_IN, false);
         editor.putString(SESSION_KEY, null);
+
+        // TODO Http request
     }
 
     private String extractAndValidateUsername(Intent intent) {
@@ -194,6 +201,7 @@ public class UserService extends Service {
 
         this.mIsConnectingActive = true;
         this.mIsUserLoggedIn = false;
+        this.mSessionKey = null;
 
         Handler userHandler = new Handler(this.mUserThread.getLooper());
         userHandler.post(new Runnable() {

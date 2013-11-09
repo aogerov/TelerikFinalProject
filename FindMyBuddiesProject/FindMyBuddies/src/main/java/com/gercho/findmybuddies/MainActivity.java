@@ -11,7 +11,10 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.view.Menu;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.gercho.findmybuddies.helpers.ProgressBarHelper;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
@@ -21,14 +24,16 @@ import com.gercho.findmybuddies.services.UserServiceBinder;
 
 public class MainActivity extends Activity {
 
-    private static final String IS_PROGRESS_BAR_ACTIVE = "IsProgressBarActive";
+    private static final String IS_CONNECTING_ACTIVE = "IsConnectingActive";
+    private static final int THREAD_SLEEP_TIME = 100;
+    private static final int MAX_SERVICE_CALLBACKS = 300;
 
     private UserService mUserService;
     private boolean mIsBoundToUserService;
     private ServiceConnection mUserServiceConnection;
 
     private ProgressBarHelper mProgressBarHelper;
-    private boolean mIsProgressBarActive;
+    private boolean mIsConnectingActive;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,34 +44,34 @@ public class MainActivity extends Activity {
         this.mProgressBarHelper = new ProgressBarHelper(this, progressBar);
 
         if (savedInstanceState != null) {
-            this.mIsProgressBarActive = savedInstanceState.getBoolean(IS_PROGRESS_BAR_ACTIVE, false);
+            this.mIsConnectingActive = savedInstanceState.getBoolean(IS_CONNECTING_ACTIVE, false);
         }
 
+        this.startUserService();
+        this.connectToUserService();
         this.setupButtons();
-        this.startServices();
-        this.connectToServices();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        Intent intent = new Intent(this, UserService.class);
-        bindService(intent, mUserServiceConnection, Context.BIND_AUTO_CREATE);
+        Intent userServiceIntent = new Intent(this, UserService.class);
+        this.bindService(userServiceIntent, this.mUserServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (this.mIsProgressBarActive) {
-            // fix this shit, each time on resume, service starts again!!!
+        if (this.mIsConnectingActive) {
             this.mProgressBarHelper.startProgressBar();
+            this.connectToServer();
         }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (this.mIsProgressBarActive) {
+        if (this.mIsConnectingActive) {
             this.mProgressBarHelper.stopProgressBar();
         }
     }
@@ -74,16 +79,16 @@ public class MainActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (mIsBoundToUserService) {
-            unbindService(mUserServiceConnection);
-            mIsBoundToUserService = false;
+        if (this.mIsBoundToUserService) {
+            this.unbindService(this.mUserServiceConnection);
+            this.mIsBoundToUserService = false;
         }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean(IS_PROGRESS_BAR_ACTIVE, this.mIsProgressBarActive);
+        outState.putBoolean(IS_CONNECTING_ACTIVE, this.mIsConnectingActive);
     }
 
     @Override
@@ -92,58 +97,10 @@ public class MainActivity extends Activity {
         return true;
     }
 
-    private void setupButtons() {
-        this.findViewById(R.id.button_login).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                MainActivity.this.handleLogin();
-            }
-        });
-
-        this.findViewById(R.id.button_register).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                MainActivity.this.handleRegister();
-            }
-        });
-    }
-
-    // test implementation below!!!
-    private void handleLogin() {
-        this.startProgressBarHelper();
-        this.mUserService.changeUserLoginStatus();
-
-        HandlerThread handlerThread = new HandlerThread("LoginThread");
-        handlerThread.start();
-        Handler userHandler = new Handler(handlerThread.getLooper());
-        userHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                while (!MainActivity.this.mUserService.getIsUserLoggedIn()) {
-                    ThreadSleeper.sleep(100);
-                }
-
-                MainActivity.this.stopProgressBarHelper();
-            }
-        });
-    }
-
-    private void handleRegister() {
-
-    }
-
-    private void startServices() {
-        this.startUserService();
-    }
-
     private void startUserService() {
-        Intent serviceIntent = new Intent();
-        serviceIntent.setAction(UserService.START_USER_SERVICE);
-        this.startService(serviceIntent);
-    }
-
-    private void connectToServices() {
-        this.connectToUserService();
+        Intent userServiceIntent = new Intent();
+        userServiceIntent.setAction(UserService.START_USER_SERVICE);
+        this.startService(userServiceIntent);
     }
 
     private void connectToUserService() {
@@ -163,14 +120,135 @@ public class MainActivity extends Activity {
         };
     }
 
-    private void startProgressBarHelper() {
-        this.mProgressBarHelper.startProgressBar();
-        this.mIsProgressBarActive = true;
+    private void setupButtons() {
+        this.findViewById(R.id.button_login).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.this.handleLogin();
+            }
+        });
+
+        this.findViewById(R.id.button_register).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.this.handleRegister();
+            }
+        });
+
+        this.findViewById(R.id.button_switch).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.this.handleSwitchLoginRegister((Button) view);
+            }
+        });
     }
 
-    private void stopProgressBarHelper() {
+    private void handleLogin() {
+        if (!this.mIsConnectingActive) {
+            this.setConnectingStart();
+
+            Intent loginServiceIntent = new Intent();
+            loginServiceIntent.setAction(UserService.LOGIN_USER_SERVICE);
+            String username = this.getTextFromTextView(R.id.editText_username);
+            loginServiceIntent.putExtra(UserService.USERNAME, username);
+            String password = this.getTextFromTextView(R.id.editText_password);
+            loginServiceIntent.putExtra(UserService.PASSWORD, password);
+            this.startService(loginServiceIntent);
+
+            this.connectToServer();
+        }
+    }
+
+    private void handleRegister() {
+        if (!this.mIsConnectingActive) {
+            this.setConnectingStart();
+
+            Intent loginServiceIntent = new Intent();
+            loginServiceIntent.setAction(UserService.REGISTER_USER_SERVICE);
+            String username = this.getTextFromTextView(R.id.editText_username);
+            loginServiceIntent.putExtra(UserService.USERNAME, username);
+            String password = this.getTextFromTextView(R.id.editText_password);
+            loginServiceIntent.putExtra(UserService.PASSWORD, password);
+            String nickname = this.getTextFromTextView(R.id.editText_nickname);
+            loginServiceIntent.putExtra(UserService.NICKNAME, nickname);
+            this.startService(loginServiceIntent);
+
+            this.connectToServer();
+        }
+    }
+
+    private void handleSwitchLoginRegister(Button button) {
+        String buttonText = button.getText().toString();
+        String loginText = this.getString(R.string.button_login);
+        String registerText = this.getString(R.string.button_register);
+
+        if (buttonText.equals(loginText)) {
+            button.setText(R.string.button_register);
+            Button loginButton = (Button) this.findViewById(R.id.button_login);
+            loginButton.setVisibility(View.VISIBLE);
+            Button registerButton = (Button) this.findViewById(R.id.button_register);
+            registerButton.setVisibility(View.INVISIBLE);
+            EditText nicknameEditText = (EditText) this.findViewById(R.id.editText_nickname);
+            nicknameEditText.setVisibility(View.INVISIBLE);
+        }
+
+        if (buttonText.equals(registerText)) {
+            button.setText(R.string.button_login);
+            Button loginButton = (Button) this.findViewById(R.id.button_login);
+            loginButton.setVisibility(View.INVISIBLE);
+            Button registerButton = (Button) this.findViewById(R.id.button_register);
+            registerButton.setVisibility(View.VISIBLE);
+            EditText nicknameEditText = (EditText) this.findViewById(R.id.editText_nickname);
+            nicknameEditText.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void connectToServer() {
+        HandlerThread handlerThread = new HandlerThread("ConnectToServerThread");
+        handlerThread.start();
+        Handler userHandler = new Handler(handlerThread.getLooper());
+        userHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < MAX_SERVICE_CALLBACKS; i++) {
+                    if (MainActivity.this.mUserService.getIsUserLoggedIn()) {
+                        break;
+                    } else {
+                        ThreadSleeper.sleep(THREAD_SLEEP_TIME);
+                    }
+                }
+
+                if (!MainActivity.this.mIsConnectingActive) {
+                    return;
+                }
+
+                MainActivity.this.setConnectingStop();
+                if (MainActivity.this.mUserService.getIsUserLoggedIn()) {
+                    ToastHelper.makeToast(MainActivity.this, "Connected successfully");
+                } else {
+                    ToastHelper.makeToast(MainActivity.this, "Connecting failed");
+                }
+            }
+        });
+    }
+
+    private String getTextFromTextView(int id) {
+        TextView textView = (TextView) this.findViewById(id);
+        CharSequence text = textView.getText();
+        if (text != null) {
+            return text.toString();
+        }
+
+        return null;
+    }
+
+    private void setConnectingStart() {
+        this.mProgressBarHelper.startProgressBar();
+        this.mIsConnectingActive = true;
+    }
+
+    private void setConnectingStop() {
         this.mProgressBarHelper.stopProgressBar();
-        this.mIsProgressBarActive = false;
-        ToastHelper.makeToast(this, "Successful connected");
+        this.mIsConnectingActive = false;
     }
 }
