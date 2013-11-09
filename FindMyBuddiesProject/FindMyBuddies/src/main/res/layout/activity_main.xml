@@ -11,8 +11,8 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Start progress bar"
-        android:id="@+id/btn_startProgressBar"
+        android:text="@string/button_login"
+        android:id="@+id/button_login"
         android:layout_marginTop="50dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
@@ -21,9 +21,9 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Stop progress bar"
-        android:id="@+id/btn_stopProgressBar"
-        android:layout_below="@+id/btn_startProgressBar"
+        android:text="@string/button_register"
+        android:id="@+id/button_register"
+        android:layout_below="@+id/button_login"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"/>
 

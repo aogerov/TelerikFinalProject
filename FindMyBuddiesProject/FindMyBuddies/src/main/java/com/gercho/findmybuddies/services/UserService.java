@@ -3,8 +3,11 @@ package com.gercho.findmybuddies.services;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+
+import com.gercho.findmybuddies.helpers.ThreadSleeper;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -31,9 +34,10 @@ public class UserService extends Service {
     private static final int MAX_INPUT_FIELDS_LENGTH = 30;
 
     private IBinder mBinder;
-    private HandlerThread mHandlerThread;
+    private HandlerThread mUserThread;
     private boolean mIsUserLoggedIn;
     private String mSessionKey;
+    private boolean mIsConnectingActive;
 
     public boolean getIsUserLoggedIn() {
         return this.mIsUserLoggedIn;
@@ -46,8 +50,8 @@ public class UserService extends Service {
     @Override
     public void onCreate() {
         this.mBinder = new UserServiceBinder(this);
-        this.mHandlerThread = new HandlerThread("UserService");
-        this.mHandlerThread.start();
+        this.mUserThread = new HandlerThread("UserServiceThread");
+        this.mUserThread.start();
         this.getAuthCode("Fanta", "12049uas");
     }
 
@@ -72,8 +76,8 @@ public class UserService extends Service {
 
     @Override
     public void onDestroy() {
-        this.mHandlerThread.quit();
-        this.mHandlerThread = null;
+        this.mUserThread.quit();
+        this.mUserThread = null;
     }
 
     @Override
@@ -182,7 +186,23 @@ public class UserService extends Service {
         throw new NumberFormatException("AuthCode failed on create");
     }
 
-    public void changeUserLoginStatus(){
-        this.mIsUserLoggedIn = !this.mIsUserLoggedIn;
+    // this is just test method, remove it on release
+    public void changeUserLoginStatus() {
+        if (this.mIsConnectingActive) {
+            return;
+        }
+
+        this.mIsConnectingActive = true;
+        this.mIsUserLoggedIn = false;
+
+        Handler userHandler = new Handler(this.mUserThread.getLooper());
+        userHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                ThreadSleeper.sleep(15000);
+                UserService.this.mIsConnectingActive = false;
+                UserService.this.mIsUserLoggedIn = true;
+            }
+        });
     }
 }

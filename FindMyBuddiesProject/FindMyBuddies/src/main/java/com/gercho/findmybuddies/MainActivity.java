@@ -6,13 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ProgressBar;
 
-import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.ProgressBarHelper;
+import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.helpers.ToastHelper;
 import com.gercho.findmybuddies.services.UserService;
 import com.gercho.findmybuddies.services.UserServiceBinder;
@@ -30,8 +32,6 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        LogHelper.logThreadId("onCreate");
-
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.activity_main);
 
@@ -56,18 +56,15 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onResume() {
-        LogHelper.logThreadId("onResume");
-
         super.onResume();
         if (this.mIsProgressBarActive) {
+            // fix this shit, each time on resume, service starts again!!!
             this.mProgressBarHelper.startProgressBar();
         }
     }
 
     @Override
     protected void onPause() {
-        LogHelper.logThreadId("onPause");
-
         super.onPause();
         if (this.mIsProgressBarActive) {
             this.mProgressBarHelper.stopProgressBar();
@@ -85,8 +82,6 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        LogHelper.logThreadId("onSaveInstanceState");
-
         super.onSaveInstanceState(outState);
         outState.putBoolean(IS_PROGRESS_BAR_ACTIVE, this.mIsProgressBarActive);
     }
@@ -98,38 +93,57 @@ public class MainActivity extends Activity {
     }
 
     private void setupButtons() {
-        this.findViewById(R.id.btn_startProgressBar).setOnClickListener(new View.OnClickListener() {
-
+        this.findViewById(R.id.button_login).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                MainActivity.this.startProgressBarHelper();
-//                ToastHelper.makeToast(MainActivity.this, MainActivity.this.mUserService.getIsUserLoggedIn() + "");
-                MainActivity.this.mUserService.changeUserLoginStatus();
+                MainActivity.this.handleLogin();
             }
         });
 
-        this.findViewById(R.id.btn_stopProgressBar).setOnClickListener(new View.OnClickListener() {
-
+        this.findViewById(R.id.button_register).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                MainActivity.this.stopProgressBarHelper();
-                ToastHelper.makeToast(MainActivity.this, MainActivity.this.mUserService.getIsUserLoggedIn() + "");
+                MainActivity.this.handleRegister();
             }
         });
+    }
+
+    // test implementation below!!!
+    private void handleLogin() {
+        this.startProgressBarHelper();
+        this.mUserService.changeUserLoginStatus();
+
+        HandlerThread handlerThread = new HandlerThread("LoginThread");
+        handlerThread.start();
+        Handler userHandler = new Handler(handlerThread.getLooper());
+        userHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                while (!MainActivity.this.mUserService.getIsUserLoggedIn()) {
+                    ThreadSleeper.sleep(100);
+                }
+
+                MainActivity.this.stopProgressBarHelper();
+            }
+        });
+    }
+
+    private void handleRegister() {
+
     }
 
     private void startServices() {
         this.startUserService();
     }
 
-    private void connectToServices() {
-        this.connectToUserService();
-    }
-
     private void startUserService() {
         Intent serviceIntent = new Intent();
         serviceIntent.setAction(UserService.START_USER_SERVICE);
         this.startService(serviceIntent);
+    }
+
+    private void connectToServices() {
+        this.connectToUserService();
     }
 
     private void connectToUserService() {
@@ -157,6 +171,6 @@ public class MainActivity extends Activity {
     private void stopProgressBarHelper() {
         this.mProgressBarHelper.stopProgressBar();
         this.mIsProgressBarActive = false;
-        ToastHelper.makeToast(MainActivity.this, "Successful connected");
+        ToastHelper.makeToast(this, "Successful connected");
     }
 }
