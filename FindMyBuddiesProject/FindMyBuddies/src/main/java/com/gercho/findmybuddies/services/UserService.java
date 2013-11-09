@@ -130,12 +130,7 @@ public class UserService extends Service {
         this.mNickname = null;
         this.mPassword = null;
 
-        SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
-        SharedPreferences.Editor editor = userStorage.edit();
-        editor.putString(USER_STORAGE_USERNAME, null);
-        editor.putString(USER_STORAGE_NICKNAME, null);
-        editor.putString(USER_STORAGE_PASSWORD, null);
-
+        this.updateLocalStorage(this.mUsername, this.mNickname, this.mPassword);
         this.logoutHttpRequest(this.mSessionKey);
     }
 
@@ -152,9 +147,7 @@ public class UserService extends Service {
         userHandler.post(new Runnable() {
             @Override
             public void run() {
-                Intent intent = UserService.this.getBroadcastIntent();
-                intent.putExtra(SERVER_RESPONSE_MESSAGE, "Was unable to login");
-                UserService.this.sendBroadcast(intent);
+
             }
         });
     }
@@ -226,17 +219,24 @@ public class UserService extends Service {
         if (messageDigest != null) {
             messageDigest.update((username + password).getBytes());
             byte[] bytes = messageDigest.digest();
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder authCode = new StringBuilder();
             for (int i = 0; i < bytes.length; i++) {
                 String tmp = Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1);
-                buffer.append(tmp);
+                authCode.append(tmp);
             }
 
-            String authCode = buffer.toString();
-            return authCode;
+            return authCode.toString();
         }
 
         throw new NumberFormatException("AuthCode failed on create");
+    }
+
+    private void updateLocalStorage(String username, String nickname, String password) {
+        SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
+        SharedPreferences.Editor editor = userStorage.edit();
+        editor.putString(USER_STORAGE_USERNAME, username);
+        editor.putString(USER_STORAGE_NICKNAME, nickname);
+        editor.putString(USER_STORAGE_PASSWORD, password);
     }
 
     private void sendInitLoginBroadcast(){
