@@ -18,5 +18,6 @@
     <string name="editText_username">Username</string>
     <string name="editText_password">Password</string>
     <string name="editText_nickname">Nickname</string>
+    <string name="action_logout">Logout</string>
 
 </resources>

@@ -26,10 +26,10 @@ public class UserServiceBroadcastManager {
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendErrorMessage(String message) {
+    public void sendResponseMessage(String message) {
         Intent intent = new Intent(UserService.USER_SERVICE_BROADCAST);
-        intent.putExtra(UserService.USER_SERVICE_ERROR, true);
-        intent.putExtra(UserService.USER_SERVICE_MESSAGE, message);
+        intent.putExtra(UserService.USER_SERVICE_RESPONSE_MESSAGE, true);
+        intent.putExtra(UserService.USER_SERVICE_MESSAGE_TEXT, message);
         this.mService.sendBroadcast(intent);
     }
 }

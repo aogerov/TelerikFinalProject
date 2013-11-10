@@ -27,7 +27,7 @@ public class UserServiceValidator {
             }
         }
 
-        this.mBroadcastManager.sendErrorMessage(
+        this.mBroadcastManager.sendResponseMessage(
                 String.format("Username must be min %d and max %d chars long",
                         MIN_USERNAME_AND_NICKNAME_LENGTH, MAX_INPUT_FIELDS_LENGTH));
         return null;
@@ -43,7 +43,7 @@ public class UserServiceValidator {
             }
         }
 
-        this.mBroadcastManager.sendErrorMessage(
+        this.mBroadcastManager.sendResponseMessage(
                 String.format("Nickname must be min %d and max %d chars long",
                         MIN_USERNAME_AND_NICKNAME_LENGTH, MAX_INPUT_FIELDS_LENGTH));
         return null;
@@ -59,7 +59,7 @@ public class UserServiceValidator {
             }
         }
 
-        this.mBroadcastManager.sendErrorMessage(
+        this.mBroadcastManager.sendResponseMessage(
                 String.format("Password must be min %d and max %d chars long",
                         MIN_PASSWORD_LENGTH, MAX_INPUT_FIELDS_LENGTH));
         return null;

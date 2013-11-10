@@ -30,9 +30,12 @@ public class UserService extends Service {
     public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcastManager";
     public static final String USER_SERVICE_CONNECTING = "UserServiceConnecting";
     public static final String USER_SERVICE_IS_CONNECTED = "UserServiceIsConnected";
-    public static final String USER_SERVICE_ERROR = "UserServiceError";
-    public static final String USER_SERVICE_MESSAGE = "UserServiceMessage";
-    public static final String USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE = "Service is currently unavailable, please try again in few seconds";
+    public static final String USER_SERVICE_RESPONSE_MESSAGE = "UserServiceResponseMessage";
+    public static final String USER_SERVICE_MESSAGE_TEXT = "UserServiceMessageText";
+    public static final String ERROR_MESSAGE_NOT_AVAILABLE = "Service is currently unavailable, please try again in few seconds";
+    public static final String ERROR_MESSAGE_INIT_FAILED = "Please login or register";
+    public static final String ERROR_MESSAGE_LOGIN_FAILED = "Invalid username or password";
+    public static final String ERROR_MESSAGE_REGISTER_FAILED = "Registration failed, try with another username and/or nickname";
     public static final String USERNAME = "Username";
     public static final String NICKNAME = "Nickname";
     public static final String PASSWORD = "Password";
@@ -131,16 +134,16 @@ public class UserService extends Service {
     }
 
     private void logout() {
-        this.mSessionKey = null;
-        this.mNickname = null;
+        this.logoutHttpRequest(this.mSessionKey);
 
         this.updateLocalStorageSessionKey(null);
-        this.logoutHttpRequest(this.mSessionKey);
+        this.mSessionKey = null;
+        this.mNickname = null;
     }
 
     private void initSessionKeyHttpRequest(String sessionKeyInput) {
         if (this.mIsConnectingActive) {
-            this.mBroadcastManager.sendErrorMessage(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
+            this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
             return;
         }
 
@@ -156,8 +159,9 @@ public class UserService extends Service {
 
                 if (response.isStatusOk()) {
                     UserService.this.mBroadcastManager.sendIsConnected();
+                    UserService.this.saveUserData(response);
                 } else {
-                    UserService.this.mBroadcastManager.sendErrorMessage("Please login or register");
+                    UserService.this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_INIT_FAILED);
                 }
 
                 UserService.this.mIsConnectingActive = false;
@@ -167,7 +171,7 @@ public class UserService extends Service {
 
     private void loginHttpRequest(String username, String authCode) {
         if (this.mIsConnectingActive) {
-            this.mBroadcastManager.sendErrorMessage(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
+            this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
             return;
         }
 
@@ -187,7 +191,7 @@ public class UserService extends Service {
                     UserService.this.mBroadcastManager.sendIsConnected();
                     UserService.this.saveUserData(response);
                 } else {
-                    UserService.this.mBroadcastManager.sendErrorMessage("Invalid username or password");
+                    UserService.this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_LOGIN_FAILED);
                 }
 
                 UserService.this.mIsConnectingActive = false;
@@ -197,7 +201,7 @@ public class UserService extends Service {
 
     private void registerHttpRequest(String username, String authCode, String nickname) {
         if (this.mIsConnectingActive) {
-            this.mBroadcastManager.sendErrorMessage(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
+            this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
             return;
         }
 
@@ -217,7 +221,7 @@ public class UserService extends Service {
                     UserService.this.mBroadcastManager.sendIsConnected();
                     UserService.this.saveUserData(response);
                 } else {
-                    UserService.this.mBroadcastManager.sendErrorMessage("Invalid username or password");
+                    UserService.this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_REGISTER_FAILED);
                 }
 
                 UserService.this.mIsConnectingActive = false;
@@ -225,14 +229,13 @@ public class UserService extends Service {
         });
     }
 
-    private void logoutHttpRequest(String sessionKeyInput) {
-        final String sessionKey = sessionKeyInput;
+    private void logoutHttpRequest(String sessionKey) {
+        final String sessionKeyAsString = sessionKey;
 
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                UserService.this.mBroadcastManager.sendConnecting();
-                UserService.this.mHttpRequester.get("users/logout?sessionKey=", sessionKey);
+                UserService.this.mHttpRequester.get("users/logout?sessionKey=", sessionKeyAsString);
             }
         });
     }

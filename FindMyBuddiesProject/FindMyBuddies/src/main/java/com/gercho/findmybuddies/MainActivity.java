@@ -188,7 +188,7 @@ public class MainActivity extends Activity {
             if (action != null && action.equals(UserService.USER_SERVICE_BROADCAST)) {
                 boolean isConnectingActive = intent.getBooleanExtra(UserService.USER_SERVICE_CONNECTING, false);
                 boolean isConnected = intent.getBooleanExtra(UserService.USER_SERVICE_IS_CONNECTED, false);
-                boolean isErrorOccurred = intent.getBooleanExtra(UserService.USER_SERVICE_ERROR, false);
+                boolean isResponseMessageReceived = intent.getBooleanExtra(UserService.USER_SERVICE_RESPONSE_MESSAGE, false);
 
                 if (isConnectingActive) {
                     MainActivity.this.startConnectMessaging();
@@ -196,9 +196,9 @@ public class MainActivity extends Activity {
                     MainActivity.this.stopConnectMessaging();
                     Intent buddiesIntent = new Intent(MainActivity.this, BuddiesActivity.class);
                     MainActivity.this.startActivity(buddiesIntent);
-                }else if (isErrorOccurred) {
+                }else if (isResponseMessageReceived) {
                     MainActivity.this.stopConnectMessaging();
-                    String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE);
+                    String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
                     MainActivity.this.mProgressBarController.changeActiveToastMessage(message);
                     ToastNotifier.makeToast(MainActivity.this, message);
                 }

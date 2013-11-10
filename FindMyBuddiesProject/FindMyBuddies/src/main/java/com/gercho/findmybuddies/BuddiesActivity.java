@@ -71,8 +71,14 @@ public class BuddiesActivity extends FragmentActivity implements ListView.OnItem
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        this.mNavigationDrawer.handleOnOptionsItemSelected(item);
-        return super.onOptionsItemSelected(item);
+        switch (item.getItemId()) {
+            case R.id.action_logout:
+                this.logout();
+                return true;
+            default:
+                this.mNavigationDrawer.handleOnOptionsItemSelected(item);
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
@@ -88,8 +94,15 @@ public class BuddiesActivity extends FragmentActivity implements ListView.OnItem
     }
 
     private void startServices() {
-        Intent intent = new Intent();
-        intent.setAction(UserService.START_USER_SERVICE);
-        this.startService(intent);
+
+    }
+
+    private void logout() {
+        Intent userServiceIntent = new Intent();
+        userServiceIntent.setAction(UserService.LOGOUT_USER_SERVICE);
+        this.startService(userServiceIntent);
+
+        Intent mainActivityIntent = new Intent(this, MainActivity.class);
+        this.startActivity(mainActivityIntent);
     }
 }
