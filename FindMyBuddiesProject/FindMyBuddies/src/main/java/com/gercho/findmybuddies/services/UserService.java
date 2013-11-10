@@ -27,7 +27,7 @@ public class UserService extends Service {
     public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
     public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
 
-    public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcast";
+    public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcastManager";
     public static final String USER_SERVICE_CONNECTING = "UserServiceConnecting";
     public static final String USER_SERVICE_IS_CONNECTED = "UserServiceIsConnected";
     public static final String USER_SERVICE_ERROR = "UserServiceError";
@@ -39,9 +39,6 @@ public class UserService extends Service {
 
     private static final String USER_STORAGE = "UserStorage";
     private static final String USER_STORAGE_SESSION_KEY = "UserStorageSessionKey";
-    private static final int MIN_USERNAME_AND_NICKNAME_LENGTH = 3;
-    private static final int MIN_PASSWORD_LENGTH = 6;
-    private static final int MAX_INPUT_FIELDS_LENGTH = 30;
 
     private boolean mIsServiceInitialized;
     private boolean mIsConnectingActive;
@@ -49,7 +46,8 @@ public class UserService extends Service {
     private Handler mHandler;
     private HttpRequester mHttpRequester;
     private Gson mGson;
-
+    private UserServiceBroadcastManager mBroadcastManager;
+    private UserServiceValidator mValidator;
     private String mSessionKey;
     private String mNickname;
 
@@ -64,6 +62,8 @@ public class UserService extends Service {
 
         this.mHttpRequester = new HttpRequester();
         this.mGson = new Gson();
+        this.mBroadcastManager = new UserServiceBroadcastManager(this);
+        this.mValidator = new UserServiceValidator(this.mBroadcastManager);
     }
 
     @Override
@@ -96,42 +96,36 @@ public class UserService extends Service {
     }
 
     private void initService() {
-//        if (!this.mIsServiceInitialized) {
-//            this.mIsServiceInitialized = true;
-//            this.mIsConnectingActive = false;
-//
-//            SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
-//            this.mSessionKey = userStorage.getString(USER_STORAGE_SESSION_KEY, null);
-//
-//            if (this.mSessionKey != null) {
-//                this.sendConnectingBroadast();
-//                this.initSessionKeyHttpRequest(this.mSessionKey);
-//            }
-//        }
+        if (!this.mIsServiceInitialized) {
+            this.mIsServiceInitialized = true;
+            this.mIsConnectingActive = false;
 
-        // remove this shit, its just for testing
-        this.loginHttpRequest("gercho", "63e58d4a85f451b10dc26dddb5a78e7e1728edb0");
+            SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
+            this.mSessionKey = userStorage.getString(USER_STORAGE_SESSION_KEY, null);
+
+            if (this.mSessionKey != null) {
+                this.initSessionKeyHttpRequest(this.mSessionKey);
+            }
+        }
     }
 
     private void login(Intent intent) {
-        String username = this.extractAndValidateUsername(intent);
-        String password = this.extractAndValidatePassword(intent);
+        String username = this.mValidator.extractAndValidateUsername(intent);
+        String password = this.mValidator.extractAndValidatePassword(intent);
         String authCode = this.getAuthCode(username, password);
 
         if (username != null && password != null) {
-            this.sendConnectingBroadast();
             this.loginHttpRequest(username, authCode);
         }
     }
 
     private void register(Intent intent) {
-        String username = this.extractAndValidateUsername(intent);
-        String nickname = this.extractAndValidateNickname(intent);
-        String password = this.extractAndValidatePassword(intent);
+        String username = this.mValidator.extractAndValidateUsername(intent);
+        String nickname = this.mValidator.extractAndValidateNickname(intent);
+        String password = this.mValidator.extractAndValidatePassword(intent);
         String authCode = this.getAuthCode(username, password);
 
         if (username != null && nickname != null && password != null) {
-            this.sendConnectingBroadast();
             this.registerHttpRequest(username, authCode, nickname);
         }
     }
@@ -146,7 +140,7 @@ public class UserService extends Service {
 
     private void initSessionKeyHttpRequest(String sessionKeyInput) {
         if (this.mIsConnectingActive) {
-            this.sendErrorMessageBroadcast(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
+            this.mBroadcastManager.sendErrorMessage(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
             return;
         }
 
@@ -156,116 +150,91 @@ public class UserService extends Service {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                UserService.this.sendConnectingBroadast();
+                UserService.this.mBroadcastManager.sendConnecting();
                 HttpResponse response =
                         UserService.this.mHttpRequester.get("users/validate?sessionKey=", sessionKey);
 
                 if (response.isStatusOk()) {
-                    UserService.this.sendIsConnectedBroadast();
+                    UserService.this.mBroadcastManager.sendIsConnected();
                 } else {
-                    UserService.this.sendErrorMessageBroadcast("Please login or register");
+                    UserService.this.mBroadcastManager.sendErrorMessage("Please login or register");
                 }
+
+                UserService.this.mIsConnectingActive = false;
             }
         });
     }
 
     private void loginHttpRequest(String username, String authCode) {
         if (this.mIsConnectingActive) {
-            this.sendErrorMessageBroadcast(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
+            this.mBroadcastManager.sendErrorMessage(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
             return;
         }
 
         this.mIsConnectingActive = true;
-        UserModel userModel = new UserModel(username, authCode, null);
-        final String json = this.mGson.toJson(userModel);
+        final Gson gson = this.mGson;
+        final UserModel userModel = new UserModel(username, authCode);
 
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                UserService.this.sendConnectingBroadast();
+                UserService.this.mBroadcastManager.sendConnecting();
+                String userModelAsJson = gson.toJson(userModel);
                 HttpResponse response =
-                        UserService.this.mHttpRequester.post("users/login", json, null);
+                        UserService.this.mHttpRequester.post("users/login", userModelAsJson, null);
 
                 if (response.isStatusOk()) {
-                    UserService.this.sendIsConnectedBroadast();
-                    // TODO parse data from server
+                    UserService.this.mBroadcastManager.sendIsConnected();
+                    UserService.this.saveUserData(response);
                 } else {
-                    UserService.this.sendErrorMessageBroadcast("Invalid username or password");
+                    UserService.this.mBroadcastManager.sendErrorMessage("Invalid username or password");
                 }
+
+                UserService.this.mIsConnectingActive = false;
             }
         });
     }
 
-    private void registerHttpRequest(String usernameInput, String authCodeInput, String nicknameInput) {
+    private void registerHttpRequest(String username, String authCode, String nickname) {
         if (this.mIsConnectingActive) {
-            this.sendErrorMessageBroadcast(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
+            this.mBroadcastManager.sendErrorMessage(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
             return;
         }
 
         this.mIsConnectingActive = true;
+        final Gson gson = this.mGson;
+        final UserModel userModel = new UserModel(username, authCode, nickname);
+
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
+                UserService.this.mBroadcastManager.sendConnecting();
+                String userModelAsJson = gson.toJson(userModel);
+                HttpResponse response =
+                        UserService.this.mHttpRequester.post("users/register", userModelAsJson, null);
 
+                if (response.isStatusOk()) {
+                    UserService.this.mBroadcastManager.sendIsConnected();
+                    UserService.this.saveUserData(response);
+                } else {
+                    UserService.this.mBroadcastManager.sendErrorMessage("Invalid username or password");
+                }
+
+                UserService.this.mIsConnectingActive = false;
             }
         });
     }
 
     private void logoutHttpRequest(String sessionKeyInput) {
+        final String sessionKey = sessionKeyInput;
+
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-
+                UserService.this.mBroadcastManager.sendConnecting();
+                UserService.this.mHttpRequester.get("users/logout?sessionKey=", sessionKey);
             }
         });
-    }
-
-    private String extractAndValidateUsername(Intent intent) {
-        String username = intent.getStringExtra(USERNAME);
-        if (username != null) {
-            String usernameTrimmed = username.trim();
-            if (usernameTrimmed.length() >= MIN_USERNAME_AND_NICKNAME_LENGTH &&
-                    usernameTrimmed.length() <= MAX_INPUT_FIELDS_LENGTH) {
-                return usernameTrimmed;
-            }
-        }
-
-        this.sendErrorMessageBroadcast(
-                String.format("Username must be min %d and max %d chars long",
-                        MIN_USERNAME_AND_NICKNAME_LENGTH, MAX_INPUT_FIELDS_LENGTH));
-        return null;
-    }
-
-    private String extractAndValidateNickname(Intent intent) {
-        String nickname = intent.getStringExtra(NICKNAME);
-        if (nickname != null) {
-            String nicknameTrimmed = nickname.trim();
-            if (nicknameTrimmed.length() >= MIN_USERNAME_AND_NICKNAME_LENGTH &&
-                    nicknameTrimmed.length() <= MAX_INPUT_FIELDS_LENGTH) {
-                return nicknameTrimmed;
-            }
-        }
-
-        this.sendErrorMessageBroadcast(
-                String.format("Nickname must be min %d and max %d chars long",
-                        MIN_USERNAME_AND_NICKNAME_LENGTH, MAX_INPUT_FIELDS_LENGTH));
-        return null;
-    }
-
-    private String extractAndValidatePassword(Intent intent) {
-        String password = intent.getStringExtra(PASSWORD);
-        if (password != null) {
-            String passwordTrimmed = password.trim();
-            if (passwordTrimmed.length() >= MIN_PASSWORD_LENGTH &&
-                    passwordTrimmed.length() <= MAX_INPUT_FIELDS_LENGTH) {
-                return passwordTrimmed;
-            }
-        }
-
-        this.sendErrorMessageBroadcast(
-                String.format("Password must be min %d and max %d chars long",
-                        MIN_PASSWORD_LENGTH, MAX_INPUT_FIELDS_LENGTH));
-        return null;
     }
 
     private String getAuthCode(String username, String password) {
@@ -291,29 +260,17 @@ public class UserService extends Service {
         throw new NumberFormatException("AuthCode failed on create");
     }
 
+    private void saveUserData(HttpResponse response) {
+        UserModel userModel = this.mGson.fromJson(response.getMessage(), UserModel.class);
+        this.mNickname = userModel.getNickname();
+        this.mSessionKey = userModel.getSessionKey();
+        this.updateLocalStorageSessionKey(this.mSessionKey);
+    }
+
     private void updateLocalStorageSessionKey(String sessionKey) {
         SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
         SharedPreferences.Editor editor = userStorage.edit();
         editor.putString(USER_STORAGE_SESSION_KEY, sessionKey);
         editor.commit();
-    }
-
-    private void sendConnectingBroadast() {
-        Intent intent = new Intent(USER_SERVICE_BROADCAST);
-        intent.putExtra(USER_SERVICE_CONNECTING, true);
-        this.sendBroadcast(intent);
-    }
-
-    private void sendIsConnectedBroadast() {
-        Intent intent = new Intent(USER_SERVICE_BROADCAST);
-        intent.putExtra(USER_SERVICE_IS_CONNECTED, true);
-        this.sendBroadcast(intent);
-    }
-
-    private void sendErrorMessageBroadcast(String message) {
-        Intent intent = new Intent(USER_SERVICE_BROADCAST);
-        intent.putExtra(USER_SERVICE_ERROR, true);
-        intent.putExtra(USER_SERVICE_MESSAGE, message);
-        this.sendBroadcast(intent);
     }
 }

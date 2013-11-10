@@ -8,8 +8,15 @@ public class UserModel {
     private String username;
     private String authCode;
     private String nickname;
+    private String sessionKey;
 
     public UserModel(String username, String authCode, String nickname) {
+        this.username = username;
+        this.authCode = authCode;
+        this.nickname = nickname;
+    }
+
+    public UserModel(String username, String authCode) {
         this.username = username;
         this.authCode = authCode;
         this.nickname = nickname;
@@ -37,5 +44,13 @@ public class UserModel {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public String getSessionKey() {
+        return sessionKey;
+    }
+
+    public void setSessionKey(String sessionKey) {
+        this.sessionKey = sessionKey;
     }
 }
