@@ -6,7 +6,7 @@ import android.widget.Toast;
 /**
  * Created by Gercho on 11/8/13.
  */
-public class ToastHelper {
+public class ToastNotifier {
 
     private static Toast mToast;
 

@@ -9,15 +9,17 @@ import android.widget.ProgressBar;
 /**
  * Created by Gercho on 11/8/13.
  */
-public class ProgressBarHelper {
+public class ProgressBarController {
 
     private static final int MAX_PROGRESS_BAR_WRITES = 300;
+    private static final String DEFAULT_TOAST_MESSAGE = "Connecting, please wait...";
 
     private Context mContext;
     private ProgressBar mProgressBar;
     private boolean mIsProgressBarActive;
+    private String mToastMessage;
 
-    public ProgressBarHelper(Context context, ProgressBar progressBar){
+    public ProgressBarController(Context context, ProgressBar progressBar) {
         this.mContext = context;
         this.mProgressBar = progressBar;
         this.mProgressBar.setMax(MAX_PROGRESS_BAR_WRITES);
@@ -25,12 +27,17 @@ public class ProgressBarHelper {
     }
 
     public void startProgressBar() {
+        this.mToastMessage = DEFAULT_TOAST_MESSAGE;
         this.mIsProgressBarActive = true;
         this.executeProcess();
     }
 
     public void stopProgressBar() {
         this.mIsProgressBarActive = false;
+    }
+
+    public void changeActiveToastMessage(String message) {
+        this.mToastMessage = message;
     }
 
     private void executeProcess() {
@@ -42,11 +49,12 @@ public class ProgressBarHelper {
         new AsyncTask<String, Integer, Void>() {
             @Override
             protected Void doInBackground(String... strings) {
-                while (ProgressBarHelper.this.mIsProgressBarActive) {
+                while (ProgressBarController.this.mIsProgressBarActive) {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            ToastHelper.makeToast(ProgressBarHelper.this.mContext, "Connecting, please wait...");
+                            ToastNotifier.makeToast(ProgressBarController.this.mContext,
+                                    ProgressBarController.this.mToastMessage);
                         }
                     });
 
@@ -58,7 +66,7 @@ public class ProgressBarHelper {
                             e.printStackTrace();
                         }
 
-                        if (!ProgressBarHelper.this.mIsProgressBarActive) {
+                        if (!ProgressBarController.this.mIsProgressBarActive) {
                             break;
                         }
                     }

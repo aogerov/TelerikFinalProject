@@ -8,6 +8,11 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 
+import com.gercho.findmybuddies.http.HttpRequester;
+import com.gercho.findmybuddies.http.HttpResponse;
+import com.gercho.findmybuddies.models.UserModel;
+import com.google.gson.Gson;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -27,7 +32,7 @@ public class UserService extends Service {
     public static final String USER_SERVICE_IS_CONNECTED = "UserServiceIsConnected";
     public static final String USER_SERVICE_ERROR = "UserServiceError";
     public static final String USER_SERVICE_MESSAGE = "UserServiceMessage";
-    public static final String USER_SERVICE_DEFAULT_ERROR_MESSAGE = "Service is currently unavailable, please try again in few seconds";
+    public static final String USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE = "Service is currently unavailable, please try again in few seconds";
     public static final String USERNAME = "Username";
     public static final String NICKNAME = "Nickname";
     public static final String PASSWORD = "Password";
@@ -42,6 +47,8 @@ public class UserService extends Service {
     private boolean mIsConnectingActive;
     private HandlerThread mHandledThread;
     private Handler mHandler;
+    private HttpRequester mHttpRequester;
+    private Gson mGson;
 
     private String mSessionKey;
     private String mNickname;
@@ -55,7 +62,8 @@ public class UserService extends Service {
             this.mHandler = new Handler(looper);
         }
 
-        this.initService();
+        this.mHttpRequester = new HttpRequester();
+        this.mGson = new Gson();
     }
 
     @Override
@@ -88,18 +96,21 @@ public class UserService extends Service {
     }
 
     private void initService() {
-        if (!this.mIsServiceInitialized) {
-            this.mIsServiceInitialized = true;
-            this.mIsConnectingActive = false;
+//        if (!this.mIsServiceInitialized) {
+//            this.mIsServiceInitialized = true;
+//            this.mIsConnectingActive = false;
+//
+//            SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
+//            this.mSessionKey = userStorage.getString(USER_STORAGE_SESSION_KEY, null);
+//
+//            if (this.mSessionKey != null) {
+//                this.sendConnectingBroadast();
+//                this.initSessionKeyHttpRequest(this.mSessionKey);
+//            }
+//        }
 
-            SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
-            this.mSessionKey = userStorage.getString(USER_STORAGE_SESSION_KEY, null);
-
-            if (this.mSessionKey != null) {
-                this.sendConnectingBroadast();
-                this.initSessionKeyHttpRequest(this.mSessionKey);
-            }
-        }
+        // remove this shit, its just for testing
+        this.loginHttpRequest("gercho", "63e58d4a85f451b10dc26dddb5a78e7e1728edb0");
     }
 
     private void login(Intent intent) {
@@ -133,42 +144,61 @@ public class UserService extends Service {
         this.logoutHttpRequest(this.mSessionKey);
     }
 
-    private void initSessionKeyHttpRequest(String sessionKey) {
+    private void initSessionKeyHttpRequest(String sessionKeyInput) {
         if (this.mIsConnectingActive) {
-            this.sendErrorMessageBroadcast(USER_SERVICE_DEFAULT_ERROR_MESSAGE);
+            this.sendErrorMessageBroadcast(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
             return;
         }
 
         this.mIsConnectingActive = true;
+        final String sessionKey = sessionKeyInput;
+
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-//                String sessionKey = "17IPCZTtGIxMwFHjlBoTfbkfRmcSGoTGAWSoHcvfPSXJkUrbyy";
-//                HttpRequester httpRequester = new HttpRequester();
-//                String result = httpRequester.get("users/logout?sessionKey=", sessionKey);
-//                int i = 0;
+                UserService.this.sendConnectingBroadast();
+                HttpResponse response =
+                        UserService.this.mHttpRequester.get("users/validate?sessionKey=", sessionKey);
+
+                if (response.isStatusOk()) {
+                    UserService.this.sendIsConnectedBroadast();
+                } else {
+                    UserService.this.sendErrorMessageBroadcast("Please login or register");
+                }
             }
         });
     }
 
     private void loginHttpRequest(String username, String authCode) {
         if (this.mIsConnectingActive) {
-            this.sendErrorMessageBroadcast(USER_SERVICE_DEFAULT_ERROR_MESSAGE);
+            this.sendErrorMessageBroadcast(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
             return;
         }
 
         this.mIsConnectingActive = true;
+        UserModel userModel = new UserModel(username, authCode, null);
+        final String json = this.mGson.toJson(userModel);
+
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
+                UserService.this.sendConnectingBroadast();
+                HttpResponse response =
+                        UserService.this.mHttpRequester.post("users/login", json, null);
 
+                if (response.isStatusOk()) {
+                    UserService.this.sendIsConnectedBroadast();
+                    // TODO parse data from server
+                } else {
+                    UserService.this.sendErrorMessageBroadcast("Invalid username or password");
+                }
             }
         });
     }
 
-    private void registerHttpRequest(String username, String authCode, String nickname) {
+    private void registerHttpRequest(String usernameInput, String authCodeInput, String nicknameInput) {
         if (this.mIsConnectingActive) {
-            this.sendErrorMessageBroadcast(USER_SERVICE_DEFAULT_ERROR_MESSAGE);
+            this.sendErrorMessageBroadcast(USER_SERVICE_NOT_AVAILABLE_ERROR_MESSAGE);
             return;
         }
 
@@ -181,7 +211,7 @@ public class UserService extends Service {
         });
     }
 
-    private void logoutHttpRequest(String sessionKey) {
+    private void logoutHttpRequest(String sessionKeyInput) {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {

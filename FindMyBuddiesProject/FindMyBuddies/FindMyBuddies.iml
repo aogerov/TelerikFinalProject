@@ -72,6 +72,7 @@
     <orderEntry type="library" exported="" name="ComAndroidSupportGridlayoutV71900.aar" level="project" />
     <orderEntry type="library" exported="" name="support-v4-19.0.0" level="project" />
     <orderEntry type="library" exported="" name="ComAndroidSupportAppcompatV71900.aar" level="project" />
+    <orderEntry type="library" name="gson-2.2.4" level="project" />
   </component>
 </module>
 
