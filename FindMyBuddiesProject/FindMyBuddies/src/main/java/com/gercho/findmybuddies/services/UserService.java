@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Looper;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -21,43 +22,45 @@ public class UserService extends Service {
     public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
     public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
 
-    public static final String USER_SERVICE_UPDATE = "UserServiceUpdate";
-    public static final String SERVICE_INIT_LOGIN = "ServiceInitLogin";
-    public static final String SERVER_RESPONSE_MESSAGE = "ServerResponseMessage";
-    public static final String IS_CONNECTED = "IsConnected";
+    public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcast";
+    public static final String USER_SERVICE_CONNECTING = "UserServiceConnecting";
+    public static final String USER_SERVICE_IS_CONNECTED = "UserServiceIsConnected";
+    public static final String USER_SERVICE_ERROR = "UserServiceError";
+    public static final String USER_SERVICE_MESSAGE = "UserServiceMessage";
+    public static final String USER_SERVICE_DEFAULT_ERROR_MESSAGE = "Service is currently unavailable, please try again in few seconds";
     public static final String USERNAME = "Username";
     public static final String NICKNAME = "Nickname";
     public static final String PASSWORD = "Password";
 
     private static final String USER_STORAGE = "UserStorage";
-    private static final String USER_STORAGE_USERNAME = "UserStorageUsername";
-    private static final String USER_STORAGE_NICKNAME = "UserStorageNickname";
-    private static final String USER_STORAGE_PASSWORD = "UserStoragePassword";
+    private static final String USER_STORAGE_SESSION_KEY = "UserStorageSessionKey";
     private static final int MIN_USERNAME_AND_NICKNAME_LENGTH = 3;
     private static final int MIN_PASSWORD_LENGTH = 6;
     private static final int MAX_INPUT_FIELDS_LENGTH = 30;
 
     private boolean mIsServiceInitialized;
     private boolean mIsConnectingActive;
-    private HandlerThread mUserThread;
+    private HandlerThread mHandledThread;
+    private Handler mHandler;
 
-    private boolean mIsConnected;
     private String mSessionKey;
-    private String mUsername;
     private String mNickname;
-    private String mPassword;
 
     @Override
     public void onCreate() {
-        this.mIsConnected = false;
-        this.mUserThread = new HandlerThread("UserServiceThread");
-        this.mUserThread.start();
+        this.mHandledThread = new HandlerThread("UserServiceThread");
+        this.mHandledThread.start();
+        Looper looper = this.mHandledThread.getLooper();
+        if (looper != null) {
+            this.mHandler = new Handler(looper);
+        }
+
+        this.initService();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
-
         if (START_USER_SERVICE.equalsIgnoreCase(action)) {
             this.initService();
         } else if (STOP_USER_SERVICE.equalsIgnoreCase(action)) {
@@ -75,8 +78,8 @@ public class UserService extends Service {
 
     @Override
     public void onDestroy() {
-        this.mUserThread.quit();
-        this.mUserThread = null;
+        this.mHandledThread.quit();
+        this.mHandledThread = null;
     }
 
     @Override
@@ -87,17 +90,14 @@ public class UserService extends Service {
     private void initService() {
         if (!this.mIsServiceInitialized) {
             this.mIsServiceInitialized = true;
+            this.mIsConnectingActive = false;
 
             SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
-            this.mUsername = userStorage.getString(USER_STORAGE_USERNAME, null);
-            this.mNickname = userStorage.getString(USER_STORAGE_NICKNAME, null);
-            this.mPassword = userStorage.getString(USER_STORAGE_PASSWORD, null);
+            this.mSessionKey = userStorage.getString(USER_STORAGE_SESSION_KEY, null);
 
-            if (this.mUsername != null && this.mPassword != null) {
-                this.sendInitLoginBroadcast();
-
-                String authCode = this.getAuthCode(this.mUsername, this.mPassword);
-                this.loginHttpRequest(this.mUsername, authCode);
+            if (this.mSessionKey != null) {
+                this.sendConnectingBroadast();
+                this.initSessionKeyHttpRequest(this.mSessionKey);
             }
         }
     }
@@ -105,9 +105,10 @@ public class UserService extends Service {
     private void login(Intent intent) {
         String username = this.extractAndValidateUsername(intent);
         String password = this.extractAndValidatePassword(intent);
+        String authCode = this.getAuthCode(username, password);
 
         if (username != null && password != null) {
-            String authCode = this.getAuthCode(username, password);
+            this.sendConnectingBroadast();
             this.loginHttpRequest(username, authCode);
         }
     }
@@ -116,35 +117,48 @@ public class UserService extends Service {
         String username = this.extractAndValidateUsername(intent);
         String nickname = this.extractAndValidateNickname(intent);
         String password = this.extractAndValidatePassword(intent);
+        String authCode = this.getAuthCode(username, password);
 
         if (username != null && nickname != null && password != null) {
-            String authCode = this.getAuthCode(username, password);
+            this.sendConnectingBroadast();
             this.registerHttpRequest(username, authCode, nickname);
         }
     }
 
     private void logout() {
-        this.mIsConnected = false;
         this.mSessionKey = null;
-        this.mUsername = null;
         this.mNickname = null;
-        this.mPassword = null;
 
-        this.updateLocalStorage(this.mUsername, this.mNickname, this.mPassword);
+        this.updateLocalStorageSessionKey(null);
         this.logoutHttpRequest(this.mSessionKey);
     }
 
-    private void loginHttpRequest(String username, String authCode) {
+    private void initSessionKeyHttpRequest(String sessionKey) {
         if (this.mIsConnectingActive) {
+            this.sendErrorMessageBroadcast(USER_SERVICE_DEFAULT_ERROR_MESSAGE);
             return;
         }
 
         this.mIsConnectingActive = true;
-        this.mIsConnected = false;
-        this.mSessionKey = null;
+        this.mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+//                String sessionKey = "17IPCZTtGIxMwFHjlBoTfbkfRmcSGoTGAWSoHcvfPSXJkUrbyy";
+//                HttpRequester httpRequester = new HttpRequester();
+//                String result = httpRequester.get("users/logout?sessionKey=", sessionKey);
+//                int i = 0;
+            }
+        });
+    }
 
-        Handler userHandler = new Handler(this.mUserThread.getLooper());
-        userHandler.post(new Runnable() {
+    private void loginHttpRequest(String username, String authCode) {
+        if (this.mIsConnectingActive) {
+            this.sendErrorMessageBroadcast(USER_SERVICE_DEFAULT_ERROR_MESSAGE);
+            return;
+        }
+
+        this.mIsConnectingActive = true;
+        this.mHandler.post(new Runnable() {
             @Override
             public void run() {
 
@@ -154,16 +168,26 @@ public class UserService extends Service {
 
     private void registerHttpRequest(String username, String authCode, String nickname) {
         if (this.mIsConnectingActive) {
+            this.sendErrorMessageBroadcast(USER_SERVICE_DEFAULT_ERROR_MESSAGE);
             return;
         }
 
         this.mIsConnectingActive = true;
-        this.mIsConnected = false;
-        this.mSessionKey = null;
+        this.mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        });
     }
 
     private void logoutHttpRequest(String sessionKey) {
+        this.mHandler.post(new Runnable() {
+            @Override
+            public void run() {
 
+            }
+        });
     }
 
     private String extractAndValidateUsername(Intent intent) {
@@ -176,7 +200,9 @@ public class UserService extends Service {
             }
         }
 
-        this.sendConnectionErrorBroadcast("Username is invalid");
+        this.sendErrorMessageBroadcast(
+                String.format("Username must be min %d and max %d chars long",
+                        MIN_USERNAME_AND_NICKNAME_LENGTH, MAX_INPUT_FIELDS_LENGTH));
         return null;
     }
 
@@ -190,7 +216,9 @@ public class UserService extends Service {
             }
         }
 
-        this.sendConnectionErrorBroadcast("Nickname is invalid");
+        this.sendErrorMessageBroadcast(
+                String.format("Nickname must be min %d and max %d chars long",
+                        MIN_USERNAME_AND_NICKNAME_LENGTH, MAX_INPUT_FIELDS_LENGTH));
         return null;
     }
 
@@ -204,7 +232,9 @@ public class UserService extends Service {
             }
         }
 
-        this.sendConnectionErrorBroadcast("Password is invalid");
+        this.sendErrorMessageBroadcast(
+                String.format("Password must be min %d and max %d chars long",
+                        MIN_PASSWORD_LENGTH, MAX_INPUT_FIELDS_LENGTH));
         return null;
     }
 
@@ -231,29 +261,29 @@ public class UserService extends Service {
         throw new NumberFormatException("AuthCode failed on create");
     }
 
-    private void updateLocalStorage(String username, String nickname, String password) {
+    private void updateLocalStorageSessionKey(String sessionKey) {
         SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
         SharedPreferences.Editor editor = userStorage.edit();
-        editor.putString(USER_STORAGE_USERNAME, username);
-        editor.putString(USER_STORAGE_NICKNAME, nickname);
-        editor.putString(USER_STORAGE_PASSWORD, password);
+        editor.putString(USER_STORAGE_SESSION_KEY, sessionKey);
+        editor.commit();
     }
 
-    private void sendInitLoginBroadcast(){
-        Intent intent = this.getBroadcastIntent();
-        intent.putExtra(SERVICE_INIT_LOGIN, true);
+    private void sendConnectingBroadast() {
+        Intent intent = new Intent(USER_SERVICE_BROADCAST);
+        intent.putExtra(USER_SERVICE_CONNECTING, true);
         this.sendBroadcast(intent);
     }
 
-    private void sendConnectionErrorBroadcast(String message) {
-        Intent intent = this.getBroadcastIntent();
-        intent.putExtra(SERVER_RESPONSE_MESSAGE, message);
+    private void sendIsConnectedBroadast() {
+        Intent intent = new Intent(USER_SERVICE_BROADCAST);
+        intent.putExtra(USER_SERVICE_IS_CONNECTED, true);
         this.sendBroadcast(intent);
     }
 
-    private Intent getBroadcastIntent() {
-        Intent intent = new Intent(USER_SERVICE_UPDATE);
-        intent.putExtra(IS_CONNECTED, UserService.this.mIsConnected);
-        return intent;
+    private void sendErrorMessageBroadcast(String message) {
+        Intent intent = new Intent(USER_SERVICE_BROADCAST);
+        intent.putExtra(USER_SERVICE_ERROR, true);
+        intent.putExtra(USER_SERVICE_MESSAGE, message);
+        this.sendBroadcast(intent);
     }
 }
