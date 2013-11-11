@@ -38,7 +38,7 @@ public class UserService extends Service {
     public static final String ERROR_MESSAGE_LOGIN_FAILED = "Invalid username or password";
     public static final String ERROR_MESSAGE_REGISTER_FAILED = "Registration failed, try with another username and/or nickname";
     public static final String SESSION_KEY_ENCRYPTED = "SessionKeyEncrypted";
-    public static final String SESSION_KEY_DECRYPTED = "SessionKeyDecrypted";
+    public static final String SESSION_KEY = "SessionKey";
     public static final String USERNAME = "Username";
     public static final String NICKNAME = "Nickname";
     public static final String PASSWORD = "Password";

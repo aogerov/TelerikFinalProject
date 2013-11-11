@@ -17,7 +17,7 @@ import com.gercho.findmybuddies.services.UserService;
 /**
  * Created by Gercho on 11/8/13.
  */
-public class BuddiesActivity extends FragmentActivity implements ListView.OnItemClickListener {
+public class FindMyBuddiesActivity extends FragmentActivity implements ListView.OnItemClickListener {
     public static final String EXTRA_COURSE_LIB = "course lib";
 
     private static final int COURSE_LIB_NOT_SET = -1;

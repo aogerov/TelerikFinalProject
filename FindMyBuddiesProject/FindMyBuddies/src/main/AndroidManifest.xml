@@ -25,7 +25,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.gercho.findmybuddies.BuddiesActivity" />
+        <activity android:name=".FindMyBuddiesActivity" />
 
         <service android:name=".services.UserService">
             <intent-filter>

@@ -230,17 +230,19 @@ public class MainActivity extends Activity {
         private void handleConnected(Intent intent) {
             MainActivity.this.setConnectingInactive();
             MainActivity.this.stopProgressBar();
+            Intent buddiesIntent = new Intent(MainActivity.this, FindMyBuddiesActivity.class);
+
             String nickname = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
             if (nickname != null) {
                 MainActivity.this.changeActiveToastMessage("Welcome " + nickname);
                 ToastNotifier.makeToast(MainActivity.this, "Welcome " + nickname);
+                buddiesIntent.putExtra(UserService.NICKNAME, nickname);
             }
 
-            Intent buddiesIntent = new Intent(MainActivity.this, BuddiesActivity.class);
             String sessionKeyEncrypted = intent.getStringExtra(UserService.SESSION_KEY_ENCRYPTED);
             if (sessionKeyEncrypted != null) {
                 String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
-                buddiesIntent.putExtra(UserService.SESSION_KEY_DECRYPTED, sessionKey);
+                buddiesIntent.putExtra(UserService.SESSION_KEY, sessionKey);
             }
 
             MainActivity.this.startActivity(buddiesIntent);
