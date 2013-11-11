@@ -8,6 +8,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 
+import com.gercho.findmybuddies.helpers.Encryptor;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
 import com.gercho.findmybuddies.models.UserModel;
@@ -26,8 +27,6 @@ public class UserService extends Service {
     public static final String LOGIN_USER_SERVICE = "com.gercho.action.LOGIN_USER_SERVICE";
     public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
     public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
-    public static final String SET_ENCRYPTION_USER_SERVICE = "com.gercho.action.SET_ENCRYPTION_USER_SERVICE";
-    public static final String GET_DATA_USER_SERVICE = "com.gercho.action.GET_DATA_USER_SERVICE";
 
     public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcastManager";
     public static final String USER_SERVICE_CONNECTING = "UserServiceConnecting";
@@ -38,12 +37,15 @@ public class UserService extends Service {
     public static final String ERROR_MESSAGE_INIT_FAILED = "Please login or register";
     public static final String ERROR_MESSAGE_LOGIN_FAILED = "Invalid username or password";
     public static final String ERROR_MESSAGE_REGISTER_FAILED = "Registration failed, try with another username and/or nickname";
+    public static final String SESSION_KEY_ENCRYPTED = "SessionKeyEncrypted";
+    public static final String SESSION_KEY_DECRYPTED = "SessionKeyDecrypted";
     public static final String USERNAME = "Username";
     public static final String NICKNAME = "Nickname";
     public static final String PASSWORD = "Password";
 
     private static final String USER_STORAGE = "UserStorage";
-    private static final String USER_STORAGE_SESSION_KEY = "UserStorageSessionKey";
+    private static final String USER_STORAGE_SESSION_KEY_ENCRYPTED = "UserStorageSessionKeyEncrypted";
+    private static final String SESSION_KEY_ENCRYPTION = "il6su3df23no3cn8wy4cpt98wtp3ncq3r0";
 
     private boolean mIsServiceInitialized;
     private boolean mIsConnectingActive;
@@ -54,8 +56,8 @@ public class UserService extends Service {
     private UserServiceBroadcastManager mBroadcastManager;
     private UserServiceValidator mValidator;
     private String mSessionKey;
+    private String mSessionKeyEncrypted;
     private String mNickname;
-    private String mEncryptKey;
 
     @Override
     public void onCreate() {
@@ -85,10 +87,6 @@ public class UserService extends Service {
             this.register(intent);
         } else if (LOGOUT_USER_SERVICE.equalsIgnoreCase(action)) {
             this.logout();
-        } else if (SET_ENCRYPTION_USER_SERVICE.equalsIgnoreCase(action)) {
-            this.setEncryption(intent);
-        } else if (GET_DATA_USER_SERVICE.equalsIgnoreCase(action)) {
-            this.getData(intent);
         }
 
         return START_REDELIVER_INTENT;
@@ -111,15 +109,16 @@ public class UserService extends Service {
             this.mIsConnectingActive = false;
 
             SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
-            this.mSessionKey = userStorage.getString(USER_STORAGE_SESSION_KEY, null);
+            this.mSessionKeyEncrypted = userStorage.getString(USER_STORAGE_SESSION_KEY_ENCRYPTED, null);
 
-            if (this.mSessionKey != null) {
+            if (this.mSessionKeyEncrypted != null) {
+                this.mSessionKey = Encryptor.decrypt(this.mSessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
                 this.initSessionKeyHttpRequest(this.mSessionKey);
             }
         }
 
-        if (this.mSessionKey != null && this.mNickname != null) {
-            this.mBroadcastManager.sendIsConnected(this.mNickname);
+        if (this.mSessionKey != null && this.mNickname != null && this.mSessionKeyEncrypted != null) {
+            this.mBroadcastManager.sendIsConnected(this.mNickname, this.mSessionKeyEncrypted);
         }
     }
 
@@ -147,7 +146,7 @@ public class UserService extends Service {
     private void logout() {
         this.logoutHttpRequest(this.mSessionKey);
 
-        this.updateLocalStorageSessionKey(null);
+        this.updateLocalStorageSessionKeyEncrypted(null);
         this.mSessionKey = null;
         this.mNickname = null;
     }
@@ -256,7 +255,7 @@ public class UserService extends Service {
         if (response.isStatusOk()) {
             isResponseValid = this.tryUpdateUserStatus(response);
             if (isResponseValid) {
-                this.mBroadcastManager.sendIsConnected(this.mNickname);
+                this.mBroadcastManager.sendIsConnected(this.mNickname, this.mSessionKeyEncrypted);
             }
         }
 
@@ -281,24 +280,15 @@ public class UserService extends Service {
 
         this.mNickname = userModel.getNickname();
         this.mSessionKey = userModel.getSessionKey();
-        this.updateLocalStorageSessionKey(this.mSessionKey);
+        this.mSessionKeyEncrypted = Encryptor.encrypt(this.mSessionKey, SESSION_KEY_ENCRYPTION);
+        this.updateLocalStorageSessionKeyEncrypted(this.mSessionKeyEncrypted);
         return true;
     }
 
-    private void updateLocalStorageSessionKey(String sessionKey) {
+    private void updateLocalStorageSessionKeyEncrypted(String sessionKeyEncrypted) {
         SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
         SharedPreferences.Editor editor = userStorage.edit();
-        editor.putString(USER_STORAGE_SESSION_KEY, sessionKey);
+        editor.putString(USER_STORAGE_SESSION_KEY_ENCRYPTED, sessionKeyEncrypted);
         editor.commit();
-    }
-
-    private void setEncryption(Intent intent) {
-
-    }
-
-    private void getData(Intent intent) {
-        if (this.mEncryptKey != null) {
-
-        }
     }
 }

@@ -12,21 +12,21 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.gercho.findmybuddies.helpers.Encryptor;
 import com.gercho.findmybuddies.helpers.ProgressBarController;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.services.UserService;
 
 public class MainActivity extends Activity {
 
-    private static final String LOGIN_STATUS = "LoginStatus";
-    private static final String REGISTER_STATUS = "RegisterStatus";
+    private static final String CONNECTING_STATUS = "ConnectingStatus";
     private static final String REGISTER_WINDOW_VISIBILITY = "RegisterWindowVisibility";
+    private static final String SESSION_KEY_ENCRYPTION = "il6su3df23no3cn8wy4cpt98wtp3ncq3r0";
 
     private UserServiceUpdateReceiver mUserServiceUpdateReceiver;
     private ProgressBarController mProgressBarController;
     private boolean mIsRegisterWindowVisible;
-    private boolean mIsLoginActive;
-    private boolean mIsRegisterActive;
+    private boolean mIsConnectingActive;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +38,7 @@ public class MainActivity extends Activity {
 
         if (savedInstanceState != null) {
             this.mIsRegisterWindowVisible = savedInstanceState.getBoolean(REGISTER_WINDOW_VISIBILITY, true);
-            this.mIsLoginActive = savedInstanceState.getBoolean(LOGIN_STATUS, false);
-            this.mIsRegisterActive = savedInstanceState.getBoolean(REGISTER_STATUS, false);
+            this.mIsConnectingActive = savedInstanceState.getBoolean(CONNECTING_STATUS, false);
         }
 
         this.setupButtons();
@@ -49,8 +48,9 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        if (this.mIsLoginActive || this.mIsRegisterActive) {
-            this.setConnectingActive();
+        if (this.mIsConnectingActive) {
+            this.startProgressBar();
+            this.hideUi();
         } else {
             this.showUi();
         }
@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
 
-        if (this.mIsLoginActive || this.mIsRegisterActive) {
+        if (this.mIsConnectingActive) {
             this.stopProgressBar();
         }
 
@@ -84,8 +84,7 @@ public class MainActivity extends Activity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(REGISTER_WINDOW_VISIBILITY, this.mIsRegisterWindowVisible);
-        outState.putBoolean(LOGIN_STATUS, this.mIsLoginActive);
-        outState.putBoolean(REGISTER_STATUS, this.mIsRegisterActive);
+        outState.putBoolean(CONNECTING_STATUS, this.mIsConnectingActive);
     }
 
     @Override
@@ -125,7 +124,6 @@ public class MainActivity extends Activity {
         String password = this.getTextFromTextView(R.id.editText_password);
         loginServiceIntent.putExtra(UserService.PASSWORD, password);
         this.startService(loginServiceIntent);
-        this.setLoginActive();
     }
 
     private void handleRegister() {
@@ -138,7 +136,6 @@ public class MainActivity extends Activity {
         String nickname = this.getTextFromTextView(R.id.editText_nickname);
         registerServiceIntent.putExtra(UserService.NICKNAME, nickname);
         this.startService(registerServiceIntent);
-        this.setRegisterActive();
     }
 
     private void handleSwitchLoginRegister() {
@@ -156,24 +153,12 @@ public class MainActivity extends Activity {
         return null;
     }
 
-    private void setLoginActive() {
-        this.mIsLoginActive = true;
-        this.mIsRegisterActive = false;
-    }
-
-    private void setRegisterActive() {
-        this.mIsRegisterActive = true;
-        this.mIsLoginActive = false;
-    }
-
     private void setConnectingActive() {
-        this.startProgressBar();
-        this.hideUi();
+        this.mIsConnectingActive = true;
     }
 
     private void setConnectingInactive() {
-        this.stopProgressBar();
-        this.showUi();
+        this.mIsConnectingActive = false;
     }
 
     private void startProgressBar() {
@@ -227,8 +212,7 @@ public class MainActivity extends Activity {
                 boolean isResponseMessageReceived = intent.getBooleanExtra(UserService.USER_SERVICE_RESPONSE_MESSAGE, false);
 
                 if (isConnectingActive) {
-                    MainActivity.this.setConnectingActive();
-                    MainActivity.this.setLoginActive();
+                    this.handleConnecting();
                 } else if (isConnected) {
                     this.handleConnected(intent);
                 } else if (isResponseMessageReceived) {
@@ -237,7 +221,14 @@ public class MainActivity extends Activity {
             }
         }
 
+        private void handleConnecting(){
+            MainActivity.this.setConnectingActive();
+            MainActivity.this.startProgressBar();
+            MainActivity.this.hideUi();
+        }
+
         private void handleConnected(Intent intent) {
+            MainActivity.this.setConnectingInactive();
             MainActivity.this.stopProgressBar();
             String nickname = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
             if (nickname != null) {
@@ -246,11 +237,19 @@ public class MainActivity extends Activity {
             }
 
             Intent buddiesIntent = new Intent(MainActivity.this, BuddiesActivity.class);
+            String sessionKeyEncrypted = intent.getStringExtra(UserService.SESSION_KEY_ENCRYPTED);
+            if (sessionKeyEncrypted != null) {
+                String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
+                buddiesIntent.putExtra(UserService.SESSION_KEY_DECRYPTED, sessionKey);
+            }
+
             MainActivity.this.startActivity(buddiesIntent);
         }
 
         private void handleResponseMessage(Intent intent) {
             MainActivity.this.setConnectingInactive();
+            MainActivity.this.stopProgressBar();
+            MainActivity.this.showUi();
             String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
             MainActivity.this.changeActiveToastMessage(message);
             ToastNotifier.makeToast(MainActivity.this, message);

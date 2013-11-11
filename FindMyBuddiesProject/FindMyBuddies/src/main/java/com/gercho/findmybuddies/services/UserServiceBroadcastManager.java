@@ -20,10 +20,11 @@ public class UserServiceBroadcastManager {
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendIsConnected(String nickname) {
+    public void sendIsConnected(String nickname, String sessionKeyEncrypted) {
         Intent intent = new Intent(UserService.USER_SERVICE_BROADCAST);
         intent.putExtra(UserService.USER_SERVICE_IS_CONNECTED, true);
         intent.putExtra(UserService.USER_SERVICE_MESSAGE_TEXT, nickname);
+        intent.putExtra(UserService.SESSION_KEY_ENCRYPTED, sessionKeyEncrypted);
         this.mService.sendBroadcast(intent);
     }
 
