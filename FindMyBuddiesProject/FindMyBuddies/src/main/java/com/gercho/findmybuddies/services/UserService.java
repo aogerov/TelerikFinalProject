@@ -26,6 +26,8 @@ public class UserService extends Service {
     public static final String LOGIN_USER_SERVICE = "com.gercho.action.LOGIN_USER_SERVICE";
     public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
     public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
+    public static final String SET_ENCRYPTION_USER_SERVICE = "com.gercho.action.SET_ENCRYPTION_USER_SERVICE";
+    public static final String GET_DATA_USER_SERVICE = "com.gercho.action.GET_DATA_USER_SERVICE";
 
     public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcastManager";
     public static final String USER_SERVICE_CONNECTING = "UserServiceConnecting";
@@ -53,6 +55,7 @@ public class UserService extends Service {
     private UserServiceValidator mValidator;
     private String mSessionKey;
     private String mNickname;
+    private String mEncryptKey;
 
     @Override
     public void onCreate() {
@@ -82,6 +85,10 @@ public class UserService extends Service {
             this.register(intent);
         } else if (LOGOUT_USER_SERVICE.equalsIgnoreCase(action)) {
             this.logout();
+        } else if (SET_ENCRYPTION_USER_SERVICE.equalsIgnoreCase(action)) {
+            this.setEncryption(intent);
+        } else if (GET_DATA_USER_SERVICE.equalsIgnoreCase(action)) {
+            this.getData(intent);
         }
 
         return START_REDELIVER_INTENT;
@@ -141,30 +148,23 @@ public class UserService extends Service {
         this.mNickname = null;
     }
 
-    private void initSessionKeyHttpRequest(String sessionKeyInput) {
+    private void initSessionKeyHttpRequest(String sessionKey) {
         if (this.mIsConnectingActive) {
             this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
             return;
         }
 
         this.mIsConnectingActive = true;
-        final String sessionKey = sessionKeyInput;
+        this.mBroadcastManager.sendConnecting();
+        final String sessionKeyAsString = sessionKey;
 
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                UserService.this.mBroadcastManager.sendConnecting();
                 HttpResponse response =
-                        UserService.this.mHttpRequester.get("users/validate?sessionKey=", sessionKey);
+                        UserService.this.mHttpRequester.get("users/validate?sessionKey=", sessionKeyAsString);
 
-                if (response.isStatusOk()) {
-                    UserService.this.mBroadcastManager.sendIsConnected();
-                    UserService.this.saveUserData(response);
-                } else {
-                    UserService.this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_INIT_FAILED);
-                }
-
-                UserService.this.mIsConnectingActive = false;
+                UserService.this.processHttpResponse(response, ERROR_MESSAGE_INIT_FAILED);
             }
         });
     }
@@ -176,25 +176,17 @@ public class UserService extends Service {
         }
 
         this.mIsConnectingActive = true;
-        final Gson gson = this.mGson;
-        final UserModel userModel = new UserModel(username, authCode);
+        this.mBroadcastManager.sendConnecting();
+        UserModel userModel = new UserModel(username, authCode);
+        final String userModelAsJson = this.mGson.toJson(userModel);
 
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                UserService.this.mBroadcastManager.sendConnecting();
-                String userModelAsJson = gson.toJson(userModel);
                 HttpResponse response =
                         UserService.this.mHttpRequester.post("users/login", userModelAsJson, null);
 
-                if (response.isStatusOk()) {
-                    UserService.this.mBroadcastManager.sendIsConnected();
-                    UserService.this.saveUserData(response);
-                } else {
-                    UserService.this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_LOGIN_FAILED);
-                }
-
-                UserService.this.mIsConnectingActive = false;
+                UserService.this.processHttpResponse(response, ERROR_MESSAGE_LOGIN_FAILED);
             }
         });
     }
@@ -206,25 +198,17 @@ public class UserService extends Service {
         }
 
         this.mIsConnectingActive = true;
-        final Gson gson = this.mGson;
-        final UserModel userModel = new UserModel(username, authCode, nickname);
+        this.mBroadcastManager.sendConnecting();
+        UserModel userModel = new UserModel(username, authCode, nickname);
+        final String userModelAsJson = this.mGson.toJson(userModel);
 
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                UserService.this.mBroadcastManager.sendConnecting();
-                String userModelAsJson = gson.toJson(userModel);
                 HttpResponse response =
                         UserService.this.mHttpRequester.post("users/register", userModelAsJson, null);
 
-                if (response.isStatusOk()) {
-                    UserService.this.mBroadcastManager.sendIsConnected();
-                    UserService.this.saveUserData(response);
-                } else {
-                    UserService.this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_REGISTER_FAILED);
-                }
-
-                UserService.this.mIsConnectingActive = false;
+                UserService.this.processHttpResponse(response, ERROR_MESSAGE_REGISTER_FAILED);
             }
         });
     }
@@ -263,11 +247,38 @@ public class UserService extends Service {
         throw new NumberFormatException("AuthCode failed on create");
     }
 
-    private void saveUserData(HttpResponse response) {
+    private void processHttpResponse(HttpResponse response, String errorMessage) {
+        boolean isResponseValid = true;
+        if (response.isStatusOk()) {
+            isResponseValid = this.tryUpdateUserStatus(response);
+            if (isResponseValid) {
+                this.mBroadcastManager.sendIsConnected();
+            }
+        }
+
+        if (!response.isStatusOk() || !isResponseValid){
+            this.mBroadcastManager.sendResponseMessage(errorMessage);
+        }
+
+        this.mIsConnectingActive = false;
+    }
+
+    private boolean tryUpdateUserStatus(HttpResponse response) {
+        boolean isResponseValid = this.mValidator.validateHttpResponse(response);
+        if (!isResponseValid) {
+            return false;
+        }
+
         UserModel userModel = this.mGson.fromJson(response.getMessage(), UserModel.class);
+        boolean isModelValid = this.mValidator.validateUserModel(userModel);
+        if (!isModelValid) {
+            return false;
+        }
+
         this.mNickname = userModel.getNickname();
         this.mSessionKey = userModel.getSessionKey();
         this.updateLocalStorageSessionKey(this.mSessionKey);
+        return true;
     }
 
     private void updateLocalStorageSessionKey(String sessionKey) {
@@ -275,5 +286,15 @@ public class UserService extends Service {
         SharedPreferences.Editor editor = userStorage.edit();
         editor.putString(USER_STORAGE_SESSION_KEY, sessionKey);
         editor.commit();
+    }
+
+    private void setEncryption(Intent intent) {
+
+    }
+
+    private void getData(Intent intent) {
+        if (this.mEncryptKey != null) {
+
+        }
     }
 }
