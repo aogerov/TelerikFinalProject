@@ -67,7 +67,7 @@ public class ProgressBarController {
                         }
 
                         if (!ProgressBarController.this.mIsProgressBarActive) {
-                            break;
+                            return null;
                         }
                     }
                 }

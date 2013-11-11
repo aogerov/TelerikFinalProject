@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -19,11 +18,15 @@ import com.gercho.findmybuddies.services.UserService;
 
 public class MainActivity extends Activity {
 
-    private static final String IS_CONNECTING_ACTIVE = "IsConnectingActive";
+    private static final String LOGIN_STATUS = "LoginStatus";
+    private static final String REGISTER_STATUS = "RegisterStatus";
+    private static final String REGISTER_WINDOW_VISIBILITY = "RegisterWindowVisibility";
 
     private UserServiceUpdateReceiver mUserServiceUpdateReceiver;
     private ProgressBarController mProgressBarController;
-    private boolean mIsConnectingActive;
+    private boolean mIsRegisterWindowVisible;
+    private boolean mIsLoginActive;
+    private boolean mIsRegisterActive;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +37,9 @@ public class MainActivity extends Activity {
         this.mProgressBarController = new ProgressBarController(this, progressBar);
 
         if (savedInstanceState != null) {
-            this.mIsConnectingActive = savedInstanceState.getBoolean(IS_CONNECTING_ACTIVE, false);
+            this.mIsRegisterWindowVisible = savedInstanceState.getBoolean(REGISTER_WINDOW_VISIBILITY, true);
+            this.mIsLoginActive = savedInstanceState.getBoolean(LOGIN_STATUS, false);
+            this.mIsRegisterActive = savedInstanceState.getBoolean(REGISTER_STATUS, false);
         }
 
         this.setupButtons();
@@ -44,8 +49,10 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        if (this.mIsConnectingActive) {
-            this.mProgressBarController.startProgressBar();
+        if (this.mIsLoginActive || this.mIsRegisterActive) {
+            this.setUiConnectingOn();
+        } else {
+            this.showUi();
         }
 
         if (this.mUserServiceUpdateReceiver == null) {
@@ -63,7 +70,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
 
-        if (this.mIsConnectingActive) {
+        if (this.mIsLoginActive || this.mIsRegisterActive) {
             this.mProgressBarController.stopProgressBar();
         }
 
@@ -76,7 +83,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean(IS_CONNECTING_ACTIVE, this.mIsConnectingActive);
+        outState.putBoolean(REGISTER_WINDOW_VISIBILITY, this.mIsRegisterWindowVisible);
+        outState.putBoolean(LOGIN_STATUS, this.mIsLoginActive);
+        outState.putBoolean(REGISTER_STATUS, this.mIsRegisterActive);
     }
 
     @Override
@@ -103,61 +112,40 @@ public class MainActivity extends Activity {
         this.findViewById(R.id.button_switch).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MainActivity.this.handleSwitchLoginRegister((Button) view);
+                MainActivity.this.handleSwitchLoginRegister();
             }
         });
     }
 
     private void handleLogin() {
-        if (!this.mIsConnectingActive) {
-            Intent loginServiceIntent = new Intent();
-            loginServiceIntent.setAction(UserService.LOGIN_USER_SERVICE);
-            String username = this.getTextFromTextView(R.id.editText_username);
-            loginServiceIntent.putExtra(UserService.USERNAME, username);
-            String password = this.getTextFromTextView(R.id.editText_password);
-            loginServiceIntent.putExtra(UserService.PASSWORD, password);
-            this.startService(loginServiceIntent);
-        }
+        Intent loginServiceIntent = new Intent();
+        loginServiceIntent.setAction(UserService.LOGIN_USER_SERVICE);
+        String username = this.getTextFromTextView(R.id.editText_username);
+        loginServiceIntent.putExtra(UserService.USERNAME, username);
+        String password = this.getTextFromTextView(R.id.editText_password);
+        loginServiceIntent.putExtra(UserService.PASSWORD, password);
+        this.startService(loginServiceIntent);
+        this.mIsLoginActive = true;
+        this.mIsRegisterActive = false;
     }
 
     private void handleRegister() {
-        if (!this.mIsConnectingActive) {
-            Intent registerServiceIntent = new Intent();
-            registerServiceIntent.setAction(UserService.REGISTER_USER_SERVICE);
-            String username = this.getTextFromTextView(R.id.editText_username);
-            registerServiceIntent.putExtra(UserService.USERNAME, username);
-            String password = this.getTextFromTextView(R.id.editText_password);
-            registerServiceIntent.putExtra(UserService.PASSWORD, password);
-            String nickname = this.getTextFromTextView(R.id.editText_nickname);
-            registerServiceIntent.putExtra(UserService.NICKNAME, nickname);
-            this.startService(registerServiceIntent);
-        }
+        Intent registerServiceIntent = new Intent();
+        registerServiceIntent.setAction(UserService.REGISTER_USER_SERVICE);
+        String username = this.getTextFromTextView(R.id.editText_username);
+        registerServiceIntent.putExtra(UserService.USERNAME, username);
+        String password = this.getTextFromTextView(R.id.editText_password);
+        registerServiceIntent.putExtra(UserService.PASSWORD, password);
+        String nickname = this.getTextFromTextView(R.id.editText_nickname);
+        registerServiceIntent.putExtra(UserService.NICKNAME, nickname);
+        this.startService(registerServiceIntent);
+        this.mIsRegisterActive = true;
+        this.mIsLoginActive = false;
     }
 
-    private void handleSwitchLoginRegister(Button button) {
-        String buttonText = button.getText().toString();
-        String loginText = this.getString(R.string.button_login);
-        String registerText = this.getString(R.string.button_register);
-
-        if (buttonText.equals(loginText)) {
-            button.setText(R.string.button_register);
-            Button loginButton = (Button) this.findViewById(R.id.button_login);
-            loginButton.setVisibility(View.VISIBLE);
-            Button registerButton = (Button) this.findViewById(R.id.button_register);
-            registerButton.setVisibility(View.INVISIBLE);
-            EditText nicknameEditText = (EditText) this.findViewById(R.id.editText_nickname);
-            nicknameEditText.setVisibility(View.INVISIBLE);
-        }
-
-        if (buttonText.equals(registerText)) {
-            button.setText(R.string.button_login);
-            Button loginButton = (Button) this.findViewById(R.id.button_login);
-            loginButton.setVisibility(View.INVISIBLE);
-            Button registerButton = (Button) this.findViewById(R.id.button_register);
-            registerButton.setVisibility(View.VISIBLE);
-            EditText nicknameEditText = (EditText) this.findViewById(R.id.editText_nickname);
-            nicknameEditText.setVisibility(View.VISIBLE);
-        }
+    private void handleSwitchLoginRegister() {
+        this.mIsRegisterWindowVisible = !this.mIsRegisterWindowVisible;
+        this.showUi();
     }
 
     private String getTextFromTextView(int id) {
@@ -170,14 +158,42 @@ public class MainActivity extends Activity {
         return null;
     }
 
-    private void startConnectMessaging() {
+    private void setUiConnectingOn() {
         this.mProgressBarController.startProgressBar();
-        this.mIsConnectingActive = true;
+        this.hideUi();
     }
 
-    private void stopConnectMessaging() {
+    private void setUiConnectingOff() {
         this.mProgressBarController.stopProgressBar();
-        this.mIsConnectingActive = false;
+        this.showUi();
+    }
+
+    private void showUi(){
+        Button switchButton = (Button) this.findViewById(R.id.button_switch);
+        switchButton.setVisibility(View.VISIBLE);
+        this.findViewById(R.id.editText_username).setVisibility(View.VISIBLE);
+        this.findViewById(R.id.editText_password).setVisibility(View.VISIBLE);
+
+        if (this.mIsRegisterWindowVisible) {
+            switchButton.setText(this.getString(R.string.button_login));
+            this.findViewById(R.id.button_login).setVisibility(View.INVISIBLE);
+            this.findViewById(R.id.button_register).setVisibility(View.VISIBLE);
+            this.findViewById(R.id.editText_nickname).setVisibility(View.VISIBLE);
+        } else {
+            switchButton.setText(this.getString(R.string.button_register));
+            this.findViewById(R.id.button_login).setVisibility(View.VISIBLE);
+            this.findViewById(R.id.button_register).setVisibility(View.INVISIBLE);
+            this.findViewById(R.id.editText_nickname).setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private void hideUi() {
+        this.findViewById(R.id.button_login).setVisibility(View.INVISIBLE);
+        this.findViewById(R.id.button_register).setVisibility(View.INVISIBLE);
+        this.findViewById(R.id.button_switch).setVisibility(View.INVISIBLE);
+        this.findViewById(R.id.editText_username).setVisibility(View.INVISIBLE);
+        this.findViewById(R.id.editText_password).setVisibility(View.INVISIBLE);
+        this.findViewById(R.id.editText_nickname).setVisibility(View.INVISIBLE);
     }
 
     private class UserServiceUpdateReceiver extends BroadcastReceiver {
@@ -191,18 +207,32 @@ public class MainActivity extends Activity {
                 boolean isResponseMessageReceived = intent.getBooleanExtra(UserService.USER_SERVICE_RESPONSE_MESSAGE, false);
 
                 if (isConnectingActive) {
-                    MainActivity.this.startConnectMessaging();
-                }else if (isConnected) {
-                    MainActivity.this.stopConnectMessaging();
-                    Intent buddiesIntent = new Intent(MainActivity.this, BuddiesActivity.class);
-                    MainActivity.this.startActivity(buddiesIntent);
-                }else if (isResponseMessageReceived) {
-                    MainActivity.this.stopConnectMessaging();
-                    String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
-                    MainActivity.this.mProgressBarController.changeActiveToastMessage(message);
-                    ToastNotifier.makeToast(MainActivity.this, message);
+                    MainActivity.this.setUiConnectingOn();
+                } else if (isConnected) {
+                    this.handleConnected(intent);
+                } else if (isResponseMessageReceived) {
+                    this.handleResponseMessage(intent);
                 }
             }
+        }
+
+        private void handleConnected(Intent intent) {
+            MainActivity.this.mProgressBarController.stopProgressBar();
+            String nickname = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
+            if (nickname != null) {
+                MainActivity.this.mProgressBarController.changeActiveToastMessage("Welcome " + nickname);
+                ToastNotifier.makeToast(MainActivity.this, "Welcome " + nickname);
+            }
+
+            Intent buddiesIntent = new Intent(MainActivity.this, BuddiesActivity.class);
+            MainActivity.this.startActivity(buddiesIntent);
+        }
+
+        private void handleResponseMessage(Intent intent) {
+            MainActivity.this.setUiConnectingOff();
+            String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
+            MainActivity.this.mProgressBarController.changeActiveToastMessage(message);
+            ToastNotifier.makeToast(MainActivity.this, message);
         }
     }
 }

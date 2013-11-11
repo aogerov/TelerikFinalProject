@@ -252,7 +252,7 @@ public class UserService extends Service {
         if (response.isStatusOk()) {
             isResponseValid = this.tryUpdateUserStatus(response);
             if (isResponseValid) {
-                this.mBroadcastManager.sendIsConnected();
+                this.mBroadcastManager.sendIsConnected(this.mNickname);
             }
         }
 
