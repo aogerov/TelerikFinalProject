@@ -31,12 +31,6 @@ public class HttpRequester {
     }
 
     public HttpResponse get(String uriEnd, String sessionKey) {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         String uri = BASE_URI + uriEnd + sessionKey;
 
         String content = null;
@@ -60,12 +54,6 @@ public class HttpRequester {
     }
 
     public HttpResponse post(String uriEnd, String data, String sessionKey) {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         String uri = BASE_URI + uriEnd;
         if (sessionKey != null) {
             uri += sessionKey;

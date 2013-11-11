@@ -117,6 +117,10 @@ public class UserService extends Service {
                 this.initSessionKeyHttpRequest(this.mSessionKey);
             }
         }
+
+        if (this.mSessionKey != null && this.mNickname != null) {
+            this.mBroadcastManager.sendIsConnected(this.mNickname);
+        }
     }
 
     private void login(Intent intent) {

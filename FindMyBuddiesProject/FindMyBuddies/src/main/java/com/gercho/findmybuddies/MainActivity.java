@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
         super.onResume();
 
         if (this.mIsLoginActive || this.mIsRegisterActive) {
-            this.setUiConnectingOn();
+            this.setConnectingActive();
         } else {
             this.showUi();
         }
@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
         super.onPause();
 
         if (this.mIsLoginActive || this.mIsRegisterActive) {
-            this.mProgressBarController.stopProgressBar();
+            this.stopProgressBar();
         }
 
         if (this.mUserServiceUpdateReceiver != null) {
@@ -125,8 +125,7 @@ public class MainActivity extends Activity {
         String password = this.getTextFromTextView(R.id.editText_password);
         loginServiceIntent.putExtra(UserService.PASSWORD, password);
         this.startService(loginServiceIntent);
-        this.mIsLoginActive = true;
-        this.mIsRegisterActive = false;
+        this.setLoginActive();
     }
 
     private void handleRegister() {
@@ -139,8 +138,7 @@ public class MainActivity extends Activity {
         String nickname = this.getTextFromTextView(R.id.editText_nickname);
         registerServiceIntent.putExtra(UserService.NICKNAME, nickname);
         this.startService(registerServiceIntent);
-        this.mIsRegisterActive = true;
-        this.mIsLoginActive = false;
+        this.setRegisterActive();
     }
 
     private void handleSwitchLoginRegister() {
@@ -158,14 +156,36 @@ public class MainActivity extends Activity {
         return null;
     }
 
-    private void setUiConnectingOn() {
-        this.mProgressBarController.startProgressBar();
+    private void setLoginActive() {
+        this.mIsLoginActive = true;
+        this.mIsRegisterActive = false;
+    }
+
+    private void setRegisterActive() {
+        this.mIsRegisterActive = true;
+        this.mIsLoginActive = false;
+    }
+
+    private void setConnectingActive() {
+        this.startProgressBar();
         this.hideUi();
     }
 
-    private void setUiConnectingOff() {
-        this.mProgressBarController.stopProgressBar();
+    private void setConnectingInactive() {
+        this.stopProgressBar();
         this.showUi();
+    }
+
+    private void startProgressBar() {
+        this.mProgressBarController.startProgressBar();
+    }
+
+    private void stopProgressBar(){
+        this.mProgressBarController.stopProgressBar();
+    }
+
+    private void changeActiveToastMessage(String message) {
+        this.mProgressBarController.changeActiveToastMessage(message);
     }
 
     private void showUi(){
@@ -207,7 +227,8 @@ public class MainActivity extends Activity {
                 boolean isResponseMessageReceived = intent.getBooleanExtra(UserService.USER_SERVICE_RESPONSE_MESSAGE, false);
 
                 if (isConnectingActive) {
-                    MainActivity.this.setUiConnectingOn();
+                    MainActivity.this.setConnectingActive();
+                    MainActivity.this.setLoginActive();
                 } else if (isConnected) {
                     this.handleConnected(intent);
                 } else if (isResponseMessageReceived) {
@@ -217,10 +238,10 @@ public class MainActivity extends Activity {
         }
 
         private void handleConnected(Intent intent) {
-            MainActivity.this.mProgressBarController.stopProgressBar();
+            MainActivity.this.stopProgressBar();
             String nickname = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
             if (nickname != null) {
-                MainActivity.this.mProgressBarController.changeActiveToastMessage("Welcome " + nickname);
+                MainActivity.this.changeActiveToastMessage("Welcome " + nickname);
                 ToastNotifier.makeToast(MainActivity.this, "Welcome " + nickname);
             }
 
@@ -229,9 +250,9 @@ public class MainActivity extends Activity {
         }
 
         private void handleResponseMessage(Intent intent) {
-            MainActivity.this.setUiConnectingOff();
+            MainActivity.this.setConnectingInactive();
             String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
-            MainActivity.this.mProgressBarController.changeActiveToastMessage(message);
+            MainActivity.this.changeActiveToastMessage(message);
             ToastNotifier.makeToast(MainActivity.this, message);
         }
     }
