@@ -10,6 +10,7 @@ import android.os.Looper;
 
 import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
 import com.gercho.findmybuddies.helpers.OrderBy;
+import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.validators.BuddiesServiceValidator;
 import com.google.gson.Gson;
@@ -41,12 +42,14 @@ public class BuddiesService extends Service {
     private static final String BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT = "BuddiesStorageBuddiesOrderByAsInt";
 
     private boolean mIsServiceAlreadyStarted;
+    private boolean mIsUpdatingActive;
+    private boolean mIsNetworkAvailable;
+    private boolean mIsGpsAvailable;
+    private BuddiesServiceBroadcast mBroadcast;
     private HandlerThread mHandledThread;
     private Handler mHandler;
     private HttpRequester mHttpRequester;
     private Gson mGson;
-    private BuddiesServiceBroadcast mBroadcast;
-    private BuddiesServiceValidator mValidator;
     private String mSessionKey;
     private int mUpdateFrequency;
     private int mImagesToShowCount;
@@ -64,7 +67,6 @@ public class BuddiesService extends Service {
         this.mHttpRequester = new HttpRequester();
         this.mGson = new Gson();
         this.mBroadcast = new BuddiesServiceBroadcast(this);
-        this.mValidator = new BuddiesServiceValidator(this.mBroadcast);
     }
 
     @Override
@@ -73,7 +75,7 @@ public class BuddiesService extends Service {
         if (START_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
             this.startBuddiesService(intent);
         } else if (STOP_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
-            this.stopSelf();
+            this.stopBuddiesService();
         } else if (GET_CURRENT_SETTINGS.equalsIgnoreCase(action)) {
             this.getCurrentSettings();
         } else if (SET_UPDATE_FREQUENCY.equalsIgnoreCase(action)) {
@@ -100,15 +102,24 @@ public class BuddiesService extends Service {
 
     private void startBuddiesService(Intent intent) {
         String sessionKey = intent.getStringExtra(UserService.SESSION_KEY_EXTRA);
-        boolean isSessionKeyValid = this.mValidator.validateSesionKey(sessionKey);
+        boolean isSessionKeyValid = BuddiesServiceValidator.validateSessionKey(sessionKey);
         if (isSessionKeyValid) {
             this.mSessionKey = sessionKey;
         }
 
         if (!this.mIsServiceAlreadyStarted) {
+            this.mIsUpdatingActive = false;
+            this.mIsNetworkAvailable = true;
+            this.mIsGpsAvailable = true;
             this.mIsServiceAlreadyStarted = true;
             this.readBuddiesStorage();
+            this.runServiceUpdating();
         }
+    }
+
+    private void stopBuddiesService() {
+        this.mIsUpdatingActive = false;
+        this.stopSelf();
     }
 
     private void getCurrentSettings() {
@@ -117,7 +128,7 @@ public class BuddiesService extends Service {
 
     private void setUpdateFrequency(Intent intent) {
         int updateFrequency = intent.getIntExtra(UPDATE_FREQUENCY_EXTRA, Integer.MIN_VALUE);
-        boolean isUpdateFrequencyValid = this.mValidator.validateUpdateFrequency(updateFrequency);
+        boolean isUpdateFrequencyValid = BuddiesServiceValidator.validateUpdateFrequency(updateFrequency);
         if (isUpdateFrequencyValid) {
             this.mUpdateFrequency = updateFrequency;
         }
@@ -125,7 +136,7 @@ public class BuddiesService extends Service {
 
     private void setImagesToShowCount(Intent intent) {
         int imagesToShowCount = intent.getIntExtra(IMAGES_TO_SHOW_COUNT_EXTRA, Integer.MIN_VALUE);
-        boolean isImagesToShowCountValid = this.mValidator.validateImagesToShowCount(imagesToShowCount);
+        boolean isImagesToShowCountValid = BuddiesServiceValidator.validateImagesToShowCount(imagesToShowCount);
         if (isImagesToShowCountValid) {
             this.mImagesToShowCount = imagesToShowCount;
         }
@@ -133,10 +144,38 @@ public class BuddiesService extends Service {
 
     private void setBuddiesOrderBy(Intent intent) {
         int buddiesOrderByAsInt = intent.getIntExtra(BUDDIES_ORDER_BY_EXTRA, Integer.MIN_VALUE);
-        boolean isBuddiesOrderByValid = this.mValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
+        boolean isBuddiesOrderByValid = BuddiesServiceValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
         if (isBuddiesOrderByValid) {
             this.mBuddiesOrderBy = OrderBy.values()[buddiesOrderByAsInt];
         }
+    }
+
+    private void runServiceUpdating() {
+        this.mIsUpdatingActive = true;
+        this.mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                while (BuddiesService.this.mIsUpdatingActive) {
+                    if (BuddiesService.this.mIsNetworkAvailable && BuddiesService.this.mIsGpsAvailable) {
+                        BuddiesService.this.updateCurrentPosition();
+                    }
+
+                    if (BuddiesService.this.mIsNetworkAvailable) {
+                        BuddiesService.this.updateBuddiesInfo();
+                    }
+
+                    ThreadSleeper.sleep(BuddiesService.this.mUpdateFrequency);
+                }
+            }
+        });
+    }
+
+    private void updateCurrentPosition() {
+
+    }
+
+    private void updateBuddiesInfo() {
+
     }
 
     private void readBuddiesStorage() {
@@ -144,7 +183,7 @@ public class BuddiesService extends Service {
 
         int updateFrequency = buddiesStorage.getInt(
                 BUDDIES_STORAGE_UPDATE_FREQUENCY, Integer.MIN_VALUE);
-        boolean isUpdateFrequencyValid = this.mValidator.validateUpdateFrequency(updateFrequency);
+        boolean isUpdateFrequencyValid = BuddiesServiceValidator.validateUpdateFrequency(updateFrequency);
         if (isUpdateFrequencyValid) {
             this.mUpdateFrequency = updateFrequency;
         } else {
@@ -153,7 +192,7 @@ public class BuddiesService extends Service {
 
         int imagesToShowCount = buddiesStorage.getInt(
                 BUDDIES_STORAGE_IMAGES_TO_SHOW_COUNT, Integer.MIN_VALUE);
-        boolean isImagesToShowCountValid = this.mValidator.validateImagesToShowCount(imagesToShowCount);
+        boolean isImagesToShowCountValid = BuddiesServiceValidator.validateImagesToShowCount(imagesToShowCount);
         if (isImagesToShowCountValid) {
             this.mImagesToShowCount = imagesToShowCount;
         } else {
@@ -162,7 +201,7 @@ public class BuddiesService extends Service {
 
         int buddiesOrderByAsInt = buddiesStorage.getInt(
                 BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, Integer.MIN_VALUE);
-        boolean isBuddiesOrderByValid = this.mValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
+        boolean isBuddiesOrderByValid = BuddiesServiceValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
         if (isBuddiesOrderByValid) {
             this.mBuddiesOrderBy = OrderBy.values()[buddiesOrderByAsInt];
         } else {

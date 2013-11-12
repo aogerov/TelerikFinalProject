@@ -1,6 +1,5 @@
 package com.gercho.findmybuddies.validators;
 
-import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
 import com.gercho.findmybuddies.helpers.OrderBy;
 
 /**
@@ -13,13 +12,7 @@ public class BuddiesServiceValidator {
     public static final int IMAGES_TO_SHOW_MIN_COUNT = 1;
     public static final int IMAGES_TO_SHOW_MAX_COUNT = 10;
 
-    private BuddiesServiceBroadcast mBroadcast;
-
-    public BuddiesServiceValidator(BuddiesServiceBroadcast broadcast) {
-        this.mBroadcast = broadcast;
-    }
-
-    public boolean validateSesionKey (String sessionKey) {
+    public static boolean validateSessionKey(String sessionKey) {
         if (sessionKey.length() != UserServiceValidator.SESSION_KEY_LENGTH) {
             return false;
         }
@@ -27,7 +20,7 @@ public class BuddiesServiceValidator {
         return true;
     }
 
-    public boolean validateUpdateFrequency(int updateFrequency) {
+    public static boolean validateUpdateFrequency(int updateFrequency) {
         if (updateFrequency < UPDATE_FREQUENCY_MIN_MILLISECONDS ||
                 updateFrequency > UPDATE_FREQUENCY_MAX_MILLISECONDS) {
             return false;
@@ -36,7 +29,7 @@ public class BuddiesServiceValidator {
         return true;
     }
 
-    public boolean validateImagesToShowCount(int imagesToShowCount) {
+    public static boolean validateImagesToShowCount(int imagesToShowCount) {
         if (imagesToShowCount < IMAGES_TO_SHOW_MIN_COUNT ||
                 imagesToShowCount > IMAGES_TO_SHOW_MAX_COUNT) {
             return false;
@@ -45,7 +38,7 @@ public class BuddiesServiceValidator {
         return true;
     }
 
-    public boolean validateBuddiesOrderByAsInt(int buddiesOrderBy) {
+    public static boolean validateBuddiesOrderByAsInt(int buddiesOrderBy) {
         if (buddiesOrderBy < 0 || buddiesOrderBy > OrderBy.values().length) {
             return false;
         }

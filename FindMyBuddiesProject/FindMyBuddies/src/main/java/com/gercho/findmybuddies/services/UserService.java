@@ -50,12 +50,11 @@ public class UserService extends Service {
 
     private boolean mIsServiceAlreadyStarted;
     private boolean mIsConnectingActive;
+    private UserServiceBroadcast mBroadcast;
     private HandlerThread mHandledThread;
     private Handler mHandler;
     private HttpRequester mHttpRequester;
     private Gson mGson;
-    private UserServiceBroadcast mBroadcast;
-    private UserServiceValidator mValidator;
     private String mSessionKey;
     private String mSessionKeyEncrypted;
     private String mNickname;
@@ -72,7 +71,6 @@ public class UserService extends Service {
         this.mHttpRequester = new HttpRequester();
         this.mGson = new Gson();
         this.mBroadcast = new UserServiceBroadcast(this);
-        this.mValidator = new UserServiceValidator(this.mBroadcast);
     }
 
     @Override
@@ -81,7 +79,7 @@ public class UserService extends Service {
         if (START_USER_SERVICE.equalsIgnoreCase(action)) {
             this.startUserService();
         } else if (STOP_USER_SERVICE.equalsIgnoreCase(action)) {
-            this.stopSelf();
+            this.stopUserService();
         } else if (LOGIN.equalsIgnoreCase(action)) {
             this.login(intent);
         } else if (REGISTER.equalsIgnoreCase(action)) {
@@ -116,9 +114,13 @@ public class UserService extends Service {
         }
     }
 
+    private void stopUserService() {
+        this.stopSelf();
+    }
+
     private void login(Intent intent) {
-        String username = this.mValidator.extractAndValidateUsername(intent);
-        String password = this.mValidator.extractAndValidatePassword(intent);
+        String username = this.extractAndValidateUsername(intent);
+        String password = this.extractAndValidatePassword(intent);
         String authCode = AuthCodeGenerator.getAuthCode(username, password);
 
         if (username != null && password != null) {
@@ -127,9 +129,9 @@ public class UserService extends Service {
     }
 
     private void register(Intent intent) {
-        String username = this.mValidator.extractAndValidateUsername(intent);
-        String nickname = this.mValidator.extractAndValidateNickname(intent);
-        String password = this.mValidator.extractAndValidatePassword(intent);
+        String username = this.extractAndValidateUsername(intent);
+        String nickname = this.extractAndValidateNickname(intent);
+        String password = this.extractAndValidatePassword(intent);
         String authCode = AuthCodeGenerator.getAuthCode(username, password);
 
         if (username != null && nickname != null && password != null) {
@@ -245,13 +247,13 @@ public class UserService extends Service {
     }
 
     private boolean tryUpdateUserStatus(HttpResponse response) {
-        boolean isResponseValid = this.mValidator.validateHttpResponse(response);
+        boolean isResponseValid = UserServiceValidator.validateHttpResponse(response);
         if (!isResponseValid) {
             return false;
         }
 
         UserModel userModel = this.mGson.fromJson(response.getMessage(), UserModel.class);
-        boolean isModelValid = this.mValidator.validateUserModel(userModel);
+        boolean isModelValid = UserServiceValidator.validateUserModel(userModel);
         if (!isModelValid) {
             return false;
         }
@@ -261,6 +263,48 @@ public class UserService extends Service {
         this.mSessionKeyEncrypted = Encryptor.encrypt(this.mSessionKey, SESSION_KEY_ENCRYPTION);
         this.updateUserStorage(this.mSessionKeyEncrypted);
         return true;
+    }
+
+    private String extractAndValidateUsername(Intent intent) {
+        String username = intent.getStringExtra(UserService.USERNAME_EXTRA);
+        boolean isUsernameValid = UserServiceValidator.validateUsername(username);
+        if (isUsernameValid && username != null) {
+            return username.trim();
+        } else {
+            this.mBroadcast.sendResponseMessage(
+                    String.format("Username must be min %d and max %d chars long",
+                            UserServiceValidator.MIN_USERNAME_AND_NICKNAME_LENGTH,
+                            UserServiceValidator.MAX_INPUT_FIELDS_LENGTH));
+            return null;
+        }
+    }
+
+    private String extractAndValidateNickname(Intent intent) {
+        String nickname = intent.getStringExtra(UserService.NICKNAME_EXTRA);
+        boolean isNicknameValid = UserServiceValidator.validateNickname(nickname);
+        if (isNicknameValid && nickname != null) {
+            return nickname.trim();
+        } else {
+            this.mBroadcast.sendResponseMessage(
+                    String.format("Nickname must be min %d and max %d chars long",
+                            UserServiceValidator.MIN_USERNAME_AND_NICKNAME_LENGTH,
+                            UserServiceValidator.MAX_INPUT_FIELDS_LENGTH));
+            return null;
+        }
+    }
+
+    private String extractAndValidatePassword(Intent intent) {
+        String password = intent.getStringExtra(UserService.PASSWORD_EXTRA);
+        boolean isPasswordValid = UserServiceValidator.validatePassword(password);
+        if (isPasswordValid && password != null) {
+            return password.trim();
+        } else {
+            this.mBroadcast.sendResponseMessage(
+                    String.format("Password must be min %d and max %d chars long",
+                            UserServiceValidator.MIN_PASSWORD_LENGTH,
+                            UserServiceValidator.MAX_INPUT_FIELDS_LENGTH));
+            return null;
+        }
     }
 
     private void readUserStorage() {
