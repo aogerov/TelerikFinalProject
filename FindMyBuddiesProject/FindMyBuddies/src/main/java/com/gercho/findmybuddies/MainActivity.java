@@ -163,15 +163,16 @@ public class MainActivity extends Activity {
         this.mProgressBarController.startProgressBar();
     }
 
-    private void stopProgressBar(){
+    private void stopProgressBar() {
         this.mProgressBarController.stopProgressBar();
     }
 
     private void changeActiveToastMessage(String message) {
         this.mProgressBarController.changeActiveToastMessage(message);
+        ToastNotifier.makeToast(this, message);
     }
 
-    private void showUi(){
+    private void showUi() {
         Button switchButton = (Button) this.findViewById(R.id.button_switch);
         switchButton.setVisibility(View.VISIBLE);
         this.findViewById(R.id.editText_username).setVisibility(View.VISIBLE);
@@ -219,7 +220,7 @@ public class MainActivity extends Activity {
             }
         }
 
-        private void handleConnecting(){
+        private void handleConnecting() {
             MainActivity.this.setConnectingActive();
             MainActivity.this.startProgressBar();
             MainActivity.this.hideUi();
@@ -229,24 +230,22 @@ public class MainActivity extends Activity {
             MainActivity.this.setConnectingInactive();
             MainActivity.this.stopProgressBar();
             MainActivity.this.showUi();
+
             String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
             MainActivity.this.changeActiveToastMessage(message);
-            ToastNotifier.makeToast(MainActivity.this, message);
         }
 
         private void handleConnected(Intent intent) {
             MainActivity.this.setConnectingInactive();
             MainActivity.this.stopProgressBar();
-            Intent buddiesIntent = new Intent(MainActivity.this, FindMyBuddiesActivity.class);
 
-            String nickname = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
-            if (nickname != null) {
-                MainActivity.this.changeActiveToastMessage("Welcome " + nickname);
-                ToastNotifier.makeToast(MainActivity.this, "Welcome " + nickname);
-                buddiesIntent.putExtra(UserService.NICKNAME, nickname);
-            }
+            String nickname = intent.getStringExtra(UserService.NICKNAME);
+            MainActivity.this.changeActiveToastMessage("Welcome " + nickname);
 
             this.startAdditionalServices();
+
+            Intent buddiesIntent = new Intent(MainActivity.this, FindMyBuddiesActivity.class);
+            buddiesIntent.putExtra(UserService.NICKNAME, nickname);
             MainActivity.this.startActivity(buddiesIntent);
         }
 

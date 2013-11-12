@@ -23,7 +23,7 @@ public class UserServiceBroadcastManager {
     public void sendIsConnected(String nickname) {
         Intent intent = new Intent(UserService.USER_SERVICE_BROADCAST);
         intent.putExtra(UserService.USER_SERVICE_IS_CONNECTED, true);
-        intent.putExtra(UserService.USER_SERVICE_MESSAGE_TEXT, nickname);
+        intent.putExtra(UserService.NICKNAME, nickname);
         this.mService.sendBroadcast(intent);
     }
 
