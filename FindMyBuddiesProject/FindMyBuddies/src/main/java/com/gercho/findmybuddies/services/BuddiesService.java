@@ -175,7 +175,8 @@ public class BuddiesService extends Service {
     }
 
     private void updateBuddiesInfo() {
-
+        // TODO Buddies might not have any images and return empty list or null
+        // TODO buddies list is with 2 lists online and offline
     }
 
     private void readBuddiesStorage() {
