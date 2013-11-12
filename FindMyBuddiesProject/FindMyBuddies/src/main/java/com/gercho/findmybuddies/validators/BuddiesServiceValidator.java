@@ -1,6 +1,7 @@
 package com.gercho.findmybuddies.validators;
 
 import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
+import com.gercho.findmybuddies.helpers.OrderBy;
 
 /**
  * Created by Gercho on 11/12/13.
@@ -27,14 +28,28 @@ public class BuddiesServiceValidator {
     }
 
     public boolean validateUpdateFrequency(int updateFrequency) {
-        return false;
+        if (updateFrequency < UPDATE_FREQUENCY_MIN_MILLISECONDS ||
+                updateFrequency > UPDATE_FREQUENCY_MAX_MILLISECONDS) {
+            return false;
+        }
+
+        return true;
     }
 
     public boolean validateImagesToShowCount(int imagesToShowCount) {
-        return false;
+        if (imagesToShowCount < IMAGES_TO_SHOW_MIN_COUNT ||
+                imagesToShowCount > IMAGES_TO_SHOW_MAX_COUNT) {
+            return false;
+        }
+
+        return true;
     }
 
     public boolean validateBuddiesOrderByAsInt(int buddiesOrderBy) {
-        return false;
+        if (buddiesOrderBy < 0 || buddiesOrderBy > OrderBy.values().length) {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -71,7 +71,7 @@ public class BuddiesService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
         if (START_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
-            this.startService(intent);
+            this.startBuddiesService(intent);
         } else if (STOP_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
             this.stopSelf();
         } else if (GET_CURRENT_SETTINGS.equalsIgnoreCase(action)) {
@@ -98,7 +98,7 @@ public class BuddiesService extends Service {
         return null;
     }
 
-    private void startService(Intent intent) {
+    private void startBuddiesService(Intent intent) {
         String sessionKey = intent.getStringExtra(UserService.SESSION_KEY_EXTRA);
         boolean isSessionKeyValid = this.mValidator.validateSesionKey(sessionKey);
         if (isSessionKeyValid) {

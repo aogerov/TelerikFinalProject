@@ -81,7 +81,7 @@ public class UserService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
         if (START_USER_SERVICE.equalsIgnoreCase(action)) {
-            this.startService();
+            this.startUserService();
         } else if (STOP_USER_SERVICE.equalsIgnoreCase(action)) {
             this.stopSelf();
         } else if (LOGIN.equalsIgnoreCase(action)) {
@@ -108,7 +108,7 @@ public class UserService extends Service {
         return null;
     }
 
-    private void startService() {
+    private void startUserService() {
         if (!this.mIsServiceAlreadyStarted) {
             this.mIsServiceAlreadyStarted = true;
             this.mIsConnectingActive = false;
@@ -268,7 +268,7 @@ public class UserService extends Service {
             }
         }
 
-        if (!response.isStatusOk() || !isResponseValid){
+        if (!response.isStatusOk() || !isResponseValid) {
             this.mBroadcast.sendResponseMessage(errorMessage);
         }
 

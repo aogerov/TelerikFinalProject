@@ -84,9 +84,9 @@ public class UserServiceValidator {
     public boolean validateUserModel(UserModel userModel) {
         String nickname = userModel.getNickname();
         String sessionKey = userModel.getSessionKey();
-        if (nickname.length() < UserServiceValidator.MIN_USERNAME_AND_NICKNAME_LENGTH &&
-                nickname.length() > UserServiceValidator.MAX_INPUT_FIELDS_LENGTH &&
-                sessionKey.length() != UserServiceValidator.SESSION_KEY_LENGTH) {
+        if (nickname.length() < MIN_USERNAME_AND_NICKNAME_LENGTH ||
+                nickname.length() > MAX_INPUT_FIELDS_LENGTH ||
+                sessionKey.length() != SESSION_KEY_LENGTH) {
             return false;
         }
 
