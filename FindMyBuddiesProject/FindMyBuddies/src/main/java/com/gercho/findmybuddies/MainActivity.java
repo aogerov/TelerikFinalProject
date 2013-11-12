@@ -116,23 +116,23 @@ public class MainActivity extends Activity {
 
     private void handleLogin() {
         Intent loginServiceIntent = new Intent();
-        loginServiceIntent.setAction(UserService.LOGIN_USER_SERVICE);
+        loginServiceIntent.setAction(UserService.LOGIN);
         String username = this.getTextFromTextView(R.id.editText_username);
-        loginServiceIntent.putExtra(UserService.USERNAME, username);
+        loginServiceIntent.putExtra(UserService.USERNAME_EXTRA, username);
         String password = this.getTextFromTextView(R.id.editText_password);
-        loginServiceIntent.putExtra(UserService.PASSWORD, password);
+        loginServiceIntent.putExtra(UserService.PASSWORD_EXTRA, password);
         this.startService(loginServiceIntent);
     }
 
     private void handleRegister() {
         Intent registerServiceIntent = new Intent();
-        registerServiceIntent.setAction(UserService.REGISTER_USER_SERVICE);
+        registerServiceIntent.setAction(UserService.REGISTER);
         String username = this.getTextFromTextView(R.id.editText_username);
-        registerServiceIntent.putExtra(UserService.USERNAME, username);
+        registerServiceIntent.putExtra(UserService.USERNAME_EXTRA, username);
         String password = this.getTextFromTextView(R.id.editText_password);
-        registerServiceIntent.putExtra(UserService.PASSWORD, password);
+        registerServiceIntent.putExtra(UserService.PASSWORD_EXTRA, password);
         String nickname = this.getTextFromTextView(R.id.editText_nickname);
-        registerServiceIntent.putExtra(UserService.NICKNAME, nickname);
+        registerServiceIntent.putExtra(UserService.NICKNAME_EXTRA, nickname);
         this.startService(registerServiceIntent);
     }
 
@@ -206,9 +206,9 @@ public class MainActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action != null && action.equals(UserService.USER_SERVICE_BROADCAST)) {
-                boolean isConnectingActive = intent.getBooleanExtra(UserService.USER_SERVICE_CONNECTING, false);
-                boolean isResponseMessageReceived = intent.getBooleanExtra(UserService.USER_SERVICE_RESPONSE_MESSAGE, false);
-                boolean isConnected = intent.getBooleanExtra(UserService.USER_SERVICE_IS_CONNECTED, false);
+                boolean isConnectingActive = intent.getBooleanExtra(UserService.CONNECTING_EXTRA, false);
+                boolean isResponseMessageReceived = intent.getBooleanExtra(UserService.RESPONSE_MESSAGE_EXTRA, false);
+                boolean isConnected = intent.getBooleanExtra(UserService.IS_CONNECTED_EXTRA, false);
 
                 if (isConnectingActive) {
                     this.handleConnecting();
@@ -231,7 +231,7 @@ public class MainActivity extends Activity {
             MainActivity.this.stopProgressBar();
             MainActivity.this.showUi();
 
-            String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
+            String message = intent.getStringExtra(UserService.MESSAGE_TEXT_EXTRA);
             MainActivity.this.changeActiveToastMessage(message);
         }
 
@@ -239,19 +239,19 @@ public class MainActivity extends Activity {
             MainActivity.this.setConnectingInactive();
             MainActivity.this.stopProgressBar();
 
-            String nickname = intent.getStringExtra(UserService.NICKNAME);
+            String nickname = intent.getStringExtra(UserService.NICKNAME_EXTRA);
             MainActivity.this.changeActiveToastMessage("Welcome " + nickname);
 
             this.startAdditionalServices();
 
             Intent buddiesIntent = new Intent(MainActivity.this, FindMyBuddiesActivity.class);
-            buddiesIntent.putExtra(UserService.NICKNAME, nickname);
+            buddiesIntent.putExtra(UserService.NICKNAME_EXTRA, nickname);
             MainActivity.this.startActivity(buddiesIntent);
         }
 
         private void startAdditionalServices() {
             Intent additionalServicesIntent = new Intent();
-            additionalServicesIntent.setAction(UserService.START_ADDITIONAL_SERVICES_USER_SERVICE);
+            additionalServicesIntent.setAction(UserService.START_ADDITIONAL_SERVICES);
             MainActivity.this.startService(additionalServicesIntent);
         }
     }

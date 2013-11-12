@@ -8,10 +8,12 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 
+import com.gercho.findmybuddies.broadcasts.UserServiceBroadcast;
 import com.gercho.findmybuddies.helpers.Encryptor;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
 import com.gercho.findmybuddies.models.UserModel;
+import com.gercho.findmybuddies.validators.UserServiceValidator;
 import com.google.gson.Gson;
 
 import java.security.MessageDigest;
@@ -24,35 +26,37 @@ public class UserService extends Service {
 
     public static final String START_USER_SERVICE = "com.gercho.action.START_USER_SERVICE";
     public static final String STOP_USER_SERVICE = "com.gercho.action.STOP_USER_SERVICE";
-    public static final String LOGIN_USER_SERVICE = "com.gercho.action.LOGIN_USER_SERVICE";
-    public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
-    public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
-    public static final String START_ADDITIONAL_SERVICES_USER_SERVICE = "com.gercho.action.START_ADDITIONAL_SERVICES_USER_SERVICE";
+    public static final String LOGIN = "com.gercho.action.LOGIN";
+    public static final String REGISTER = "com.gercho.action.REGISTER";
+    public static final String LOGOUT = "com.gercho.action.LOGOUT";
+    public static final String START_ADDITIONAL_SERVICES = "com.gercho.action.START_ADDITIONAL_SERVICES";
 
-    public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcastManager";
-    public static final String USER_SERVICE_CONNECTING = "UserServiceConnecting";
-    public static final String USER_SERVICE_IS_CONNECTED = "UserServiceIsConnected";
-    public static final String USER_SERVICE_RESPONSE_MESSAGE = "UserServiceResponseMessage";
-    public static final String USER_SERVICE_MESSAGE_TEXT = "UserServiceMessageText";
-    public static final String ERROR_MESSAGE_NOT_AVAILABLE = "Service is currently unavailable, please try again in few seconds";
-    public static final String ERROR_MESSAGE_INIT_FAILED = "Please login or register";
-    public static final String ERROR_MESSAGE_LOGIN_FAILED = "Invalid username or password";
-    public static final String ERROR_MESSAGE_REGISTER_FAILED = "Registration failed, try with another username and/or nickname";
-    public static final String USERNAME = "Username";
-    public static final String NICKNAME = "Nickname";
-    public static final String PASSWORD = "Password";
+    public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcast";
+    public static final String CONNECTING_EXTRA = "ConnectingExtra";
+    public static final String IS_CONNECTED_EXTRA = "IsConnectedExtra";
+    public static final String RESPONSE_MESSAGE_EXTRA = "ResponseMessageExtra";
+    public static final String MESSAGE_TEXT_EXTRA = "MessageTextExtra";
+    public static final String USERNAME_EXTRA = "UsernameExtra";
+    public static final String NICKNAME_EXTRA = "NicknameExtra";
+    public static final String PASSWORD_EXTRA = "PasswordExtra";
+    public static final String SESSION_KEY_EXTRA = "SessionKeyExtra";
+
+    private static final String ERROR_MESSAGE_NOT_AVAILABLE = "Service is currently unavailable, please try again in few seconds";
+    private static final String ERROR_MESSAGE_INIT_FAILED = "Please login or register";
+    private static final String ERROR_MESSAGE_LOGIN_FAILED = "Invalid username or password";
+    private static final String ERROR_MESSAGE_REGISTER_FAILED = "Registration failed, try with another username and/or nickname";
 
     private static final String USER_STORAGE = "UserStorage";
     private static final String USER_STORAGE_SESSION_KEY_ENCRYPTED = "UserStorageSessionKeyEncrypted";
     private static final String SESSION_KEY_ENCRYPTION = "il6su3df23no3cn8wy4cpt98wtp3ncq3r0";
 
-    private boolean mIsServiceInitialized;
+    private boolean mIsServiceAlreadyStarted;
     private boolean mIsConnectingActive;
     private HandlerThread mHandledThread;
     private Handler mHandler;
     private HttpRequester mHttpRequester;
     private Gson mGson;
-    private UserServiceBroadcastManager mBroadcastManager;
+    private UserServiceBroadcast mBroadcast;
     private UserServiceValidator mValidator;
     private String mSessionKey;
     private String mSessionKeyEncrypted;
@@ -69,25 +73,25 @@ public class UserService extends Service {
 
         this.mHttpRequester = new HttpRequester();
         this.mGson = new Gson();
-        this.mBroadcastManager = new UserServiceBroadcastManager(this);
-        this.mValidator = new UserServiceValidator(this.mBroadcastManager);
+        this.mBroadcast = new UserServiceBroadcast(this);
+        this.mValidator = new UserServiceValidator(this.mBroadcast);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
         if (START_USER_SERVICE.equalsIgnoreCase(action)) {
-            this.initService();
+            this.startService();
         } else if (STOP_USER_SERVICE.equalsIgnoreCase(action)) {
             this.stopSelf();
-        } else if (LOGIN_USER_SERVICE.equalsIgnoreCase(action)) {
+        } else if (LOGIN.equalsIgnoreCase(action)) {
             this.login(intent);
-        } else if (REGISTER_USER_SERVICE.equalsIgnoreCase(action)) {
+        } else if (REGISTER.equalsIgnoreCase(action)) {
             this.register(intent);
-        } else if (LOGOUT_USER_SERVICE.equalsIgnoreCase(action)) {
+        } else if (LOGOUT.equalsIgnoreCase(action)) {
             this.logout();
-        } else if (START_ADDITIONAL_SERVICES_USER_SERVICE.equalsIgnoreCase(action)) {
-            this.startAdditionalServices(intent);
+        } else if (START_ADDITIONAL_SERVICES.equalsIgnoreCase(action)) {
+            this.startAdditionalServices();
         }
 
         return START_REDELIVER_INTENT;
@@ -104,22 +108,19 @@ public class UserService extends Service {
         return null;
     }
 
-    private void initService() {
-        if (!this.mIsServiceInitialized) {
-            this.mIsServiceInitialized = true;
+    private void startService() {
+        if (!this.mIsServiceAlreadyStarted) {
+            this.mIsServiceAlreadyStarted = true;
             this.mIsConnectingActive = false;
-
             SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
-            this.mSessionKeyEncrypted = userStorage.getString(USER_STORAGE_SESSION_KEY_ENCRYPTED, null);
 
-            if (this.mSessionKeyEncrypted != null) {
-                this.mSessionKey = Encryptor.decrypt(this.mSessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
-                this.initSessionKeyHttpRequest(this.mSessionKey);
+            String sessionKeyEncrypted = userStorage.getString(USER_STORAGE_SESSION_KEY_ENCRYPTED, null);
+            if (sessionKeyEncrypted != null) {
+                String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
+                this.initSessionKeyHttpRequest(sessionKey);
             }
-        }
-
-        if (this.mSessionKey != null && this.mNickname != null && this.mSessionKeyEncrypted != null) {
-            this.mBroadcastManager.sendIsConnected(this.mNickname);
+        } else if (this.mNickname != null && this.mSessionKey != null && this.mSessionKeyEncrypted != null) {
+            this.mBroadcast.sendIsConnected(this.mNickname);
         }
     }
 
@@ -152,21 +153,21 @@ public class UserService extends Service {
         this.mNickname = null;
     }
 
-    private void startAdditionalServices(Intent intent) {
-        // TODO add services here
-//        Intent userServiceIntent = new Intent();
-//        userServiceIntent.setAction(UserService.START_USER_SERVICE);
-//        this.startService(userServiceIntent);
+    private void startAdditionalServices() {
+        Intent userServiceIntent = new Intent();
+        userServiceIntent.setAction(UserService.START_USER_SERVICE);
+        userServiceIntent.putExtra(SESSION_KEY_EXTRA, this.mSessionKey);
+        this.startService(userServiceIntent);
     }
 
     private void initSessionKeyHttpRequest(String sessionKey) {
         if (this.mIsConnectingActive) {
-            this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
+            this.mBroadcast.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
             return;
         }
 
         this.mIsConnectingActive = true;
-        this.mBroadcastManager.sendConnecting();
+        this.mBroadcast.sendConnecting();
         final String sessionKeyAsString = sessionKey;
 
         this.mHandler.post(new Runnable() {
@@ -182,12 +183,12 @@ public class UserService extends Service {
 
     private void loginHttpRequest(String username, String authCode) {
         if (this.mIsConnectingActive) {
-            this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
+            this.mBroadcast.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
             return;
         }
 
         this.mIsConnectingActive = true;
-        this.mBroadcastManager.sendConnecting();
+        this.mBroadcast.sendConnecting();
         UserModel userModel = new UserModel(username, authCode);
         final String userModelAsJson = this.mGson.toJson(userModel);
 
@@ -204,12 +205,12 @@ public class UserService extends Service {
 
     private void registerHttpRequest(String username, String authCode, String nickname) {
         if (this.mIsConnectingActive) {
-            this.mBroadcastManager.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
+            this.mBroadcast.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
             return;
         }
 
         this.mIsConnectingActive = true;
-        this.mBroadcastManager.sendConnecting();
+        this.mBroadcast.sendConnecting();
         UserModel userModel = new UserModel(username, authCode, nickname);
         final String userModelAsJson = this.mGson.toJson(userModel);
 
@@ -263,12 +264,12 @@ public class UserService extends Service {
         if (response.isStatusOk()) {
             isResponseValid = this.tryUpdateUserStatus(response);
             if (isResponseValid) {
-                this.mBroadcastManager.sendIsConnected(this.mNickname);
+                this.mBroadcast.sendIsConnected(this.mNickname);
             }
         }
 
         if (!response.isStatusOk() || !isResponseValid){
-            this.mBroadcastManager.sendResponseMessage(errorMessage);
+            this.mBroadcast.sendResponseMessage(errorMessage);
         }
 
         this.mIsConnectingActive = false;

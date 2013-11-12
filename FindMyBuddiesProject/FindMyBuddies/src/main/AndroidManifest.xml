@@ -32,10 +32,20 @@
             <intent-filter>
                 <action android:name="com.gercho.action.START_USER_SERVICE" />
                 <action android:name="com.gercho.action.STOP_USER_SERVICE" />
-                <action android:name="com.gercho.action.LOGIN_USER_SERVICE" />
-                <action android:name="com.gercho.action.REGISTER_USER_SERVICE" />
-                <action android:name="com.gercho.action.LOGOUT_USER_SERVICE" />
-                <action android:name="com.gercho.action.START_ADDITIONAL_SERVICES_USER_SERVICE" />
+                <action android:name="com.gercho.action.LOGIN" />
+                <action android:name="com.gercho.action.REGISTER" />
+                <action android:name="com.gercho.action.LOGOUT" />
+                <action android:name="com.gercho.action.START_ADDITIONAL_SERVICES" />
+            </intent-filter>
+        </service>
+        <service android:name=".services.BuddiesService">
+            <intent-filter>
+                <action android:name="com.gercho.action.START_BUDDIES_SERVICE" />
+                <action android:name="com.gercho.action.STOP_BUDDIES_SERVICE" />
+                <action android:name="com.gercho.action.GET_CURRENT_SETTINGS" />
+                <action android:name="com.gercho.action.SET_UPDATE_FREQUENCY" />
+                <action android:name="com.gercho.action.SET_IMAGES_TO_SHOW_COUNT" />
+                <action android:name="com.gercho.action.SET_BUDDIES_ORDER_BY" />
             </intent-filter>
         </service>
     </application>

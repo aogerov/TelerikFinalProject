@@ -99,7 +99,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
     private void logout() {
         Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(UserService.LOGOUT_USER_SERVICE);
+        userServiceIntent.setAction(UserService.LOGOUT);
         this.startService(userServiceIntent);
 
         Intent mainActivityIntent = new Intent(this, MainActivity.class);
