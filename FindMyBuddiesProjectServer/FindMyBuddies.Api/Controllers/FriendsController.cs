@@ -45,9 +45,11 @@ namespace FindMyBuddies.Api.Controllers
                         }
                     }
 
+                    context.SaveChanges();
                     var friendModels = new List<List<FriendModel>>();
                     friendModels.Add(onlineFriends);
                     friendModels.Add(offlineFriends);
+					
                     var response = this.Request.CreateResponse(HttpStatusCode.OK, friendModels);
                     return response;
                 }
