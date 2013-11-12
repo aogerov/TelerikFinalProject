@@ -27,6 +27,7 @@ public class UserService extends Service {
     public static final String LOGIN_USER_SERVICE = "com.gercho.action.LOGIN_USER_SERVICE";
     public static final String REGISTER_USER_SERVICE = "com.gercho.action.REGISTER_USER_SERVICE";
     public static final String LOGOUT_USER_SERVICE = "com.gercho.action.LOGOUT_USER_SERVICE";
+    public static final String START_ADDITIONAL_SERVICES_USER_SERVICE = "com.gercho.action.START_ADDITIONAL_SERVICES_USER_SERVICE";
 
     public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcastManager";
     public static final String USER_SERVICE_CONNECTING = "UserServiceConnecting";
@@ -37,8 +38,6 @@ public class UserService extends Service {
     public static final String ERROR_MESSAGE_INIT_FAILED = "Please login or register";
     public static final String ERROR_MESSAGE_LOGIN_FAILED = "Invalid username or password";
     public static final String ERROR_MESSAGE_REGISTER_FAILED = "Registration failed, try with another username and/or nickname";
-    public static final String SESSION_KEY_ENCRYPTED = "SessionKeyEncrypted";
-    public static final String SESSION_KEY = "SessionKey";
     public static final String USERNAME = "Username";
     public static final String NICKNAME = "Nickname";
     public static final String PASSWORD = "Password";
@@ -87,6 +86,8 @@ public class UserService extends Service {
             this.register(intent);
         } else if (LOGOUT_USER_SERVICE.equalsIgnoreCase(action)) {
             this.logout();
+        } else if (START_ADDITIONAL_SERVICES_USER_SERVICE.equalsIgnoreCase(action)) {
+            this.startAdditionalServices(intent);
         }
 
         return START_REDELIVER_INTENT;
@@ -118,7 +119,7 @@ public class UserService extends Service {
         }
 
         if (this.mSessionKey != null && this.mNickname != null && this.mSessionKeyEncrypted != null) {
-            this.mBroadcastManager.sendIsConnected(this.mNickname, this.mSessionKeyEncrypted);
+            this.mBroadcastManager.sendIsConnected(this.mNickname);
         }
     }
 
@@ -149,6 +150,13 @@ public class UserService extends Service {
         this.updateLocalStorageSessionKeyEncrypted(null);
         this.mSessionKey = null;
         this.mNickname = null;
+    }
+
+    private void startAdditionalServices(Intent intent) {
+        // TODO add services here
+//        Intent userServiceIntent = new Intent();
+//        userServiceIntent.setAction(UserService.START_USER_SERVICE);
+//        this.startService(userServiceIntent);
     }
 
     private void initSessionKeyHttpRequest(String sessionKey) {
@@ -255,7 +263,7 @@ public class UserService extends Service {
         if (response.isStatusOk()) {
             isResponseValid = this.tryUpdateUserStatus(response);
             if (isResponseValid) {
-                this.mBroadcastManager.sendIsConnected(this.mNickname, this.mSessionKeyEncrypted);
+                this.mBroadcastManager.sendIsConnected(this.mNickname);
             }
         }
 

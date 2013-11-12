@@ -12,7 +12,6 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.gercho.findmybuddies.helpers.Encryptor;
 import com.gercho.findmybuddies.helpers.ProgressBarController;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.services.UserService;
@@ -21,7 +20,6 @@ public class MainActivity extends Activity {
 
     private static final String CONNECTING_STATUS = "ConnectingStatus";
     private static final String REGISTER_WINDOW_VISIBILITY = "RegisterWindowVisibility";
-    private static final String SESSION_KEY_ENCRYPTION = "il6su3df23no3cn8wy4cpt98wtp3ncq3r0";
 
     private UserServiceUpdateReceiver mUserServiceUpdateReceiver;
     private ProgressBarController mProgressBarController;
@@ -208,15 +206,15 @@ public class MainActivity extends Activity {
             String action = intent.getAction();
             if (action != null && action.equals(UserService.USER_SERVICE_BROADCAST)) {
                 boolean isConnectingActive = intent.getBooleanExtra(UserService.USER_SERVICE_CONNECTING, false);
-                boolean isConnected = intent.getBooleanExtra(UserService.USER_SERVICE_IS_CONNECTED, false);
                 boolean isResponseMessageReceived = intent.getBooleanExtra(UserService.USER_SERVICE_RESPONSE_MESSAGE, false);
+                boolean isConnected = intent.getBooleanExtra(UserService.USER_SERVICE_IS_CONNECTED, false);
 
                 if (isConnectingActive) {
                     this.handleConnecting();
-                } else if (isConnected) {
-                    this.handleConnected(intent);
                 } else if (isResponseMessageReceived) {
                     this.handleResponseMessage(intent);
+                } else if (isConnected) {
+                    this.handleConnected(intent);
                 }
             }
         }
@@ -225,6 +223,15 @@ public class MainActivity extends Activity {
             MainActivity.this.setConnectingActive();
             MainActivity.this.startProgressBar();
             MainActivity.this.hideUi();
+        }
+
+        private void handleResponseMessage(Intent intent) {
+            MainActivity.this.setConnectingInactive();
+            MainActivity.this.stopProgressBar();
+            MainActivity.this.showUi();
+            String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
+            MainActivity.this.changeActiveToastMessage(message);
+            ToastNotifier.makeToast(MainActivity.this, message);
         }
 
         private void handleConnected(Intent intent) {
@@ -239,22 +246,14 @@ public class MainActivity extends Activity {
                 buddiesIntent.putExtra(UserService.NICKNAME, nickname);
             }
 
-            String sessionKeyEncrypted = intent.getStringExtra(UserService.SESSION_KEY_ENCRYPTED);
-            if (sessionKeyEncrypted != null) {
-                String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
-                buddiesIntent.putExtra(UserService.SESSION_KEY, sessionKey);
-            }
-
+            this.startAdditionalServices();
             MainActivity.this.startActivity(buddiesIntent);
         }
 
-        private void handleResponseMessage(Intent intent) {
-            MainActivity.this.setConnectingInactive();
-            MainActivity.this.stopProgressBar();
-            MainActivity.this.showUi();
-            String message = intent.getStringExtra(UserService.USER_SERVICE_MESSAGE_TEXT);
-            MainActivity.this.changeActiveToastMessage(message);
-            ToastNotifier.makeToast(MainActivity.this, message);
+        private void startAdditionalServices() {
+            Intent additionalServicesIntent = new Intent();
+            additionalServicesIntent.setAction(UserService.START_ADDITIONAL_SERVICES_USER_SERVICE);
+            MainActivity.this.startService(additionalServicesIntent);
         }
     }
 }

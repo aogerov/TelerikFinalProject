@@ -30,7 +30,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setContentView(R.layout.activity_buddies);
+        this.setContentView(R.layout.activity_find_my_buddies);
 
         this.startServices();
 

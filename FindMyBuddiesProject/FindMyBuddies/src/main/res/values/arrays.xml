@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string-array name="navigation_drawer_options">
-    <item>Buddies</item>
-    <item>Map</item>
-    <item>Settings</item>
-  </string-array>
+    <string-array name="navigation_drawer_options">
+        <item>Buddies</item>
+        <item>Map</item>
+        <item>Camera</item>
+        <item>Settings</item>
+    </string-array>
 </resources>
