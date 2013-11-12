@@ -9,15 +9,13 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import com.gercho.findmybuddies.broadcasts.UserServiceBroadcast;
+import com.gercho.findmybuddies.helpers.AuthCodeGenerator;
 import com.gercho.findmybuddies.helpers.Encryptor;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
 import com.gercho.findmybuddies.models.UserModel;
 import com.gercho.findmybuddies.validators.UserServiceValidator;
 import com.google.gson.Gson;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * Created by Gercho on 11/7/13.
@@ -112,13 +110,7 @@ public class UserService extends Service {
         if (!this.mIsServiceAlreadyStarted) {
             this.mIsServiceAlreadyStarted = true;
             this.mIsConnectingActive = false;
-            SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
-
-            String sessionKeyEncrypted = userStorage.getString(USER_STORAGE_SESSION_KEY_ENCRYPTED, null);
-            if (sessionKeyEncrypted != null) {
-                String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
-                this.initSessionKeyHttpRequest(sessionKey);
-            }
+            this.readUserStorage();
         } else if (this.mNickname != null && this.mSessionKey != null && this.mSessionKeyEncrypted != null) {
             this.mBroadcast.sendIsConnected(this.mNickname);
         }
@@ -127,7 +119,7 @@ public class UserService extends Service {
     private void login(Intent intent) {
         String username = this.mValidator.extractAndValidateUsername(intent);
         String password = this.mValidator.extractAndValidatePassword(intent);
-        String authCode = this.getAuthCode(username, password);
+        String authCode = AuthCodeGenerator.getAuthCode(username, password);
 
         if (username != null && password != null) {
             this.loginHttpRequest(username, authCode);
@@ -138,7 +130,7 @@ public class UserService extends Service {
         String username = this.mValidator.extractAndValidateUsername(intent);
         String nickname = this.mValidator.extractAndValidateNickname(intent);
         String password = this.mValidator.extractAndValidatePassword(intent);
-        String authCode = this.getAuthCode(username, password);
+        String authCode = AuthCodeGenerator.getAuthCode(username, password);
 
         if (username != null && nickname != null && password != null) {
             this.registerHttpRequest(username, authCode, nickname);
@@ -148,7 +140,7 @@ public class UserService extends Service {
     private void logout() {
         this.logoutHttpRequest(this.mSessionKey);
 
-        this.updateLocalStorageSessionKeyEncrypted(null);
+        this.updateUserStorage(null);
         this.mSessionKey = null;
         this.mNickname = null;
     }
@@ -236,29 +228,6 @@ public class UserService extends Service {
         });
     }
 
-    private String getAuthCode(String username, String password) {
-        MessageDigest messageDigest = null;
-        try {
-            messageDigest = MessageDigest.getInstance("SHA-1");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-
-        if (messageDigest != null) {
-            messageDigest.update((username + password).getBytes());
-            byte[] bytes = messageDigest.digest();
-            StringBuilder authCode = new StringBuilder();
-            for (int i = 0; i < bytes.length; i++) {
-                String tmp = Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1);
-                authCode.append(tmp);
-            }
-
-            return authCode.toString();
-        }
-
-        throw new NumberFormatException("AuthCode failed on create");
-    }
-
     private void processHttpResponse(HttpResponse response, String errorMessage) {
         boolean isResponseValid = true;
         if (response.isStatusOk()) {
@@ -290,12 +259,22 @@ public class UserService extends Service {
         this.mNickname = userModel.getNickname();
         this.mSessionKey = userModel.getSessionKey();
         this.mSessionKeyEncrypted = Encryptor.encrypt(this.mSessionKey, SESSION_KEY_ENCRYPTION);
-        this.updateLocalStorageSessionKeyEncrypted(this.mSessionKeyEncrypted);
+        this.updateUserStorage(this.mSessionKeyEncrypted);
         return true;
     }
 
-    private void updateLocalStorageSessionKeyEncrypted(String sessionKeyEncrypted) {
-        SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, 0);
+    private void readUserStorage() {
+        SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, MODE_PRIVATE);
+
+        String sessionKeyEncrypted = userStorage.getString(USER_STORAGE_SESSION_KEY_ENCRYPTED, null);
+        if (sessionKeyEncrypted != null) {
+            String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
+            this.initSessionKeyHttpRequest(sessionKey);
+        }
+    }
+
+    private void updateUserStorage(String sessionKeyEncrypted) {
+        SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, MODE_PRIVATE);
         SharedPreferences.Editor editor = userStorage.edit();
         editor.putString(USER_STORAGE_SESSION_KEY_ENCRYPTED, sessionKeyEncrypted);
         editor.commit();

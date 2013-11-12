@@ -31,9 +31,9 @@ public class BuddiesService extends Service {
     public static final String IMAGES_TO_SHOW_COUNT_EXTRA = "ImagesToShowCountExtra";
     public static final String BUDDIES_ORDER_BY_EXTRA = "BuddiesOrderByExtra";
 
-    public static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60; // 1 minute
-    public static final int IMAGES_TO_SHOW_COUNT_DEFAULT = 3;
-    public static final OrderBy BUDDIES_ORDER_BY_DEFAULT = OrderBy.DISTANCE;
+    private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60; // 1 minute
+    private static final int IMAGES_TO_SHOW_COUNT_DEFAULT = 3;
+    private static final OrderBy BUDDIES_ORDER_BY_DEFAULT = OrderBy.DISTANCE;
 
     private static final String BUDDIES_STORAGE = "BuddiesStorage";
     private static final String BUDDIES_STORAGE_UPDATE_FREQUENCY = "BuddiesStorageUpdateFrequency";
@@ -107,50 +107,75 @@ public class BuddiesService extends Service {
 
         if (!this.mIsServiceAlreadyStarted) {
             this.mIsServiceAlreadyStarted = true;
-            SharedPreferences buddiesStorage = this.getSharedPreferences(BUDDIES_STORAGE, 0);
-
-            int updateFrequency = buddiesStorage.getInt(
-                    BUDDIES_STORAGE_UPDATE_FREQUENCY, Integer.MIN_VALUE);
-            boolean isUpdateFrequencyValid = this.mValidator.validateUpdateFrequency(updateFrequency);
-            if (isUpdateFrequencyValid) {
-                this.mUpdateFrequency = updateFrequency;
-            } else {
-                this.mUpdateFrequency = UPDATE_FREQUENCY_DEFAULT;
-            }
-
-            int imagesToShowCount = buddiesStorage.getInt(
-                    BUDDIES_STORAGE_IMAGES_TO_SHOW_COUNT, Integer.MIN_VALUE);
-            boolean isImagesToShowCountValid = this.mValidator.validateImagesToShowCount(imagesToShowCount);
-            if (isImagesToShowCountValid) {
-                this.mImagesToShowCount = imagesToShowCount;
-            } else {
-                this.mImagesToShowCount = IMAGES_TO_SHOW_COUNT_DEFAULT;
-            }
-
-            int buddiesOrderByAsInt = buddiesStorage.getInt(
-                    BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, Integer.MIN_VALUE);
-            boolean isBuddiesOrderByValid = this.mValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
-            if (isBuddiesOrderByValid) {
-                this.mBuddiesOrderBy = OrderBy.values()[buddiesOrderByAsInt];
-            } else {
-                this.mBuddiesOrderBy = BUDDIES_ORDER_BY_DEFAULT;
-            }
+            this.readBuddiesStorage();
         }
     }
 
     private void getCurrentSettings() {
-
+        this.mBroadcast.sendCurrentSettings(this.mUpdateFrequency, this.mImagesToShowCount, this.mBuddiesOrderBy);
     }
 
     private void setUpdateFrequency(Intent intent) {
-
+        int updateFrequency = intent.getIntExtra(UPDATE_FREQUENCY_EXTRA, Integer.MIN_VALUE);
+        boolean isUpdateFrequencyValid = this.mValidator.validateUpdateFrequency(updateFrequency);
+        if (isUpdateFrequencyValid) {
+            this.mUpdateFrequency = updateFrequency;
+        }
     }
 
     private void setImagesToShowCount(Intent intent) {
-
+        int imagesToShowCount = intent.getIntExtra(IMAGES_TO_SHOW_COUNT_EXTRA, Integer.MIN_VALUE);
+        boolean isImagesToShowCountValid = this.mValidator.validateImagesToShowCount(imagesToShowCount);
+        if (isImagesToShowCountValid) {
+            this.mImagesToShowCount = imagesToShowCount;
+        }
     }
 
     private void setBuddiesOrderBy(Intent intent) {
+        int buddiesOrderByAsInt = intent.getIntExtra(BUDDIES_ORDER_BY_EXTRA, Integer.MIN_VALUE);
+        boolean isBuddiesOrderByValid = this.mValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
+        if (isBuddiesOrderByValid) {
+            this.mBuddiesOrderBy = OrderBy.values()[buddiesOrderByAsInt];
+        }
+    }
 
+    private void readBuddiesStorage() {
+        SharedPreferences buddiesStorage = this.getSharedPreferences(BUDDIES_STORAGE, MODE_PRIVATE);
+
+        int updateFrequency = buddiesStorage.getInt(
+                BUDDIES_STORAGE_UPDATE_FREQUENCY, Integer.MIN_VALUE);
+        boolean isUpdateFrequencyValid = this.mValidator.validateUpdateFrequency(updateFrequency);
+        if (isUpdateFrequencyValid) {
+            this.mUpdateFrequency = updateFrequency;
+        } else {
+            this.mUpdateFrequency = UPDATE_FREQUENCY_DEFAULT;
+        }
+
+        int imagesToShowCount = buddiesStorage.getInt(
+                BUDDIES_STORAGE_IMAGES_TO_SHOW_COUNT, Integer.MIN_VALUE);
+        boolean isImagesToShowCountValid = this.mValidator.validateImagesToShowCount(imagesToShowCount);
+        if (isImagesToShowCountValid) {
+            this.mImagesToShowCount = imagesToShowCount;
+        } else {
+            this.mImagesToShowCount = IMAGES_TO_SHOW_COUNT_DEFAULT;
+        }
+
+        int buddiesOrderByAsInt = buddiesStorage.getInt(
+                BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, Integer.MIN_VALUE);
+        boolean isBuddiesOrderByValid = this.mValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
+        if (isBuddiesOrderByValid) {
+            this.mBuddiesOrderBy = OrderBy.values()[buddiesOrderByAsInt];
+        } else {
+            this.mBuddiesOrderBy = BUDDIES_ORDER_BY_DEFAULT;
+        }
+    }
+
+    private void updateBuddiesStorage(int updateFrequency, int imagesToShowCount, OrderBy buddiesOrderBy) {
+        SharedPreferences userStorage = this.getSharedPreferences(BUDDIES_STORAGE, MODE_PRIVATE);
+        SharedPreferences.Editor editor = userStorage.edit();
+        editor.putInt(BUDDIES_STORAGE_UPDATE_FREQUENCY, updateFrequency);
+        editor.putInt(BUDDIES_STORAGE_IMAGES_TO_SHOW_COUNT, imagesToShowCount);
+        editor.putInt(BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, buddiesOrderBy.ordinal());
+        editor.commit();
     }
 }
