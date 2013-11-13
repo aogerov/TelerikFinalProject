@@ -13,9 +13,9 @@ namespace FindMyBuddies.Api.Models
         public DateTime Timestamp { get; set; }
 
         [DataMember(Name = "latitudeAtCapturing")]
-        public string LatitudeAtCapturing { get; set; }
+        public double LatitudeAtCapturing { get; set; }
 
         [DataMember(Name = "longitudeAtCapturing")]
-        public string LongitudeAtCapturing { get; set; }
+        public double LongitudeAtCapturing { get; set; }
     }
 }

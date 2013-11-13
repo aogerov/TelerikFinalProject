@@ -1,5 +1,7 @@
 package com.gercho.findmybuddies.models;
 
+import java.util.Date;
+
 /**
  * Created by Gercho on 11/13/13.
  */
@@ -10,13 +12,19 @@ public class FriendModel {
     private boolean isOnline;
     private String latitude;
     private String longitude;
+    private Date coordinatesTimestamp;
+    private String coordinatesTimestampDifference;
+    private int distance;
 
-    public FriendModel(int id, String nickname, boolean isOnline, String latitude, String longitude) {
+    public FriendModel(int id, String nickname, boolean isOnline, String latitude, String longitude, Date coordinatesTimestamp, String coordinatesTimestampDifference, int distance) {
         this.id = id;
         this.nickname = nickname;
         this.isOnline = isOnline;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.coordinatesTimestamp = coordinatesTimestamp;
+        this.coordinatesTimestampDifference = coordinatesTimestampDifference;
+        this.distance = distance;
     }
 
     public int getId() {
@@ -57,5 +65,29 @@ public class FriendModel {
 
     public void setLongitude(String longitude) {
         this.longitude = longitude;
+    }
+
+    public Date getCoordinatesTimestamp() {
+        return coordinatesTimestamp;
+    }
+
+    public void setCoordinatesTimestamp(Date coordinatesTimestamp) {
+        this.coordinatesTimestamp = coordinatesTimestamp;
+    }
+
+    public String getCoordinatesTimestampDifference() {
+        return coordinatesTimestampDifference;
+    }
+
+    public void setCoordinatesTimestampDifference(String coordinatesTimestampDifference) {
+        this.coordinatesTimestampDifference = coordinatesTimestampDifference;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
     }
 }

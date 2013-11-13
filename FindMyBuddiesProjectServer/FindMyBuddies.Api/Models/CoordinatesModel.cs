@@ -7,12 +7,9 @@ namespace FindMyBuddies.Api.Models
     public class CoordinatesModel
     {
         [DataMember(Name = "latitude")]
-        public string Latitude { get; set; }
+        public double Latitude { get; set; }
 
         [DataMember(Name = "longitude")]
-        public string Longitude { get; set; }
-
-        [DataMember(Name = "timeStamp")]
-        public string Timestamp { get; set; }
+        public double Longitude { get; set; }
     }
 }

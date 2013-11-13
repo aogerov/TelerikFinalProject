@@ -16,12 +16,18 @@ namespace FindMyBuddies.Api.Models
         public bool IsOnline { get; set; }
 
         [DataMember(Name = "latitude")]
-        public string Latitude { get; set; }
+        public double Latitude { get; set; }
 
         [DataMember(Name = "longitude")]
-        public string Longitude { get; set; }
+        public double Longitude { get; set; }
 
         [DataMember(Name = "coordinatesTimestamp")]
         public DateTime CoordinatesTimestamp { get; set; }
+
+        [DataMember(Name = "coordinatesTimestampDifference")]
+        public string CoordinatesTimestampDifference { get; set; }
+
+        [DataMember(Name = "distance")]
+        public double Distance { get; set; }
     }
 }

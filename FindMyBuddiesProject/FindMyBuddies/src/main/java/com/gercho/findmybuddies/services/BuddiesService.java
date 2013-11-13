@@ -208,6 +208,7 @@ public class BuddiesService extends Service {
                 "friends/all?orderBy=%s?measureUnits=%s?sessionKey=%s",
                 this.mBuddiesOrderBy.toString(), this.mMeasureUnits.toString(), this.mSessionKey));
 
+        String TEST = this.mBuddiesOrderBy.toString();
         if (response.isStatusOk()) {
             FriendModels friendModels = this.mGson.fromJson(response.getMessage(), FriendModels.class);
             boolean areModelsValid = BuddiesServiceValidator.validateFriendModels(friendModels);

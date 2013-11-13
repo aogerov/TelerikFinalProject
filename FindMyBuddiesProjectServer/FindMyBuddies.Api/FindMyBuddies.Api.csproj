@@ -179,6 +179,7 @@
     <Compile Include="Models\FriendModel.cs" />
     <Compile Include="Models\FriendRequestResponseModel.cs" />
     <Compile Include="Models\ImageModel.cs" />
+    <Compile Include="Models\MeasureUnitsEnum.cs" />
     <Compile Include="Models\UserLoggedModel.cs" />
     <Compile Include="Models\UserModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

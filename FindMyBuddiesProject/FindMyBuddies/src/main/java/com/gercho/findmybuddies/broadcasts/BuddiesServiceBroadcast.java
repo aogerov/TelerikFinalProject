@@ -24,6 +24,7 @@ public class BuddiesServiceBroadcast {
         intent.putExtra(BuddiesService.BUDDIES_ORDER_BY_EXTRA, buddiesOrderBy);
         this.mService.sendBroadcast(intent);
     }
+
     public void sendBuddiesInfoUpdate(String friendModels) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, friendModels);
