@@ -27,7 +27,7 @@ namespace FindMyBuddies.Api.Models
         [DataMember(Name = "coordinatesTimestampDifference")]
         public string CoordinatesTimestampDifference { get; set; }
 
-        [DataMember(Name = "distance")]
-        public double Distance { get; set; }
+        [DataMember(Name = "distanceInMeters")]
+        public double DistanceInMeters { get; set; }
     }
 }

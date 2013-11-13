@@ -208,7 +208,7 @@ namespace FindMyBuddies.Api.Assists
             foreach (var friend in friends)
             {
                 var friendGeoCoordinate = new GeoCoordinate(friend.Latitude, friend.Longitude);
-                friend.Distance = userGeoCoordinate.GetDistanceTo(friendGeoCoordinate);
+                friend.DistanceInMeters = userGeoCoordinate.GetDistanceTo(friendGeoCoordinate);
             }
         }   
 
@@ -226,7 +226,7 @@ namespace FindMyBuddies.Api.Assists
             }
             else if (orderBy.ToLower() == Distance.ToLower())
             {
-                var orderedFriends = friends.OrderBy(f => f.Distance);
+                var orderedFriends = friends.OrderBy(f => f.DistanceInMeters);
                 friends = orderedFriends.ToList();
             }
         }
