@@ -81,8 +81,13 @@ namespace FindMyBuddies.Api.Assists
             }
 
             CalculateDistance(user, onlineFriends, units);
+            CalculateDistance(user, offlineFriends, units);
+
             CalculateTimestampDifferences(onlineFriends);
-            SortFriendLists(onlineFriends, offlineFriends, orderBy);
+            CalculateTimestampDifferences(offlineFriends);
+
+            SortFriendLists(onlineFriends, orderBy);
+            SortFriendLists(offlineFriends, orderBy);
 
             var friendModels = new List<FriendModel>();
             friendModels.AddRange(onlineFriends);
@@ -228,29 +233,22 @@ namespace FindMyBuddies.Api.Assists
             return (Math.PI / 180) * val;
         }
 
-        private static void SortFriendLists(
-            List<FriendModel> onlineFriends, List<FriendModel> offlineFriends, string orderBy)
+        private static void SortFriendLists(List<FriendModel> friends, string orderBy)
         {
             if (orderBy.ToLower() == Nickname.ToLower())
             {
-                var orderedOnlineFriends = onlineFriends.OrderBy(f => f.Nickname);
-                onlineFriends = orderedOnlineFriends.ToList();
-                var orderedOfflineFriends = offlineFriends.OrderBy(f => f.Nickname);
-                offlineFriends = orderedOfflineFriends.ToList();
+                var orderedFriends = friends.OrderBy(f => f.Nickname);
+                friends = orderedFriends.ToList();
             }
             else if (orderBy.ToLower() == CoordinatesTimestamp.ToLower())
             {
-                var orderedOnlineFriends = onlineFriends.OrderByDescending(f => f.CoordinatesTimestamp);
-                onlineFriends = orderedOnlineFriends.ToList();
-                var orderedOfflineFriends = offlineFriends.OrderByDescending(f => f.CoordinatesTimestamp);
-                offlineFriends = orderedOfflineFriends.ToList();
+                var orderedFriends = friends.OrderByDescending(f => f.CoordinatesTimestamp);
+                friends = orderedFriends.ToList();
             }
             else if (orderBy.ToLower() == Distance.ToLower())
             {
-                var orderedOnlineFriends = onlineFriends.OrderBy(f => f.Distance);
-                onlineFriends = orderedOnlineFriends.ToList();
-                var orderedOfflineFriends = offlineFriends.OrderBy(f => f.Distance);
-                offlineFriends = orderedOfflineFriends.ToList();
+                var orderedFriends = friends.OrderBy(f => f.Distance);
+                friends = orderedFriends.ToList();
             }
         }
     }

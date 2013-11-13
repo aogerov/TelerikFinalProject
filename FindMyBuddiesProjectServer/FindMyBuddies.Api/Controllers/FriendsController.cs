@@ -11,7 +11,7 @@ namespace FindMyBuddies.Api.Controllers
 {
     public class FriendsController : BaseApiController
     {
-        // api/friends/all?orderBy={orderBy}?measureUnits={measureUnits}?sessionKey={sessionKey}
+        // api/friends/all?orderBy={orderBy}&measureUnits={measureUnits}&sessionKey={sessionKey}
         [HttpGet]
         [ActionName("all")]
         public HttpResponseMessage GetAllFriends([FromUri]string orderBy, [FromUri]string measureUnits, [FromUri]string sessionKey)

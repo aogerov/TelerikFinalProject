@@ -14,7 +14,7 @@ public class FriendModel {
     private String longitude;
     private Date coordinatesTimestamp;
     private String coordinatesTimestampDifference;
-    private int distance;
+    private double distance;
 
     public FriendModel(int id, String nickname, boolean isOnline, String latitude, String longitude, Date coordinatesTimestamp, String coordinatesTimestampDifference, int distance) {
         this.id = id;
@@ -83,7 +83,7 @@ public class FriendModel {
         this.coordinatesTimestampDifference = coordinatesTimestampDifference;
     }
 
-    public int getDistance() {
+    public double getDistance() {
         return distance;
     }
 

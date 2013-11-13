@@ -205,8 +205,8 @@ public class BuddiesService extends Service {
         // TODO Buddies might not have any images and return empty list or null
         // TODO buddies list is with 2 lists online and offline
         HttpResponse response = this.mHttpRequester.get(String.format(
-                "friends/all?orderBy=%s?measureUnits=%s?sessionKey=%s",
-                this.mBuddiesOrderBy.toString(), this.mMeasureUnits.toString(), this.mSessionKey));
+                "friends/all?orderBy=%s&measureUnits=%s&sessionKey=%s",
+                this.mBuddiesOrderBy.toString().toLowerCase(), this.mMeasureUnits.toString().toLowerCase(), this.mSessionKey));
 
         String TEST = this.mBuddiesOrderBy.toString();
         if (response.isStatusOk()) {
