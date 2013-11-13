@@ -20,5 +20,8 @@ namespace FindMyBuddies.Api.Models
 
         [DataMember(Name = "longitude")]
         public string Longitude { get; set; }
+
+        [DataMember(Name = "coordinatesTimestamp")]
+        public DateTime CoordinatesTimestamp { get; set; }
     }
 }

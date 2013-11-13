@@ -7,15 +7,19 @@ using System.Web.Http;
 using FindMyBuddies.Api.Assists;
 using FindMyBuddies.Api.Models;
 using FindMyBuddies.Data;
+using FindMyBuddies.Model;
 
 namespace FindMyBuddies.Api.Controllers
 {
     public class FriendsController : BaseApiController
     {
-        // api/friends/all?sessionKey={sessionKey}
+        private static const string nickname = "NICKNAME";
+        private static const string coordinatesTimestamp = "COORDINATES_TIMESTAMP";
+
+        // api/friends/all?orderBy={orderBy}?measureUnits={measureUnits}?sessionKey={sessionKey}
         [HttpGet]
         [ActionName("all")]
-        public HttpResponseMessage GetAllFriends([FromUri]string sessionKey)
+        public HttpResponseMessage GetAllFriends([FromUri]string orderBy, [FromUri]string measureUnits, [FromUri]string sessionKey)
         {
             var responseMsg = this.PerformOperationAndHandleExeptions(() =>
             {
@@ -23,32 +27,13 @@ namespace FindMyBuddies.Api.Controllers
                 {
                     var user = Validator.ValidateSessionKey(context, sessionKey);
 
-                    var friends = user.Friends.OrderBy(u => u.Coordinates.Timestamp);
                     var onlineFriends = new List<FriendModel>();
                     var offlineFriends = new List<FriendModel>();
-                    foreach (var friend in friends)
-                    {
-                        if (friend.Coordinates.Timestamp.AddHours(-1) > DateTime.Now)
-                        {
-                            friend.IsOnline = false;
-                        }
-
-                        var friendModel = Parser.FriendToFriendModel(friend);
-                        if (friend.IsOnline)
-                        {
-                            onlineFriends.Add(friendModel);
-                        }
-                        else
-                        {
-                            offlineFriends.Add(friendModel);
-                        }
-                    }
+                    this.SplitOnlineAndOfflineFriends(user, onlineFriends, offlineFriends);
 
                     context.SaveChanges();
-                    var friendModels = new List<List<FriendModel>>();
-                    friendModels.Add(onlineFriends);
-                    friendModels.Add(offlineFriends);
-					
+                    var friendModels = SortFriendLists(orderBy, onlineFriends, offlineFriends);
+
                     var response = this.Request.CreateResponse(HttpStatusCode.OK, friendModels);
                     return response;
                 }
@@ -116,6 +101,81 @@ namespace FindMyBuddies.Api.Controllers
             });
 
             return responseMsg;
+        }
+
+        private void SplitOnlineAndOfflineFriends(User user, List<FriendModel> onlineFriends, List<FriendModel> offlineFriends)
+        {
+            foreach (var friend in user.Friends)
+            {
+                if (friend.Coordinates.Timestamp.AddHours(-1) > DateTime.Now)
+                {
+                    friend.IsOnline = false;
+                }
+
+                var friendModel = Parser.FriendToFriendModel(friend);
+                if (friendModel.IsOnline)
+                {
+                    onlineFriends.Add(friendModel);
+                }
+                else
+                {
+                    offlineFriends.Add(friendModel);
+                }
+            }
+        }
+
+        private List<FriendModel> SortFriendLists(string orderBy, List<FriendModel> onlineFriends, List<FriendModel> offlineFriends)
+        {
+            var friendModels = new List<FriendModel>();
+
+            if (orderBy.ToLower() == nickname.ToLower())
+            {
+                var orderedOnlineFriends = onlineFriends.OrderBy(f => f.Nickname);
+                friendModels.AddRange(orderedOnlineFriends);
+                var orderedOfflineFriends = offlineFriends.OrderBy(f => f.Nickname);
+                friendModels.AddRange(orderedOfflineFriends);
+            }
+            else if (orderBy.ToLower() == coordinatesTimestamp.ToLower())
+            {
+                var orderedOnlineFriends = onlineFriends.OrderBy(f => f.CoordinatesTimestamp);
+                friendModels.AddRange(orderedOnlineFriends);
+                var orderedOfflineFriends = offlineFriends.OrderBy(f => f.CoordinatesTimestamp);
+                friendModels.AddRange(orderedOfflineFriends);
+            }
+            else
+            {
+
+            }
+
+            return friendModels;
+        }
+
+        public double CalculateDistance(double latitudeA, double longitudeA, double latitudeB, double longitudeB, MeasureUnitsEnum units)
+        {
+            if (latitudeA <= -90 || latitudeA >= 90 || longitudeA <= -180 || longitudeA >= 180
+                || latitudeB <= -90 && latitudeB >= 90 || longitudeB <= -180 || longitudeB >= 180)
+            {
+                throw new ArgumentException(String.Format("Invalid value point coordinates. Points A({0},{1}) B({2},{3}) ",
+                                                          latitudeA, longitudeA, latitudeB, longitudeB));
+            }
+
+
+            double radians = (units == MeasureUnitsEnum.Kilometers) ? 6371 : 3960;
+            double radianLatitude = this.ToRadian(latitudeB - latitudeA);
+            double radianLongitude = this.ToRadian(longitudeB - longitudeA);
+
+            double pointA = Math.Sin(radianLatitude / 2) * Math.Sin(radianLatitude / 2) +
+                Math.Cos(this.ToRadian(latitudeA)) * Math.Cos(this.ToRadian(latitudeB)) *
+                Math.Sin(radianLongitude / 2) * Math.Sin(radianLongitude / 2);
+
+            double pointC = 2 * Math.Asin(Math.Min(1, Math.Sqrt(pointA)));
+            double pointD = radians * pointC;
+            return pointD;
+        }
+
+        private double ToRadian(double val)
+        {
+            return (Math.PI / 180) * val;
         }
     }
 }

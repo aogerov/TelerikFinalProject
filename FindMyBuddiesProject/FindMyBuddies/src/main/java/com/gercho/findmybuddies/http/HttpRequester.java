@@ -30,8 +30,8 @@ public class HttpRequester {
         HttpConnectionParams.setSoTimeout(this.mHttpParameters, SOCKET_TIMEOUT);
     }
 
-    public HttpResponse get(String uriEnd, String sessionKey) {
-        String uri = BASE_URI + uriEnd + sessionKey;
+    public HttpResponse get(String uriEnd) {
+        String uri = BASE_URI + uriEnd;
 
         String content = null;
         String error = null;
@@ -53,11 +53,8 @@ public class HttpRequester {
         }
     }
 
-    public HttpResponse post(String uriEnd, String data, String sessionKey) {
+    public HttpResponse post(String uriEnd, String data) {
         String uri = BASE_URI + uriEnd;
-        if (sessionKey != null) {
-            uri += sessionKey;
-        }
 
         String content = null;
         String error = null;

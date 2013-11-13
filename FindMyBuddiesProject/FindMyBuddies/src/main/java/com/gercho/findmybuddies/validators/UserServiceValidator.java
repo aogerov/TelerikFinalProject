@@ -11,7 +11,7 @@ public class UserServiceValidator {
     public static final int MIN_USERNAME_AND_NICKNAME_LENGTH = 3;
     public static final int MIN_PASSWORD_LENGTH = 6;
     public static final int MAX_INPUT_FIELDS_LENGTH = 30;
-    public static final int SESSION_KEY_LENGTH = 40;
+    public static final int SESSION_KEY_LENGTH = 50;
     public static final int SERVER_RESPONSE_MIN_LENGTH = 70;
 
     public static boolean validateUsername(String username) {

@@ -7,30 +7,19 @@ import java.util.ArrayList;
  */
 public class FriendModels { // implements Parcelable
 
-    private ArrayList<FriendModel> onlineFriends;
-    private ArrayList<FriendModel> offlineFriends;
+    private ArrayList<FriendModel> friends;
 
-    public FriendModels(){
-        this.onlineFriends = new ArrayList<FriendModel>();
-        this.offlineFriends = new ArrayList<FriendModel>();
+    public FriendModels(ArrayList<FriendModel> friends){
+        this.friends = friends;
     }
 
-    public ArrayList<FriendModel> getOnlineFriends() {
-        return onlineFriends;
+    public ArrayList<FriendModel> getFriends() {
+        return friends;
     }
 
-    public void setOnlineFriends(ArrayList<FriendModel> onlineFriends) {
-        this.onlineFriends = onlineFriends;
+    public void setFriends(ArrayList<FriendModel> friends) {
+        this.friends = friends;
     }
-
-    public ArrayList<FriendModel> getOfflineFriends() {
-        return offlineFriends;
-    }
-
-    public void setOfflineFriends(ArrayList<FriendModel> offlineFriends) {
-        this.offlineFriends = offlineFriends;
-    }
-
     // TODO try to make this on intent.putExtra();
 //
 //    @Override

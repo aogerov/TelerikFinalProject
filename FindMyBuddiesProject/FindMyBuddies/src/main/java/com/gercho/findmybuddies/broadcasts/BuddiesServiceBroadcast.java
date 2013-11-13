@@ -3,7 +3,7 @@ package com.gercho.findmybuddies.broadcasts;
 import android.app.Service;
 import android.content.Intent;
 
-import com.gercho.findmybuddies.helpers.OrderBy;
+import com.gercho.findmybuddies.helpers.EnumOrderBy;
 import com.gercho.findmybuddies.services.BuddiesService;
 
 /**
@@ -17,7 +17,7 @@ public class BuddiesServiceBroadcast {
         this.mService = service;
     }
 
-    public void sendCurrentSettings(int updateFrequency, int imagesToShowCount, OrderBy buddiesOrderBy) {
+    public void sendCurrentSettings(int updateFrequency, int imagesToShowCount, EnumOrderBy buddiesOrderBy) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.UPDATE_FREQUENCY_EXTRA, updateFrequency);
         intent.putExtra(BuddiesService.IMAGES_TO_SHOW_COUNT_EXTRA, imagesToShowCount);
@@ -26,7 +26,7 @@ public class BuddiesServiceBroadcast {
     }
     public void sendBuddiesInfoUpdate(String friendModels) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
-        intent.putExtra(BuddiesService.BUDDIES_INFO_UDATE_EXTRA, friendModels);
+        intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, friendModels);
         this.mService.sendBroadcast(intent);
     }
 }

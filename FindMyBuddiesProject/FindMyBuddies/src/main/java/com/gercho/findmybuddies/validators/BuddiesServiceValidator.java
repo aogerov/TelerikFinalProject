@@ -1,7 +1,7 @@
 package com.gercho.findmybuddies.validators;
 
-import com.gercho.findmybuddies.helpers.OrderBy;
-import com.gercho.findmybuddies.http.HttpResponse;
+import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
+import com.gercho.findmybuddies.helpers.EnumOrderBy;
 import com.gercho.findmybuddies.models.FriendModels;
 
 /**
@@ -42,16 +42,15 @@ public class BuddiesServiceValidator {
     }
 
     public static boolean validateBuddiesOrderByAsInt(int buddiesOrderBy) {
-        if (buddiesOrderBy < 0 || buddiesOrderBy > OrderBy.values().length) {
+        if (buddiesOrderBy < 0 || buddiesOrderBy >= EnumOrderBy.values().length) {
             return false;
         }
 
         return true;
     }
 
-    public static boolean validateHttpResponse(HttpResponse response) {
-        if (response == null || response.getMessage() == null ||
-                response.getMessage().length() < SERVER_RESPONSE_MIN_LENGTH) {
+    public static boolean validateDistanceAsInt(int distanceAsInt) {
+        if (distanceAsInt < 0 || distanceAsInt >= EnumMeasureUnits.values().length) {
             return false;
         }
 

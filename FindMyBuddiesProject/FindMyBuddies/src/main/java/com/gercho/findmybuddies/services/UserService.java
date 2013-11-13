@@ -149,7 +149,7 @@ public class UserService extends Service {
 
     private void startAdditionalServices() {
         Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(UserService.START_USER_SERVICE);
+        userServiceIntent.setAction(BuddiesService.START_BUDDIES_SERVICE);
         userServiceIntent.putExtra(SESSION_KEY_EXTRA, this.mSessionKey);
         this.startService(userServiceIntent);
     }
@@ -167,7 +167,7 @@ public class UserService extends Service {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                HttpResponse response = UserService.this.mHttpRequester.get("users/validate?sessionKey=", sessionKeyAsString);
+                HttpResponse response = UserService.this.mHttpRequester.get("users/validate?sessionKey=" + sessionKeyAsString);
                 UserService.this.processHttpResponse(response, ERROR_MESSAGE_INIT_FAILED);
             }
         });
@@ -187,7 +187,7 @@ public class UserService extends Service {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                HttpResponse response = UserService.this.mHttpRequester.post("users/login", userModelAsJson, null);
+                HttpResponse response = UserService.this.mHttpRequester.post("users/login", userModelAsJson);
                 UserService.this.processHttpResponse(response, ERROR_MESSAGE_LOGIN_FAILED);
             }
         });
@@ -207,7 +207,7 @@ public class UserService extends Service {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                HttpResponse response = UserService.this.mHttpRequester.post("users/register", userModelAsJson, null);
+                HttpResponse response = UserService.this.mHttpRequester.post("users/register", userModelAsJson);
                 UserService.this.processHttpResponse(response, ERROR_MESSAGE_REGISTER_FAILED);
             }
         });
@@ -219,7 +219,7 @@ public class UserService extends Service {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                UserService.this.mHttpRequester.get("users/logout?sessionKey=", sessionKeyAsString);
+                UserService.this.mHttpRequester.get("users/logout?sessionKey=" + sessionKeyAsString);
             }
         });
     }
