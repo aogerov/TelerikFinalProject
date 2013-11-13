@@ -2,7 +2,6 @@ package com.gercho.findmybuddies.validators;
 
 import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
 import com.gercho.findmybuddies.helpers.EnumOrderBy;
-import com.gercho.findmybuddies.models.FriendModel;
 
 /**
  * Created by Gercho on 11/12/13.
@@ -50,14 +49,6 @@ public class BuddiesServiceValidator {
 
     public static boolean validateDistanceAsInt(int distanceAsInt) {
         if (distanceAsInt < 0 || distanceAsInt >= EnumMeasureUnits.values().length) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public static boolean validateFriendModels(FriendModel[] friends) {
-        if (friends.length == 0) {
             return false;
         }
 

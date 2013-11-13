@@ -11,11 +11,9 @@ import android.os.Looper;
 import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
 import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
 import com.gercho.findmybuddies.helpers.EnumOrderBy;
-import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
-import com.gercho.findmybuddies.models.FriendModel;
 import com.gercho.findmybuddies.validators.BuddiesServiceValidator;
 import com.google.gson.Gson;
 
@@ -25,6 +23,8 @@ import com.google.gson.Gson;
 public class BuddiesService extends Service {
 
     public static final String START_BUDDIES_SERVICE = "com.gercho.action.START_BUDDIES_SERVICE";
+    public static final String PAUSE_BUDDIES_SERVICE = "com.gercho.action.PAUSE_BUDDIES_SERVICE";
+    public static final String RESUME_BUDDIES_SERVICE = "com.gercho.action.RESUME_BUDDIES_SERVICE";
     public static final String STOP_BUDDIES_SERVICE = "com.gercho.action.STOP_BUDDIES_SERVICE";
     public static final String GET_CURRENT_SETTINGS = "com.gercho.action.GET_CURRENT_SETTINGS";
     public static final String SET_UPDATE_FREQUENCY = "com.gercho.action.SET_UPDATE_FREQUENCY";
@@ -54,6 +54,7 @@ public class BuddiesService extends Service {
 
     private boolean mIsServiceAlreadyStarted;
     private boolean mIsUpdatingActive;
+    private boolean mIsOnPauseMode;
     private boolean mIsNetworkAvailable;
     private boolean mIsGpsAvailable;
     private BuddiesServiceBroadcast mBroadcast;
@@ -86,6 +87,10 @@ public class BuddiesService extends Service {
         String action = intent.getAction();
         if (START_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
             this.startBuddiesService(intent);
+        } else if (RESUME_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
+            this.resumeBuddiesService();
+        } else if (PAUSE_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
+            this.pauseBuddiesService();
         } else if (STOP_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
             this.stopBuddiesService();
         } else if (GET_CURRENT_SETTINGS.equalsIgnoreCase(action)) {
@@ -126,12 +131,21 @@ public class BuddiesService extends Service {
         // TODO fix the shit below, commented just for testing, uncomment on release
 //        if (!this.mIsServiceAlreadyStarted) {
 //            this.mIsServiceAlreadyStarted = true;
-            this.mIsUpdatingActive = false;
-            this.mIsNetworkAvailable = true;
-            this.mIsGpsAvailable = true;
-            this.readBuddiesStorage();
-            this.runServiceUpdating();
+        this.mIsNetworkAvailable = true;
+        this.mIsGpsAvailable = true;
+        this.readBuddiesStorage();
+
+        this.mIsUpdatingActive = true;
+        this.runServiceUpdating();
 //        }
+    }
+
+    private void resumeBuddiesService() {
+        this.mIsOnPauseMode = false;
+    }
+
+    private void pauseBuddiesService() {
+        this.mIsOnPauseMode = true;
     }
 
     private void stopBuddiesService() {
@@ -180,7 +194,6 @@ public class BuddiesService extends Service {
     }
 
     private void runServiceUpdating() {
-        this.mIsUpdatingActive = true;
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -189,7 +202,7 @@ public class BuddiesService extends Service {
                         BuddiesService.this.updateCurrentPosition();
                     }
 
-                    if (BuddiesService.this.mIsNetworkAvailable) {
+                    if (!BuddiesService.this.mIsOnPauseMode && BuddiesService.this.mIsNetworkAvailable) {
                         BuddiesService.this.updateBuddiesInfo();
                     }
 
@@ -209,15 +222,7 @@ public class BuddiesService extends Service {
                 this.mBuddiesOrderBy.toString().toLowerCase(), this.mSessionKey));
 
         if (response.isStatusOk()) {
-            try {
-                FriendModel[] friends = this.mGson.fromJson(response.getMessage(), FriendModel[].class);
-                boolean areModelsValid = BuddiesServiceValidator.validateFriendModels(friends);
-                if (areModelsValid) {
-                    this.mBroadcast.sendBuddiesInfoUpdate(friends);
-                }
-            } catch (Exception ex) {
-                LogHelper.logThreadId("updateBuddiesInfo fromJson parse");
-            }
+            this.mBroadcast.sendBuddiesInfoUpdate(response.getMessage());
         }
     }
 

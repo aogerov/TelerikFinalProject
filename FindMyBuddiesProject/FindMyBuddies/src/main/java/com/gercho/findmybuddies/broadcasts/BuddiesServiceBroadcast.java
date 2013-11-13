@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 
 import com.gercho.findmybuddies.helpers.EnumOrderBy;
-import com.gercho.findmybuddies.models.FriendModel;
 import com.gercho.findmybuddies.services.BuddiesService;
 
 /**
@@ -26,9 +25,9 @@ public class BuddiesServiceBroadcast {
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendBuddiesInfoUpdate(FriendModel[] friends) {
+    public void sendBuddiesInfoUpdate(String buddieModelsAsJson) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
-        intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, friends);
+        intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, buddieModelsAsJson);
         this.mService.sendBroadcast(intent);
     }
 }

@@ -3,7 +3,7 @@ package com.gercho.findmybuddies.models;
 /**
  * Created by Gercho on 11/13/13.
  */
-public class FriendModel {
+public class BuddieModel {
 
     private int id;
     private String nickname;
@@ -15,7 +15,7 @@ public class FriendModel {
     private String distanceInKilometersAsString;
     private String distanceInMilesAsString;
 
-    public FriendModel(int id, String nickname, boolean isOnline, double latitude, double longitude,
+    public BuddieModel(int id, String nickname, boolean isOnline, double latitude, double longitude,
                        String coordinatesTimestampDifference, int distanceInMeters,
                        String distanceInKilometersAsString, String distanceInMilesAsString) {
         this.id = id;

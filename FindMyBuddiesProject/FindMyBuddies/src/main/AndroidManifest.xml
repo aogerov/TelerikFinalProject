@@ -38,9 +38,12 @@
                 <action android:name="com.gercho.action.START_ADDITIONAL_SERVICES" />
             </intent-filter>
         </service>
+
         <service android:name=".services.BuddiesService">
             <intent-filter>
                 <action android:name="com.gercho.action.START_BUDDIES_SERVICE" />
+                <action android:name="com.gercho.action.PAUSE_BUDDIES_SERVICE" />
+                <action android:name="com.gercho.action.RESUME_BUDDIES_SERVICE" />
                 <action android:name="com.gercho.action.STOP_BUDDIES_SERVICE" />
                 <action android:name="com.gercho.action.GET_CURRENT_SETTINGS" />
                 <action android:name="com.gercho.action.SET_UPDATE_FREQUENCY" />

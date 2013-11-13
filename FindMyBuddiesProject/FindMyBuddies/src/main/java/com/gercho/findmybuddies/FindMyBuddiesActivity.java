@@ -1,6 +1,9 @@
 package com.gercho.findmybuddies;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -11,16 +14,20 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
+import com.gercho.findmybuddies.helpers.ToastNotifier;
+import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.services.BuddiesService;
 import com.gercho.findmybuddies.services.UserService;
+import com.google.gson.Gson;
 
 /**
  * Created by Gercho on 11/8/13.
  */
 public class FindMyBuddiesActivity extends FragmentActivity implements ListView.OnItemClickListener {
-    public static final String EXTRA_COURSE_LIB = "course lib";
 
+    public static final String EXTRA_COURSE_LIB = "course lib";
     private static final int COURSE_LIB_NOT_SET = -1;
 
     //    private CoursePagerAdapter mCoursePagerAdapter;
@@ -28,10 +35,15 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
     private NavigationDrawer mNavigationDrawer;
     private boolean mIsLoggingInProgress;
 
+    private BuddiesServiceUpdateReceiver mBuddiesServiceUpdateReceiver;
+    private Gson mGson;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.activity_find_my_buddies);
+
+        this.mGson = new Gson();
 
 //        this.mCoursePagerAdapter = new CoursePagerAdapter(
 //                this.getSupportFragmentManager(), this);
@@ -48,6 +60,35 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 //            this.mCoursePagerAdapter.setCourseLib(courseLib);
             this.mNavigationDrawer.setSelection(courseLib);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (this.mBuddiesServiceUpdateReceiver == null) {
+            this.mBuddiesServiceUpdateReceiver = new BuddiesServiceUpdateReceiver();
+            IntentFilter intentFilter = new IntentFilter(BuddiesService.BUDDIES_SERVICE_BROADCAST);
+            this.registerReceiver(this.mBuddiesServiceUpdateReceiver, intentFilter);
+        }
+
+        Intent buddiesServiceIntent = new Intent();
+        buddiesServiceIntent.setAction(BuddiesService.RESUME_BUDDIES_SERVICE);
+        this.startService(buddiesServiceIntent);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (this.mBuddiesServiceUpdateReceiver != null) {
+            this.unregisterReceiver(this.mBuddiesServiceUpdateReceiver);
+            this.mBuddiesServiceUpdateReceiver = null;
+        }
+
+        Intent buddiesServiceIntent = new Intent();
+        buddiesServiceIntent.setAction(BuddiesService.PAUSE_BUDDIES_SERVICE);
+        this.startService(buddiesServiceIntent);
     }
 
     @Override
@@ -108,5 +149,31 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
         Intent mainActivityIntent = new Intent(this, MainActivity.class);
         this.startActivity(mainActivityIntent);
+    }
+
+    private class BuddiesServiceUpdateReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null && action.equals(BuddiesService.BUDDIES_SERVICE_BROADCAST)) {
+                String buddieModelsAsJson = intent.getStringExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA);
+
+                if (buddieModelsAsJson != null) {
+                    this.handleBuddiesUpdated(buddieModelsAsJson);
+                }
+            }
+        }
+
+        private void handleBuddiesUpdated(String buddieModelsAsJson) {
+            try {
+                BuddieModel[] buddies = FindMyBuddiesActivity.this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
+                if (buddies.length > 0) {
+                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count - " + buddies.length);
+                }
+            } catch (Exception ex) {
+                LogHelper.logThreadId("updateBuddiesInfo fromJson parse");
+            }
+        }
     }
 }
