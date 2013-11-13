@@ -7,7 +7,6 @@ using System.Web.Http;
 using FindMyBuddies.Api.Assists;
 using FindMyBuddies.Api.Models;
 using FindMyBuddies.Data;
-using FindMyBuddies.Model;
 
 namespace FindMyBuddies.Api.Controllers
 {

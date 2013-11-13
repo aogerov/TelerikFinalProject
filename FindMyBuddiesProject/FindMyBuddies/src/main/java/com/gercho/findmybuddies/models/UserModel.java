@@ -19,7 +19,6 @@ public class UserModel {
     public UserModel(String username, String authCode) {
         this.username = username;
         this.authCode = authCode;
-        this.nickname = nickname;
     }
 
     public String getUsername() {

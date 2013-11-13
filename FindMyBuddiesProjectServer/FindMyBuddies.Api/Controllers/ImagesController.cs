@@ -39,7 +39,7 @@ namespace FindMyBuddies.Api.Controllers
             return responseMsg;
         }
 
-        // api/images/get?sessionKey={sessionKey}
+        // api/images/get?imagesCount={imagesCount}?sessionKey={sessionKey}
         [HttpPost]
         [ActionName("get")]
         public HttpResponseMessage PostGetFriendsImage(

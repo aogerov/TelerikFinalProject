@@ -12,6 +12,8 @@ import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
 import com.gercho.findmybuddies.helpers.OrderBy;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.http.HttpRequester;
+import com.gercho.findmybuddies.http.HttpResponse;
+import com.gercho.findmybuddies.models.FriendModels;
 import com.gercho.findmybuddies.validators.BuddiesServiceValidator;
 import com.google.gson.Gson;
 
@@ -26,11 +28,13 @@ public class BuddiesService extends Service {
     public static final String SET_UPDATE_FREQUENCY = "com.gercho.action.SET_UPDATE_FREQUENCY";
     public static final String SET_IMAGES_TO_SHOW_COUNT = "com.gercho.action.SET_IMAGES_TO_SHOW_COUNT";
     public static final String SET_BUDDIES_ORDER_BY = "com.gercho.action.SET_BUDDIES_ORDER_BY";
+    public static final String GET_BUDDIE_IMAGES = "com.gercho.action.GET_BUDDIE_IMAGES";
 
     public static final String BUDDIES_SERVICE_BROADCAST = "BuddiesServiceBroadcast";
     public static final String UPDATE_FREQUENCY_EXTRA = "UpdateFrequencyExtra";
     public static final String IMAGES_TO_SHOW_COUNT_EXTRA = "ImagesToShowCountExtra";
     public static final String BUDDIES_ORDER_BY_EXTRA = "BuddiesOrderByExtra";
+    public static final String BUDDIES_INFO_UDATE_EXTRA = "BuddiesInfoUpdateExtra";
 
     private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60; // 1 minute
     private static final int IMAGES_TO_SHOW_COUNT_DEFAULT = 3;
@@ -84,6 +88,8 @@ public class BuddiesService extends Service {
             this.setImagesToShowCount(intent);
         } else if (SET_BUDDIES_ORDER_BY.equalsIgnoreCase(action)) {
             this.setBuddiesOrderBy(intent);
+        } else if (GET_BUDDIE_IMAGES.equalsIgnoreCase(action)) {
+            this.getBuddieImages();
         }
 
         return START_REDELIVER_INTENT;
@@ -107,14 +113,15 @@ public class BuddiesService extends Service {
             this.mSessionKey = sessionKey;
         }
 
-        if (!this.mIsServiceAlreadyStarted) {
+        // TODO fix the shit below, commented jist for testing, uncomment on release
+//        if (!this.mIsServiceAlreadyStarted) {
             this.mIsUpdatingActive = false;
             this.mIsNetworkAvailable = true;
             this.mIsGpsAvailable = true;
-            this.mIsServiceAlreadyStarted = true;
+//            this.mIsServiceAlreadyStarted = true;
             this.readBuddiesStorage();
             this.runServiceUpdating();
-        }
+//        }
     }
 
     private void stopBuddiesService() {
@@ -150,6 +157,10 @@ public class BuddiesService extends Service {
         }
     }
 
+    private void getBuddieImages() {
+
+    }
+
     private void runServiceUpdating() {
         this.mIsUpdatingActive = true;
         this.mHandler.post(new Runnable() {
@@ -177,6 +188,22 @@ public class BuddiesService extends Service {
     private void updateBuddiesInfo() {
         // TODO Buddies might not have any images and return empty list or null
         // TODO buddies list is with 2 lists online and offline
+        HttpResponse response = this.mHttpRequester.get("friends/all?sessionKey=", this.mSessionKey);
+
+        if (response.isStatusOk()) {
+            boolean isResponseValid = BuddiesServiceValidator.validateHttpResponse(response);
+            if (!isResponseValid) {
+                return;
+            }
+
+            FriendModels friendModels = this.mGson.fromJson(response.getMessage(), FriendModels.class);
+            boolean areModelsValid = BuddiesServiceValidator.validateFriendModels(friendModels);
+            if (!areModelsValid) {
+                return;
+            }
+
+            this.mBroadcast.sendBuddiesInfoUpdate(response.getMessage());
+        }
     }
 
     private void readBuddiesStorage() {

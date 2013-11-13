@@ -46,6 +46,7 @@
                 <action android:name="com.gercho.action.SET_UPDATE_FREQUENCY" />
                 <action android:name="com.gercho.action.SET_IMAGES_TO_SHOW_COUNT" />
                 <action android:name="com.gercho.action.SET_BUDDIES_ORDER_BY" />
+                <action android:name="com.gercho.action.GET_BUDDIE_IMAGES" />
             </intent-filter>
         </service>
     </application>

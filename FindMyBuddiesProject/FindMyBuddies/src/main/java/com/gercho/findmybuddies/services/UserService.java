@@ -167,9 +167,7 @@ public class UserService extends Service {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                HttpResponse response =
-                        UserService.this.mHttpRequester.get("users/validate?sessionKey=", sessionKeyAsString);
-
+                HttpResponse response = UserService.this.mHttpRequester.get("users/validate?sessionKey=", sessionKeyAsString);
                 UserService.this.processHttpResponse(response, ERROR_MESSAGE_INIT_FAILED);
             }
         });
@@ -189,9 +187,7 @@ public class UserService extends Service {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                HttpResponse response =
-                        UserService.this.mHttpRequester.post("users/login", userModelAsJson, null);
-
+                HttpResponse response = UserService.this.mHttpRequester.post("users/login", userModelAsJson, null);
                 UserService.this.processHttpResponse(response, ERROR_MESSAGE_LOGIN_FAILED);
             }
         });
@@ -211,9 +207,7 @@ public class UserService extends Service {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                HttpResponse response =
-                        UserService.this.mHttpRequester.post("users/register", userModelAsJson, null);
-
+                HttpResponse response = UserService.this.mHttpRequester.post("users/register", userModelAsJson, null);
                 UserService.this.processHttpResponse(response, ERROR_MESSAGE_REGISTER_FAILED);
             }
         });
