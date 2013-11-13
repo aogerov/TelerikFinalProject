@@ -48,6 +48,7 @@
                 <action android:name="com.gercho.action.SET_BUDDIES_ORDER_BY" />
                 <action android:name="com.gercho.action.SET_MEASURE_UNITS" />
                 <action android:name="com.gercho.action.GET_BUDDIE_IMAGES" />
+                <action android:name="com.gercho.action.FORCE_UPDATE" />
             </intent-filter>
         </service>
     </application>

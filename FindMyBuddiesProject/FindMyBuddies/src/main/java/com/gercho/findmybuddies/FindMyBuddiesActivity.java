@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
+import com.gercho.findmybuddies.services.BuddiesService;
 import com.gercho.findmybuddies.services.UserService;
 
 /**
@@ -31,8 +32,6 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.activity_find_my_buddies);
-
-        this.startServices();
 
 //        this.mCoursePagerAdapter = new CoursePagerAdapter(
 //                this.getSupportFragmentManager(), this);
@@ -72,6 +71,9 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_forceUpdate:
+                this.forceUpdate();
+                return true;
             case R.id.action_logout:
                 this.logout();
                 return true;
@@ -93,8 +95,10 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
         this.mNavigationDrawer.syncState();
     }
 
-    private void startServices() {
-
+    private void forceUpdate() {
+        Intent userServiceIntent = new Intent();
+        userServiceIntent.setAction(BuddiesService.FORCE_UPDATE);
+        this.startService(userServiceIntent);
     }
 
     private void logout() {

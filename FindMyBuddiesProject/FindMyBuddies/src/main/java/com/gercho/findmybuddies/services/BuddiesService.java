@@ -32,6 +32,7 @@ public class BuddiesService extends Service {
     public static final String SET_BUDDIES_ORDER_BY = "com.gercho.action.SET_BUDDIES_ORDER_BY";
     public static final String SET_MEASURE_UNITS = "com.gercho.action.SET_MEASURE_UNITS";
     public static final String GET_BUDDIE_IMAGES = "com.gercho.action.GET_BUDDIE_IMAGES";
+    public static final String FORCE_UPDATE = "com.gercho.action.FORCE_UPDATE";
 
     public static final String BUDDIES_SERVICE_BROADCAST = "BuddiesServiceBroadcast";
     public static final String UPDATE_FREQUENCY_EXTRA = "UpdateFrequencyExtra";
@@ -40,7 +41,7 @@ public class BuddiesService extends Service {
     public static final String BUDDIES_MEASURE_UNITS_EXTRA = "BuddiesMeasureUnitsExtra";
     public static final String BUDDIES_INFO_UPDATE_EXTRA = "BuddiesInfoUpdateExtra";
 
-    private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60; // 1 minute
+    private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60 * 5; // 5 minutes
     private static final int IMAGES_TO_SHOW_COUNT_DEFAULT = 3;
     private static final EnumOrderBy BUDDIES_ORDER_BY_DEFAULT = EnumOrderBy.DISTANCE;
     private static final EnumMeasureUnits MEASURE_UNITS_DEFAULT = EnumMeasureUnits.KILOMETERS;
@@ -98,7 +99,7 @@ public class BuddiesService extends Service {
         } else if (SET_MEASURE_UNITS.equalsIgnoreCase(action)) {
             this.setMeasureUnits(intent);
         } else if (GET_BUDDIE_IMAGES.equalsIgnoreCase(action)) {
-            this.getBuddieImages();
+            this.getBuddieImages(intent);
         }
 
         return START_REDELIVER_INTENT;
@@ -122,7 +123,7 @@ public class BuddiesService extends Service {
             this.mSessionKey = sessionKey;
         }
 
-        // TODO fix the shit below, commented jist for testing, uncomment on release
+        // TODO fix the shit below, commented just for testing, uncomment on release
 //        if (!this.mIsServiceAlreadyStarted) {
 //            this.mIsServiceAlreadyStarted = true;
             this.mIsUpdatingActive = false;
@@ -174,8 +175,8 @@ public class BuddiesService extends Service {
         }
     }
 
-    private void getBuddieImages() {
-
+    private void getBuddieImages(Intent intent) {
+        // TODO fill
     }
 
     private void runServiceUpdating() {
@@ -199,13 +200,10 @@ public class BuddiesService extends Service {
     }
 
     private void updateCurrentPosition() {
-
+        // TODO fill
     }
 
     private void updateBuddiesInfo() {
-        // TODO Buddies might not have any images and return empty list or null
-        // TODO buddies list is with 2 lists online and offline
-
         HttpResponse response = this.mHttpRequester.get(String.format(
                 "friends/all?orderBy=%s&sessionKey=%s",
                 this.mBuddiesOrderBy.toString().toLowerCase(), this.mSessionKey));
