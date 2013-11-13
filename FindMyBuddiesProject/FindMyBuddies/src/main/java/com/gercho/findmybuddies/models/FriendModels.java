@@ -1,25 +1,24 @@
 package com.gercho.findmybuddies.models;
 
-import java.util.ArrayList;
-
 /**
  * Created by Gercho on 11/13/13.
  */
 public class FriendModels { // implements Parcelable
 
-    private ArrayList<FriendModel> friends;
+    private FriendModel[] friends;
 
-    public FriendModels(ArrayList<FriendModel> friends){
+    public FriendModels(FriendModel[] friends) {
         this.friends = friends;
     }
 
-    public ArrayList<FriendModel> getFriends() {
+    public FriendModel[] getFriends() {
         return friends;
     }
 
-    public void setFriends(ArrayList<FriendModel> friends) {
+    public void setFriends(FriendModel[] friends) {
         this.friends = friends;
     }
+
     // TODO try to make this on intent.putExtra();
 //
 //    @Override

@@ -28,6 +28,12 @@ namespace FindMyBuddies.Api.Models
         public string CoordinatesTimestampDifference { get; set; }
 
         [DataMember(Name = "distanceInMeters")]
-        public double DistanceInMeters { get; set; }
+        public int DistanceInMeters { get; set; }
+
+        [DataMember(Name = "distanceInKilometersAsString")]
+        public string DistanceInKilometersAsString { get; set; }
+
+        [DataMember(Name = "distanceInMilesAsString")]
+        public string DistanceInMilesAsString { get; set; }
     }
 }

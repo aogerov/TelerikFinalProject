@@ -10,13 +10,17 @@ public class FriendModel {
     private int id;
     private String nickname;
     private boolean isOnline;
-    private String latitude;
-    private String longitude;
+    private double latitude;
+    private double longitude;
     private Date coordinatesTimestamp;
     private String coordinatesTimestampDifference;
-    private double distance;
+    private int distanceInMeters;
+    private String distanceInKilometersAsString;
+    private String distanceInMilesAsString;
 
-    public FriendModel(int id, String nickname, boolean isOnline, String latitude, String longitude, Date coordinatesTimestamp, String coordinatesTimestampDifference, int distance) {
+    public FriendModel(int id, String nickname, boolean isOnline, double latitude, double longitude,
+                       Date coordinatesTimestamp, String coordinatesTimestampDifference, int distanceInMeters,
+                       String distanceInKilometersAsString, String distanceInMilesAsString) {
         this.id = id;
         this.nickname = nickname;
         this.isOnline = isOnline;
@@ -24,7 +28,9 @@ public class FriendModel {
         this.longitude = longitude;
         this.coordinatesTimestamp = coordinatesTimestamp;
         this.coordinatesTimestampDifference = coordinatesTimestampDifference;
-        this.distance = distance;
+        this.distanceInMeters = distanceInMeters;
+        this.distanceInKilometersAsString = distanceInKilometersAsString;
+        this.distanceInMilesAsString = distanceInMilesAsString;
     }
 
     public int getId() {
@@ -51,19 +57,19 @@ public class FriendModel {
         this.isOnline = isOnline;
     }
 
-    public String getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(String latitude) {
+    public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
 
-    public String getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(String longitude) {
+    public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
 
@@ -83,11 +89,27 @@ public class FriendModel {
         this.coordinatesTimestampDifference = coordinatesTimestampDifference;
     }
 
-    public double getDistance() {
-        return distance;
+    public int getDistanceInMeters() {
+        return distanceInMeters;
     }
 
-    public void setDistance(int distance) {
-        this.distance = distance;
+    public void setDistanceInMeters(int distanceInMeters) {
+        this.distanceInMeters = distanceInMeters;
+    }
+
+    public String getDistanceInKilometersAsString() {
+        return distanceInKilometersAsString;
+    }
+
+    public void setDistanceInKilometersAsString(String distanceInKilometersAsString) {
+        this.distanceInKilometersAsString = distanceInKilometersAsString;
+    }
+
+    public String getDistanceInMilesAsString() {
+        return distanceInMilesAsString;
+    }
+
+    public void setDistanceInMilesAsString(String distanceInMilesAsString) {
+        this.distanceInMilesAsString = distanceInMilesAsString;
     }
 }

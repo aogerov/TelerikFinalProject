@@ -13,6 +13,12 @@ namespace FindMyBuddies.Api.Assists
         private const string Nickname = "NICKNAME";
         private const string Distance = "DISTANCE";
         private const string CoordinatesTimestamp = "COORDINATES_TIMESTAMP";
+        private const string TimeDifferenceMoreThanDay = "more than 24 hours";
+        private const int MetersInKilometer = 1000;
+        private const int YardsInMile = 1760;
+        private const double MetersToKilometer = 0.001;
+        private const double MetersToYards = 1.0936133;
+        private const double MetersToMiles = 0.000621371192;
 
         public static User UserModelToUser(UserModel userModel)
         {
@@ -175,7 +181,7 @@ namespace FindMyBuddies.Api.Assists
                 var timeDifference = timeNow.Subtract(friend.CoordinatesTimestamp);
                 if (timeDifference.Days > 0)
                 {
-                    friend.CoordinatesTimestampDifference = "more than 24 hours";
+                    friend.CoordinatesTimestampDifference = TimeDifferenceMoreThanDay;
                     continue;
                 }
 
@@ -208,7 +214,35 @@ namespace FindMyBuddies.Api.Assists
             foreach (var friend in friends)
             {
                 var friendGeoCoordinate = new GeoCoordinate(friend.Latitude, friend.Longitude);
-                friend.DistanceInMeters = userGeoCoordinate.GetDistanceTo(friendGeoCoordinate);
+                int meters = Convert.ToInt32(userGeoCoordinate.GetDistanceTo(friendGeoCoordinate));
+                friend.DistanceInMeters = meters;
+
+                double kilometers = meters * MetersToKilometer;
+                int yards = Convert.ToInt32(meters * MetersToYards);
+                double miles = meters * MetersToMiles;
+
+                ParseDistancesToString(friend, meters, kilometers, yards, miles);
+            }
+        }
+
+        private static void ParseDistancesToString(FriendModel friend, int meters, double kilometers, int yards, double miles)
+        {
+            if (meters < MetersInKilometer)
+            {
+                friend.DistanceInKilometersAsString = String.Format("{0} meters", meters);
+            }
+            else
+            {
+                friend.DistanceInKilometersAsString = String.Format("{0:F2} kilometers", kilometers);
+            }
+
+            if (yards < YardsInMile)
+            {
+                friend.DistanceInMilesAsString = String.Format("{0} yards", yards);
+            }
+            else
+            {
+                friend.DistanceInMilesAsString = String.Format("{0:F2} miles", miles);
             }
         }   
 
