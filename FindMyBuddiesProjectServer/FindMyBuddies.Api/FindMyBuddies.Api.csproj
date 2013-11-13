@@ -43,6 +43,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Device" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.Entity" />
@@ -179,7 +180,6 @@
     <Compile Include="Models\FriendModel.cs" />
     <Compile Include="Models\FriendRequestResponseModel.cs" />
     <Compile Include="Models\ImageModel.cs" />
-    <Compile Include="Models\MeasureUnitsEnum.cs" />
     <Compile Include="Models\UserLoggedModel.cs" />
     <Compile Include="Models\UserModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

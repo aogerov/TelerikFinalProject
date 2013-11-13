@@ -11,10 +11,10 @@ namespace FindMyBuddies.Api.Controllers
 {
     public class FriendsController : BaseApiController
     {
-        // api/friends/all?orderBy={orderBy}&measureUnits={measureUnits}&sessionKey={sessionKey}
+        // api/friends/all?orderBy={orderBy}&sessionKey={sessionKey}
         [HttpGet]
         [ActionName("all")]
-        public HttpResponseMessage GetAllFriends([FromUri]string orderBy, [FromUri]string measureUnits, [FromUri]string sessionKey)
+        public HttpResponseMessage GetAllFriends([FromUri]string orderBy, [FromUri]string sessionKey)
         {
             var responseMsg = this.PerformOperationAndHandleExeptions(() =>
             {
@@ -36,7 +36,7 @@ namespace FindMyBuddies.Api.Controllers
                     }
 
                     context.SaveChanges();
-                    var friendModels = Parser.FriendsToFriendModels(user, user.Friends, orderBy, measureUnits);
+                    var friendModels = Parser.FriendsToFriendModels(user, user.Friends, orderBy);
 
                     var response = this.Request.CreateResponse(HttpStatusCode.OK, friendModels);
                     return response;
