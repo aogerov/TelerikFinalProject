@@ -12,6 +12,9 @@ namespace FindMyBuddies.Api.Models
         [DataMember(Name = "timestamp")]
         public DateTime Timestamp { get; set; }
 
+        [DataMember(Name = "imageTimestampDifference")]
+        public string ImageTimestampDifference { get; set; }
+
         [DataMember(Name = "latitudeAtCapturing")]
         public double LatitudeAtCapturing { get; set; }
 

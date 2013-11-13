@@ -11,10 +11,11 @@ import android.os.Looper;
 import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
 import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
 import com.gercho.findmybuddies.helpers.EnumOrderBy;
+import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
-import com.gercho.findmybuddies.models.FriendModels;
+import com.gercho.findmybuddies.models.FriendModel;
 import com.gercho.findmybuddies.validators.BuddiesServiceValidator;
 import com.google.gson.Gson;
 
@@ -205,23 +206,20 @@ public class BuddiesService extends Service {
         // TODO Buddies might not have any images and return empty list or null
         // TODO buddies list is with 2 lists online and offline
 
-
-        String responseTest = "[{\"id\":18,\"nickname\":\"fantas\",\"isOnline\":true,\"latitude\":43.467197,\"longitude\":-80.520362,\"coordinatesTimestamp\":\"1900-01-01T00:00:00\",\"coordinatesTimestampDifference\":\"more than 24 hours\",\"distanceInMeters\":276.40174408086324},{\"id\":19,\"nickname\":\"nikola\",\"isOnline\":false,\"latitude\":43.467207,\"longitude\":-80.524352,\"coordinatesTimestamp\":\"2013-11-13T14:00:00\",\"coordinatesTimestampDifference\":\"2:06:12\",\"distanceInMeters\":275.89148370431457},{\"id\":20,\"nickname\":\"kalojan\",\"isOnline\":false,\"latitude\":44.464227,\"longitude\":-80.520372,\"coordinatesTimestamp\":\"1900-01-01T00:00:00\",\"coordinatesTimestampDifference\":\"more than 24 hours\",\"distanceInMeters\":111184.1958820517}]";
-        FriendModels parsedResponse = this.mGson.fromJson(responseTest, )
-
-
         HttpResponse response = this.mHttpRequester.get(String.format(
                 "friends/all?orderBy=%s&sessionKey=%s",
                 this.mBuddiesOrderBy.toString().toLowerCase(), this.mSessionKey));
 
         if (response.isStatusOk()) {
-            FriendModels friendModels = this.mGson.fromJson(response.getMessage(), FriendModels.class);
-            boolean areModelsValid = BuddiesServiceValidator.validateFriendModels(friendModels);
-            if (!areModelsValid) {
-                return;
+            try {
+                FriendModel[] friends = this.mGson.fromJson(response.getMessage(), FriendModel[].class);
+                boolean areModelsValid = BuddiesServiceValidator.validateFriendModels(friends);
+                if (areModelsValid) {
+                    this.mBroadcast.sendBuddiesInfoUpdate(friends);
+                }
+            } catch (Exception ex) {
+                LogHelper.logThreadId("updateBuddiesInfo fromJson parse");
             }
-
-            this.mBroadcast.sendBuddiesInfoUpdate(response.getMessage());
         }
     }
 

@@ -1,7 +1,5 @@
 package com.gercho.findmybuddies.models;
 
-import java.util.Date;
-
 /**
  * Created by Gercho on 11/13/13.
  */
@@ -12,21 +10,19 @@ public class FriendModel {
     private boolean isOnline;
     private double latitude;
     private double longitude;
-    private Date coordinatesTimestamp;
     private String coordinatesTimestampDifference;
     private int distanceInMeters;
     private String distanceInKilometersAsString;
     private String distanceInMilesAsString;
 
     public FriendModel(int id, String nickname, boolean isOnline, double latitude, double longitude,
-                       Date coordinatesTimestamp, String coordinatesTimestampDifference, int distanceInMeters,
+                       String coordinatesTimestampDifference, int distanceInMeters,
                        String distanceInKilometersAsString, String distanceInMilesAsString) {
         this.id = id;
         this.nickname = nickname;
         this.isOnline = isOnline;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.coordinatesTimestamp = coordinatesTimestamp;
         this.coordinatesTimestampDifference = coordinatesTimestampDifference;
         this.distanceInMeters = distanceInMeters;
         this.distanceInKilometersAsString = distanceInKilometersAsString;
@@ -71,14 +67,6 @@ public class FriendModel {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
-    }
-
-    public Date getCoordinatesTimestamp() {
-        return coordinatesTimestamp;
-    }
-
-    public void setCoordinatesTimestamp(Date coordinatesTimestamp) {
-        this.coordinatesTimestamp = coordinatesTimestamp;
     }
 
     public String getCoordinatesTimestampDifference() {

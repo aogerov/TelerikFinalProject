@@ -14,6 +14,9 @@ namespace FindMyBuddies.Api.Assists
         private const string Distance = "DISTANCE";
         private const string CoordinatesTimestamp = "COORDINATES_TIMESTAMP";
         private const string TimeDifferenceMoreThanDay = "more than 24 hours";
+        private const string TimeDifferenceMoreThanYear = "more than one year ago";
+        private const int DaysInYear = 365;
+        private const int DaysInMonth = 30;
         private const int MetersInKilometer = 1000;
         private const int YardsInMile = 1760;
         private const double MetersToKilometer = 0.001;
@@ -154,6 +157,7 @@ namespace FindMyBuddies.Api.Assists
             {
                 Url = image.Url,
                 Timestamp = image.Timestamp,
+                ImageTimestampDifference = CalculateImageTimestampDifference(image),
                 LatitudeAtCapturing = image.Coordinates.Latitude,
                 LongitudeAtCapturing = image.Coordinates.Longitude
             };
@@ -164,13 +168,29 @@ namespace FindMyBuddies.Api.Assists
             return new Image
             {
                 Url = imageModel.Url,
-                Timestamp = imageModel.Timestamp,
                 Coordinates = new Coordinates
                 {
                     Latitude = imageModel.LatitudeAtCapturing,
                     Longitude = imageModel.LongitudeAtCapturing
                 }
             };
+        }
+
+        private static string CalculateImageTimestampDifference(Image image)
+        {
+            var timeNow = DateTime.Now;
+
+            var timeDifference = timeNow.Subtract(image.Timestamp);
+            if (timeDifference.Days > DaysInYear)
+            {
+                return TimeDifferenceMoreThanYear;
+            }
+            else if (timeDifference.Days > DaysInMonth)
+            {
+                return String.Format("{0} days ago", timeDifference.Days);
+            }
+
+            return GetTimeDifferenceAsString(timeDifference);
         }
 
         private static void CalculateTimestampDifferences(List<FriendModel> friends)
@@ -185,22 +205,27 @@ namespace FindMyBuddies.Api.Assists
                     continue;
                 }
 
-                StringBuilder difference = new StringBuilder();
-                difference.Append(timeDifference.Hours + ":");
-                if (timeDifference.Minutes < 10)
-                {
-                    difference.Append("0");
-                }
-
-                difference.Append(timeDifference.Minutes + ":");
-                if (timeDifference.Seconds < 10)
-                {
-                    difference.Append("0");
-                }
-
-                difference.Append(timeDifference.Seconds);
-                friend.CoordinatesTimestampDifference = difference.ToString();
+                friend.CoordinatesTimestampDifference = GetTimeDifferenceAsString(timeDifference);
             }
+        }
+
+        private static string GetTimeDifferenceAsString(TimeSpan timeDifference)
+        {
+            StringBuilder difference = new StringBuilder();
+            difference.Append(timeDifference.Hours + ":");
+            if (timeDifference.Minutes < 10)
+            {
+                difference.Append("0");
+            }
+
+            difference.Append(timeDifference.Minutes + ":");
+            if (timeDifference.Seconds < 10)
+            {
+                difference.Append("0");
+            }
+
+            difference.Append(timeDifference.Seconds);
+            return difference.ToString();
         }
 
         private static void CalculateDistance(User user, List<FriendModel> friends)
@@ -244,7 +269,7 @@ namespace FindMyBuddies.Api.Assists
             {
                 friend.DistanceInMilesAsString = String.Format("{0:F2} miles", miles);
             }
-        }   
+        }
 
         private static void SortFriendLists(List<FriendModel> friends, string orderBy)
         {
