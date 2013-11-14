@@ -14,7 +14,7 @@ public class BuddiesServiceValidator {
     public static final int IMAGES_TO_SHOW_MAX_COUNT = 10;
 
     public static boolean validateSessionKey(String sessionKey) {
-        if (sessionKey.length() != UserServiceValidator.SESSION_KEY_LENGTH) {
+        if (sessionKey == null || sessionKey.length() != UserServiceValidator.SESSION_KEY_LENGTH) {
             return false;
         }
 

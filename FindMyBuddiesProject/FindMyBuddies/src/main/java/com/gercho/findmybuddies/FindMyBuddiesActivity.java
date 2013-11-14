@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
@@ -137,7 +138,6 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
     }
 
     private void forceUpdate() {
-        // TODO add 1 min Thread.sleep() on force update and hide it by this time - if(this.mIsForceUpdateAvailable) { bla, bla... }
         Intent userServiceIntent = new Intent();
         userServiceIntent.setAction(BuddiesService.FORCE_UPDATING_BUDDIES_SERVICE);
         this.startService(userServiceIntent);
@@ -160,22 +160,23 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             String action = intent.getAction();
             if (action != null && action.equals(BuddiesService.BUDDIES_SERVICE_BROADCAST)) {
                 String buddieModelsAsJson = intent.getStringExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA);
+                int measureUnitsAsInt = intent.getIntExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, Integer.MIN_VALUE);
 
-                if (buddieModelsAsJson != null) {
-                    this.handleBuddiesUpdated(buddieModelsAsJson);
+                if (buddieModelsAsJson != null && measureUnitsAsInt != Integer.MIN_VALUE) {
+                    this.handleBuddiesUpdated(buddieModelsAsJson, measureUnitsAsInt);
                 }
             }
         }
 
-        private void handleBuddiesUpdated(String buddieModelsAsJson) {
+        private void handleBuddiesUpdated(String buddieModelsAsJson, int measureUnitsAsInt) {
             try {
                 BuddieModel[] buddies = FindMyBuddiesActivity.this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
-                // TODO read the enum as well
+                EnumMeasureUnits measureUnits = EnumMeasureUnits.values()[measureUnitsAsInt];
                 if (buddies.length > 0) {
-                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count - " + buddies.length);
+                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count - " + buddies.length + " measure units - " + measureUnits);
                 }
             } catch (Exception ex) {
-                LogHelper.logThreadId("updateBuddiesInfo fromJson parse");
+                LogHelper.logThreadId("updateBuddiesInfo fromJson() parse error");
             }
         }
     }

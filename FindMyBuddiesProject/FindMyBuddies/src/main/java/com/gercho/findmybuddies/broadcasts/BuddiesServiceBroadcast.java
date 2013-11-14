@@ -29,7 +29,7 @@ public class BuddiesServiceBroadcast {
     public void sendBuddiesInfoUpdate(String buddieModelsAsJson, EnumMeasureUnits measureUnits) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, buddieModelsAsJson);
-        intent.putExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, measureUnits);
+        intent.putExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, measureUnits.ordinal());
         this.mService.sendBroadcast(intent);
     }
 }

@@ -46,7 +46,7 @@ public class BuddiesService extends Service {
     public static final String BUDDIES_MEASURE_UNITS_EXTRA = "BuddiesMeasureUnitsExtra";
     public static final String BUDDIES_INFO_UPDATE_EXTRA = "BuddiesInfoUpdateExtra";
 
-    private static final int UPDATE_BUDDIES_INFO_LOCK_TIME = 1000 * 50; // 50 seconds
+    private static final int UPDATING_LOCK_TIME = 1000 * 50; // 50 seconds
     private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60 * 5; // 5 minutes
     private static final int IMAGES_TO_SHOW_COUNT_DEFAULT = 3;
     private static final EnumOrderBy BUDDIES_ORDER_BY_DEFAULT = EnumOrderBy.DISTANCE;
@@ -62,10 +62,9 @@ public class BuddiesService extends Service {
 
     private boolean mIsServiceAlreadyStarted;
     private boolean mIsUpdatingActive;
-    private boolean mIsUpdateBuddiesInfoAvailable;
+    private boolean mIsUpdatingAvailable;
     private boolean mIsOnPauseMode;
     private boolean mIsNetworkAvailable;
-    private boolean mIsGpsAvailable;
     private BuddiesServiceBroadcast mBroadcast;
     private HandlerThread mMainHandledThread;
     private Handler mMainHandler;
@@ -154,16 +153,13 @@ public class BuddiesService extends Service {
             this.mSessionKey = sessionKey;
         }
 
-        // TODO fix the shit below, commented just for testing, uncomment on release
         // TODO made broadcast receivers:
         // TODO on this.mIsNetworkAvailable run explicit this.updateBuddiesInfo() if !this.mIsUpdatingActive && !this.mIsOnPauseMode
-        // TODO and on this.mIsNetworkAvailable && this.mIsGpsAvailable run explicit this.updateCurrentPosition() if !this.mIsUpdatingActive && !this.mIsOnPauseMode
-        this.mIsGpsAvailable = true;
-        this.mIsUpdateBuddiesInfoAvailable = true;
-//        if (!this.mIsServiceAlreadyStarted) {
-        this.readBuddiesStorage();
-        this.mIsServiceAlreadyStarted = true;
-//        }
+        this.mIsUpdatingAvailable = true;
+        if (!this.mIsServiceAlreadyStarted) {
+            this.mIsServiceAlreadyStarted = true;
+            this.readBuddiesStorage();
+        }
     }
 
     private void resumeBuddiesService() {
@@ -182,10 +178,10 @@ public class BuddiesService extends Service {
     }
 
     private void forceUpdatingBuddiesService() {
-        if (this.mIsUpdateBuddiesInfoAvailable && this.mIsUpdatingActive) {
-            this.runOccasionalServiceUpdating();
-        } else if (!this.mIsUpdateBuddiesInfoAvailable) {
+        if (!this.mIsUpdatingAvailable) {
             this.sendBroadcastWithBuddiesInfoUpdate();
+        } else if (this.mIsUpdatingActive) {
+            this.runOccasionalServiceUpdating();
         }
 
         if (!this.mIsUpdatingActive) {
@@ -247,6 +243,7 @@ public class BuddiesService extends Service {
                     BuddiesService.this.updateBuddiesInfo();
                     BuddiesService.this.updateCurrentPosition();
 
+                    BuddiesService.this.setUpdatingTemporallyUnavailable(UPDATING_LOCK_TIME);
                     ThreadSleeper.sleep(BuddiesService.this.mUpdateFrequency);
                 }
             }
@@ -259,16 +256,16 @@ public class BuddiesService extends Service {
             public void run() {
                 BuddiesService.this.updateBuddiesInfo();
                 BuddiesService.this.updateCurrentPosition();
+
+                BuddiesService.this.setUpdatingTemporallyUnavailable(UPDATING_LOCK_TIME);
             }
         });
     }
 
     private void updateBuddiesInfo() {
-        if (!this.mIsNetworkAvailable || this.mIsOnPauseMode) {
+        if (!this.mIsUpdatingAvailable || !this.mIsNetworkAvailable || this.mIsOnPauseMode) {
             return;
         }
-
-        this.setUpdateBuddiesInfoTemporallyUnavailable(UPDATE_BUDDIES_INFO_LOCK_TIME);
 
         HttpResponse response = this.mHttpRequester.get(String.format(
                 "friends/all?orderBy=%s&sessionKey=%s",
@@ -281,25 +278,25 @@ public class BuddiesService extends Service {
     }
 
     private void updateCurrentPosition() {
-        if (!this.mIsNetworkAvailable || !this.mIsGpsAvailable) {
+        if (!this.mIsUpdatingAvailable || !this.mIsNetworkAvailable) {
             return;
         }
 
-        // TODO fill
+
     }
 
     private void sendBroadcastWithBuddiesInfoUpdate() {
-        if (!this.mIsOnPauseMode && this.mCurrentBuddiesInfo != null) {
+        if (this.mCurrentBuddiesInfo != null) {
             this.mBroadcast.sendBuddiesInfoUpdate(this.mCurrentBuddiesInfo, this.mMeasureUnits);
         }
     }
 
-    private void setUpdateBuddiesInfoTemporallyUnavailable(long delay) {
-        this.mIsUpdateBuddiesInfoAvailable = false;
+    private void setUpdatingTemporallyUnavailable(long delay) {
+        this.mIsUpdatingAvailable = false;
         this.mUpdateTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                BuddiesService.this.mIsUpdateBuddiesInfoAvailable = true;
+                BuddiesService.this.mIsUpdatingAvailable = true;
             }
         }, delay);
     }
