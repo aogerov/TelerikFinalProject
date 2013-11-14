@@ -26,12 +26,12 @@ namespace FindMyBuddies.Api.Controllers
                     {
                         user.Coordinates.Latitude = model.Latitude;
                         user.Coordinates.Longitude = model.Longitude;
-                        user.Coordinates.Timestamp = DateTime.Now;
+                        user.Coordinates.Timestamp = DateTime.Now.AddMilliseconds(-model.TimeDifferenceInMilliseconds);
                     }
                     else
                     {
                         var newCoordinates = Parser.CoordinatesModelToCoordinates(model);
-                        newCoordinates.Timestamp = DateTime.Now;
+                        newCoordinates.Timestamp = DateTime.Now.AddMilliseconds(-model.TimeDifferenceInMilliseconds);
                         context.Coordinates.Add(newCoordinates);
                         user.Coordinates = newCoordinates;
                     }

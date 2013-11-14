@@ -11,11 +11,14 @@ import android.os.Looper;
 import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
 import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
 import com.gercho.findmybuddies.helpers.EnumOrderBy;
+import com.gercho.findmybuddies.helpers.LocationUpdater;
+import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NetworkConnectionInfo;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
+import com.gercho.findmybuddies.models.CoordinatesModel;
 import com.gercho.findmybuddies.validators.BuddiesServiceValidator;
 import com.google.gson.Gson;
 
@@ -65,12 +68,14 @@ public class BuddiesService extends Service {
     private boolean mIsUpdatingAvailable;
     private boolean mIsOnPauseMode;
     private boolean mIsNetworkAvailable;
+    private boolean mIsGpsAvailable;
     private BuddiesServiceBroadcast mBroadcast;
     private HandlerThread mMainHandledThread;
     private Handler mMainHandler;
     private HandlerThread mOccasionalHandlerThread;
     private Handler mOccasionalHandler;
     private Timer mUpdateTimer;
+    private LocationUpdater mLocationUpdater;
     private HttpRequester mHttpRequester;
     private Gson mGson;
     private String mSessionKey;
@@ -97,6 +102,7 @@ public class BuddiesService extends Service {
         }
 
         this.mUpdateTimer = new Timer("UpdateTimer");
+        this.mLocationUpdater = new LocationUpdater(this);
         this.mHttpRequester = new HttpRequester();
         this.mGson = new Gson();
         this.mBroadcast = new BuddiesServiceBroadcast(this);
@@ -278,11 +284,20 @@ public class BuddiesService extends Service {
     }
 
     private void updateCurrentPosition() {
-        if (!this.mIsUpdatingAvailable || !this.mIsNetworkAvailable) {
+        if (!this.mIsUpdatingAvailable || !this.mIsNetworkAvailable || !this.mIsGpsAvailable) {
             return;
         }
 
+        CoordinatesModel coordinatesModel = this.mLocationUpdater.getLastKnownLocation();
+        if (coordinatesModel != null) {
+            String coordinatesModelAsJson = this.mGson.toJson(coordinatesModel);
+            HttpResponse response = this.mHttpRequester.post(
+                    "api/coordinates/update?sessionKey=" + this.mSessionKey, coordinatesModelAsJson);
 
+            if (!response.isStatusOk()) {
+                LogHelper.logThreadId("updateCurrentPosition() error: " + response.getMessage());
+            }
+        }
     }
 
     private void sendBroadcastWithBuddiesInfoUpdate() {

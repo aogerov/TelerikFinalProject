@@ -16,7 +16,7 @@ import java.util.Calendar;
  */
 public class LocationUpdater implements LocationListener {
 
-    private static final int TIME_REVERENCE =  1000 * 60 * 2; // 2 minute
+    private static final int TIME_REVERENCE = 1000 * 60 * 2; // 2 minute
     private static final int UPDATES_MIN_TIME = 1000 * 30; // 30 seconds
     private static final int UPDATES_MIN_DISTANCE = 10; // 10 meters
 
@@ -30,9 +30,9 @@ public class LocationUpdater implements LocationListener {
                 LocationManager.GPS_PROVIDER, UPDATES_MIN_TIME, UPDATES_MIN_DISTANCE, this);
     }
 
-    public CoordinatesModel getCurrentLocation(){
+    public CoordinatesModel getLastKnownLocation() {
         Location location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if(location != null) {
+        if (location != null) {
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
             long timeDifferenceInMilliseconds = Calendar.getInstance().getTimeInMillis() - location.getTime();

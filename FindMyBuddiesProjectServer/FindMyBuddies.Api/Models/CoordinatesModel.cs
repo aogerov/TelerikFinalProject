@@ -11,5 +11,8 @@ namespace FindMyBuddies.Api.Models
 
         [DataMember(Name = "longitude")]
         public double Longitude { get; set; }
+
+        [DataMember(Name = "timeDifferenceInMilliseconds")]
+        public long TimeDifferenceInMilliseconds { get; set; }
     }
 }
