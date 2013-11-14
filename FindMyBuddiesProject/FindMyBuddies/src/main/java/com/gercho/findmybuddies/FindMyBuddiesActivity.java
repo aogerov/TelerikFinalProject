@@ -137,12 +137,14 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
     }
 
     private void forceUpdate() {
+        // TODO add 1 min Thread.sleep() on force update and hide it by this time - if(this.mIsForceUpdateAvailable) { bla, bla... }
         Intent userServiceIntent = new Intent();
         userServiceIntent.setAction(BuddiesService.FORCE_UPDATE);
         this.startService(userServiceIntent);
     }
 
     private void logout() {
+        // TODO send "popup" to the user, saying that "logging out will dismiss your current session and the session if you logged from other devices", on yes logout, on no nothing happens
         Intent userServiceIntent = new Intent();
         userServiceIntent.setAction(UserService.LOGOUT);
         this.startService(userServiceIntent);

@@ -53,7 +53,7 @@ public class BuddiesService extends Service {
     private static final String BUDDIES_STORAGE_MEASURE_UNITS_AS_INT = "BuddiesStorageMeasureUnitsAsInt";
 
     private boolean mIsServiceAlreadyStarted;
-    private boolean mIsUpdatingActive;
+    private boolean mIsUpdatingAlreadyStarted;
     private boolean mIsOnPauseMode;
     private boolean mIsNetworkAvailable;
     private boolean mIsGpsAvailable;
@@ -129,19 +129,22 @@ public class BuddiesService extends Service {
         }
 
         // TODO fix the shit below, commented just for testing, uncomment on release
-//        if (!this.mIsServiceAlreadyStarted) {
-//            this.mIsServiceAlreadyStarted = true;
+        // TODO made broadcast receivers:
+        // TODO on this.mIsNetworkAvailable run explicit this.updateBuddiesInfo() if !this.mIsUpdatingAlreadyStarted && !this.mIsOnPauseMode
+        // TODO and on this.mIsNetworkAvailable && this.mIsGpsAvailable run explicit this.updateCurrentPosition() if !this.mIsUpdatingAlreadyStarted && !this.mIsOnPauseMode
         this.mIsNetworkAvailable = true;
         this.mIsGpsAvailable = true;
-        this.readBuddiesStorage();
+//        if (!this.mIsServiceAlreadyStarted) {
+//            this.mIsServiceAlreadyStarted = true;
 
-        this.mIsUpdatingActive = true;
-        this.runServiceUpdating();
+        this.readBuddiesStorage();
+        this.resumeBuddiesService();
 //        }
     }
 
     private void resumeBuddiesService() {
         this.mIsOnPauseMode = false;
+        this.runServiceUpdating();
     }
 
     private void pauseBuddiesService() {
@@ -149,7 +152,7 @@ public class BuddiesService extends Service {
     }
 
     private void stopBuddiesService() {
-        this.mIsUpdatingActive = false;
+        this.mIsUpdatingAlreadyStarted = false;
         this.stopSelf();
     }
 
@@ -194,26 +197,29 @@ public class BuddiesService extends Service {
     }
 
     private void runServiceUpdating() {
+        if (this.mIsUpdatingAlreadyStarted || !this.mIsNetworkAvailable) {
+            return;
+        }
+
+        this.mIsUpdatingAlreadyStarted = true;
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                while (BuddiesService.this.mIsUpdatingActive) {
-                    if (BuddiesService.this.mIsNetworkAvailable && BuddiesService.this.mIsGpsAvailable) {
-                        BuddiesService.this.updateCurrentPosition();
-                    }
+                while (BuddiesService.this.mIsUpdatingAlreadyStarted) {
+                    if (!BuddiesService.this.mIsOnPauseMode) {
+                        if (BuddiesService.this.mIsNetworkAvailable) {
+                            BuddiesService.this.updateBuddiesInfo();
+                        }
 
-                    if (!BuddiesService.this.mIsOnPauseMode && BuddiesService.this.mIsNetworkAvailable) {
-                        BuddiesService.this.updateBuddiesInfo();
+                        if (BuddiesService.this.mIsNetworkAvailable && BuddiesService.this.mIsGpsAvailable) {
+                            BuddiesService.this.updateCurrentPosition();
+                        }
                     }
 
                     ThreadSleeper.sleep(BuddiesService.this.mUpdateFrequency);
                 }
             }
         });
-    }
-
-    private void updateCurrentPosition() {
-        // TODO fill
     }
 
     private void updateBuddiesInfo() {
@@ -224,6 +230,10 @@ public class BuddiesService extends Service {
         if (response.isStatusOk()) {
             this.mBroadcast.sendBuddiesInfoUpdate(response.getMessage());
         }
+    }
+
+    private void updateCurrentPosition() {
+        // TODO fill
     }
 
     private void readBuddiesStorage() {
