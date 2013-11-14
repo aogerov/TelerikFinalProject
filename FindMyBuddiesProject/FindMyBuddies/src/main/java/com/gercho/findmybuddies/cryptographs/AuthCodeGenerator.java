@@ -1,4 +1,4 @@
-package com.gercho.findmybuddies.helpers;
+package com.gercho.findmybuddies.cryptographs;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

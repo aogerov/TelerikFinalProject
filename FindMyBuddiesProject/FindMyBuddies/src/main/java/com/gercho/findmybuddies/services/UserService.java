@@ -9,8 +9,8 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import com.gercho.findmybuddies.broadcasts.UserServiceBroadcast;
-import com.gercho.findmybuddies.helpers.AuthCodeGenerator;
-import com.gercho.findmybuddies.helpers.Encryptor;
+import com.gercho.findmybuddies.cryptographs.AuthCodeGenerator;
+import com.gercho.findmybuddies.cryptographs.Encryptor;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
 import com.gercho.findmybuddies.models.UserModel;

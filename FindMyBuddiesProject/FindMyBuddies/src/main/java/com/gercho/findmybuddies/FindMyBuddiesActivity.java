@@ -14,10 +14,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
+import com.gercho.findmybuddies.enums.MeasureUnits;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
-import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.services.BuddiesService;
 import com.gercho.findmybuddies.services.UserService;
@@ -145,6 +144,10 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
     private void logout() {
         // TODO send "popup" to the user, saying that "logging out will dismiss your current session and the session if you logged from other devices", on yes logout, on no nothing happens
+        Intent buddiesServiceIntent = new Intent();
+        buddiesServiceIntent.setAction(BuddiesService.STOP_BUDDIES_SERVICE);
+        this.startService(buddiesServiceIntent);
+
         Intent userServiceIntent = new Intent();
         userServiceIntent.setAction(UserService.LOGOUT);
         this.startService(userServiceIntent);
@@ -171,9 +174,9 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
         private void handleBuddiesUpdated(String buddieModelsAsJson, int measureUnitsAsInt) {
             try {
                 BuddieModel[] buddies = FindMyBuddiesActivity.this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
-                EnumMeasureUnits measureUnits = EnumMeasureUnits.values()[measureUnitsAsInt];
+                MeasureUnits measureUnits = MeasureUnits.values()[measureUnitsAsInt];
                 if (buddies.length > 0) {
-                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count - " + buddies.length + " measure units - " + measureUnits);
+//                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count - " + buddies.length + " measure units - " + measureUnits);
                 }
             } catch (Exception ex) {
                 LogHelper.logThreadId("updateBuddiesInfo fromJson() parse error");

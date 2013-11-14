@@ -1,16 +1,21 @@
 package com.gercho.findmybuddies.services;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 
 import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
-import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
-import com.gercho.findmybuddies.helpers.EnumOrderBy;
+import com.gercho.findmybuddies.enums.MeasureUnits;
+import com.gercho.findmybuddies.enums.OrderBy;
 import com.gercho.findmybuddies.helpers.LocationUpdater;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NetworkConnectionInfo;
@@ -41,6 +46,8 @@ public class BuddiesService extends Service {
     public static final String SET_BUDDIES_ORDER_BY = "com.gercho.action.SET_BUDDIES_ORDER_BY";
     public static final String SET_MEASURE_UNITS = "com.gercho.action.SET_MEASURE_UNITS";
     public static final String GET_BUDDIE_IMAGES = "com.gercho.action.GET_BUDDIE_IMAGES";
+    public static final String ANDROID_CONNECTIVITY_CHANGE = "android.net.conn.ANDROID_CONNECTIVITY_CHANGE";
+    public static final String ANDROID_GPS_ENABLED_CHANGE = "android.location.ANDROID_GPS_ENABLED_CHANGE";
 
     public static final String BUDDIES_SERVICE_BROADCAST = "BuddiesServiceBroadcast";
     public static final String UPDATE_FREQUENCY_EXTRA = "UpdateFrequencyExtra";
@@ -52,10 +59,11 @@ public class BuddiesService extends Service {
     private static final int UPDATING_LOCK_TIME = 1000 * 50; // 50 seconds
     private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60 * 5; // 5 minutes
     private static final int IMAGES_TO_SHOW_COUNT_DEFAULT = 3;
-    private static final EnumOrderBy BUDDIES_ORDER_BY_DEFAULT = EnumOrderBy.DISTANCE;
-    private static final EnumMeasureUnits MEASURE_UNITS_DEFAULT = EnumMeasureUnits.KILOMETERS;
+    private static final OrderBy BUDDIES_ORDER_BY_DEFAULT = OrderBy.DISTANCE;
+    private static final MeasureUnits MEASURE_UNITS_DEFAULT = MeasureUnits.KILOMETERS;
 
-    private static final String ERROR_MESSAGE_NO_NETWORK = "Can't access buddies data, no network available";
+    private static final String ERROR_MESSAGE_NO_NETWORK = "Can't access buddies, no network available";
+    private static final String ERROR_MESSAGE_NO_GPS = "Please turn on your GPS";
 
     private static final String BUDDIES_STORAGE = "BuddiesStorage";
     private static final String BUDDIES_STORAGE_UPDATE_FREQUENCY = "BuddiesStorageUpdateFrequency";
@@ -63,6 +71,7 @@ public class BuddiesService extends Service {
     private static final String BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT = "BuddiesStorageBuddiesOrderByAsInt";
     private static final String BUDDIES_STORAGE_MEASURE_UNITS_AS_INT = "BuddiesStorageMeasureUnitsAsInt";
 
+    private StatusChangeReceiver mStatusChangeReceiver;
     private boolean mIsServiceAlreadyStarted;
     private boolean mIsUpdatingActive;
     private boolean mIsUpdatingAvailable;
@@ -81,12 +90,18 @@ public class BuddiesService extends Service {
     private String mSessionKey;
     private int mUpdateFrequency;
     private int mImagesToShowCount;
-    private EnumOrderBy mBuddiesOrderBy;
-    private EnumMeasureUnits mMeasureUnits;
+    private OrderBy mBuddiesOrderBy;
+    private MeasureUnits mMeasureUnits;
     private String mCurrentBuddiesInfo;
 
     @Override
     public void onCreate() {
+        this.mStatusChangeReceiver = new StatusChangeReceiver();
+        IntentFilter networkIntentFilter = new IntentFilter();
+        networkIntentFilter.addAction(ANDROID_CONNECTIVITY_CHANGE);
+        networkIntentFilter.addAction(ANDROID_GPS_ENABLED_CHANGE);
+        this.registerReceiver(this.mStatusChangeReceiver, networkIntentFilter);
+
         this.mMainHandledThread = new HandlerThread("UserServiceMainThread");
         this.mMainHandledThread.start();
         Looper mainLooper = this.mMainHandledThread.getLooper();
@@ -140,6 +155,11 @@ public class BuddiesService extends Service {
 
     @Override
     public void onDestroy() {
+        if (this.mStatusChangeReceiver != null) {
+            this.unregisterReceiver(this.mStatusChangeReceiver);
+            this.mStatusChangeReceiver = null;
+        }
+
         this.mMainHandledThread.quit();
         this.mMainHandledThread = null;
         this.mOccasionalHandlerThread.quit();
@@ -192,17 +212,18 @@ public class BuddiesService extends Service {
 
         if (!this.mIsUpdatingActive) {
             this.mIsNetworkAvailable = NetworkConnectionInfo.isOnline(this);
+            this.mIsGpsAvailable = this.mLocationUpdater.isProviderEnabled();
+
             if (this.mIsNetworkAvailable) {
                 this.mIsUpdatingActive = true;
                 this.runServiceUpdating();
-            } else {
-                ToastNotifier.makeToast(this, ERROR_MESSAGE_NO_NETWORK);
             }
         }
     }
 
     private void getCurrentSettings() {
-        this.mBroadcast.sendCurrentSettings(this.mUpdateFrequency, this.mImagesToShowCount, this.mBuddiesOrderBy, this.mMeasureUnits);
+        this.mBroadcast.sendCurrentSettings(
+                this.mUpdateFrequency, this.mImagesToShowCount, this.mBuddiesOrderBy, this.mMeasureUnits);
     }
 
     private void setUpdateFrequency(Intent intent) {
@@ -226,8 +247,8 @@ public class BuddiesService extends Service {
     private void setBuddiesOrderBy(Intent intent) {
         int buddiesOrderByAsInt = intent.getIntExtra(BUDDIES_ORDER_BY_EXTRA, Integer.MIN_VALUE);
         boolean isBuddiesOrderByValid = BuddiesServiceValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
-        if (isBuddiesOrderByValid && this.mBuddiesOrderBy != EnumOrderBy.values()[buddiesOrderByAsInt]) {
-            this.mBuddiesOrderBy = EnumOrderBy.values()[buddiesOrderByAsInt];
+        if (isBuddiesOrderByValid && this.mBuddiesOrderBy != OrderBy.values()[buddiesOrderByAsInt]) {
+            this.mBuddiesOrderBy = OrderBy.values()[buddiesOrderByAsInt];
             this.updateBuddiesStorage(BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, buddiesOrderByAsInt);
         }
     }
@@ -235,8 +256,8 @@ public class BuddiesService extends Service {
     private void setMeasureUnits(Intent intent) {
         int measureUnitsAsInt = intent.getIntExtra(BUDDIES_MEASURE_UNITS_EXTRA, Integer.MIN_VALUE);
         boolean areMeasureUnitsValid = BuddiesServiceValidator.validateDistanceAsInt(measureUnitsAsInt);
-        if (areMeasureUnitsValid && this.mMeasureUnits != EnumMeasureUnits.values()[measureUnitsAsInt]) {
-            this.mMeasureUnits = EnumMeasureUnits.values()[measureUnitsAsInt];
+        if (areMeasureUnitsValid && this.mMeasureUnits != MeasureUnits.values()[measureUnitsAsInt]) {
+            this.mMeasureUnits = MeasureUnits.values()[measureUnitsAsInt];
             this.updateBuddiesStorage(BUDDIES_STORAGE_MEASURE_UNITS_AS_INT, measureUnitsAsInt);
         }
     }
@@ -296,9 +317,9 @@ public class BuddiesService extends Service {
         if (coordinatesModel != null) {
             String coordinatesModelAsJson = this.mGson.toJson(coordinatesModel);
             HttpResponse response = this.mHttpRequester.post(
-                    "api/coordinates/update?sessionKey=" + this.mSessionKey, coordinatesModelAsJson);
+                    "coordinates/update?sessionKey=" + this.mSessionKey, coordinatesModelAsJson);
 
-            if (!response.isStatusOk()) {
+            if (response.isStatusOk()) {
                 LogHelper.logThreadId("updateCurrentPosition() error: " + response.getMessage());
             }
         }
@@ -345,7 +366,7 @@ public class BuddiesService extends Service {
                 BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, Integer.MIN_VALUE);
         boolean isBuddiesOrderByValid = BuddiesServiceValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
         if (isBuddiesOrderByValid) {
-            this.mBuddiesOrderBy = EnumOrderBy.values()[buddiesOrderByAsInt];
+            this.mBuddiesOrderBy = OrderBy.values()[buddiesOrderByAsInt];
         } else {
             this.mBuddiesOrderBy = BUDDIES_ORDER_BY_DEFAULT;
         }
@@ -354,7 +375,7 @@ public class BuddiesService extends Service {
                 BUDDIES_STORAGE_MEASURE_UNITS_AS_INT, Integer.MIN_VALUE);
         boolean areMeasureUnitsValid = BuddiesServiceValidator.validateDistanceAsInt(measureUnitsAsInt);
         if (areMeasureUnitsValid) {
-            this.mMeasureUnits = EnumMeasureUnits.values()[measureUnitsAsInt];
+            this.mMeasureUnits = MeasureUnits.values()[measureUnitsAsInt];
         } else {
             this.mMeasureUnits = MEASURE_UNITS_DEFAULT;
         }
@@ -365,5 +386,35 @@ public class BuddiesService extends Service {
         SharedPreferences.Editor editor = userStorage.edit();
         editor.putInt(storageItem, value);
         editor.commit();
+    }
+
+    private class StatusChangeReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null && action.equals(BuddiesService.ANDROID_CONNECTIVITY_CHANGE)) {
+                this.handleConnectivityChange(context);
+            } else if (action != null && action.equals(BuddiesService.ANDROID_GPS_ENABLED_CHANGE)) {
+                this.handleGpsEnabledChange();
+            }
+        }
+
+        private void handleConnectivityChange(Context context) {
+            ConnectivityManager connectivityManager = (ConnectivityManager)
+                    context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            BuddiesService.this.mIsNetworkAvailable = activeNetworkInfo != null && activeNetworkInfo.isConnected();
+            if (!BuddiesService.this.mIsNetworkAvailable) {
+                ToastNotifier.makeToast(BuddiesService.this, ERROR_MESSAGE_NO_NETWORK);
+            }
+        }
+
+        private void handleGpsEnabledChange() {
+            BuddiesService.this.mIsGpsAvailable = BuddiesService.this.mLocationUpdater.isProviderEnabled();
+            if (!BuddiesService.this.mIsGpsAvailable) {
+                ToastNotifier.makeToast(BuddiesService.this, ERROR_MESSAGE_NO_GPS);
+            }
+        }
     }
 }

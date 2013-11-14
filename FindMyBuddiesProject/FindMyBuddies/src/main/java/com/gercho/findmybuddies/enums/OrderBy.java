@@ -1,9 +1,9 @@
-package com.gercho.findmybuddies.helpers;
+package com.gercho.findmybuddies.enums;
 
 /**
  * Created by Gercho on 11/12/13.
  */
-public enum EnumOrderBy {
+public enum OrderBy {
     NICKNAME,
     DISTANCE,
     COORDINATES_TIMESTAMP

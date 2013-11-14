@@ -5,8 +5,8 @@
     android:versionName="1.0">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <uses-sdk
         android:minSdkVersion="10"
@@ -55,6 +55,7 @@
                 <action android:name="com.gercho.action.GET_BUDDIE_IMAGES" />
             </intent-filter>
         </service>
+
     </application>
 
 </manifest>
