@@ -18,11 +18,13 @@ public class BuddiesServiceBroadcast {
         this.mService = service;
     }
 
-    public void sendCurrentSettings(int updateFrequency, int imagesToShowCount, EnumOrderBy buddiesOrderBy) {
+    public void sendCurrentSettings(int updateFrequency, int imagesToShowCount,
+                                    EnumOrderBy buddiesOrderBy, EnumMeasureUnits measureUnits) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.UPDATE_FREQUENCY_EXTRA, updateFrequency);
         intent.putExtra(BuddiesService.IMAGES_TO_SHOW_COUNT_EXTRA, imagesToShowCount);
-        intent.putExtra(BuddiesService.BUDDIES_ORDER_BY_EXTRA, buddiesOrderBy);
+        intent.putExtra(BuddiesService.BUDDIES_ORDER_BY_EXTRA, buddiesOrderBy.ordinal());
+        intent.putExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, measureUnits.ordinal());
         this.mService.sendBroadcast(intent);
     }
 

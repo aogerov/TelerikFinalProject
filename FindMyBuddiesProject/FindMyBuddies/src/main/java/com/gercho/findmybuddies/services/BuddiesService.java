@@ -202,38 +202,42 @@ public class BuddiesService extends Service {
     }
 
     private void getCurrentSettings() {
-        this.mBroadcast.sendCurrentSettings(this.mUpdateFrequency, this.mImagesToShowCount, this.mBuddiesOrderBy);
+        this.mBroadcast.sendCurrentSettings(this.mUpdateFrequency, this.mImagesToShowCount, this.mBuddiesOrderBy, this.mMeasureUnits);
     }
 
     private void setUpdateFrequency(Intent intent) {
         int updateFrequency = intent.getIntExtra(UPDATE_FREQUENCY_EXTRA, Integer.MIN_VALUE);
         boolean isUpdateFrequencyValid = BuddiesServiceValidator.validateUpdateFrequency(updateFrequency);
-        if (isUpdateFrequencyValid) {
+        if (isUpdateFrequencyValid && this.mUpdateFrequency != updateFrequency) {
             this.mUpdateFrequency = updateFrequency;
+            this.updateBuddiesStorage(BUDDIES_STORAGE_UPDATE_FREQUENCY, updateFrequency);
         }
     }
 
     private void setImagesToShowCount(Intent intent) {
         int imagesToShowCount = intent.getIntExtra(IMAGES_TO_SHOW_COUNT_EXTRA, Integer.MIN_VALUE);
         boolean isImagesToShowCountValid = BuddiesServiceValidator.validateImagesToShowCount(imagesToShowCount);
-        if (isImagesToShowCountValid) {
+        if (isImagesToShowCountValid && this.mImagesToShowCount != imagesToShowCount) {
             this.mImagesToShowCount = imagesToShowCount;
+            this.updateBuddiesStorage(BUDDIES_STORAGE_IMAGES_TO_SHOW_COUNT, imagesToShowCount);
         }
     }
 
     private void setBuddiesOrderBy(Intent intent) {
         int buddiesOrderByAsInt = intent.getIntExtra(BUDDIES_ORDER_BY_EXTRA, Integer.MIN_VALUE);
         boolean isBuddiesOrderByValid = BuddiesServiceValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
-        if (isBuddiesOrderByValid) {
+        if (isBuddiesOrderByValid && this.mBuddiesOrderBy != EnumOrderBy.values()[buddiesOrderByAsInt]) {
             this.mBuddiesOrderBy = EnumOrderBy.values()[buddiesOrderByAsInt];
+            this.updateBuddiesStorage(BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, buddiesOrderByAsInt);
         }
     }
 
     private void setMeasureUnits(Intent intent) {
         int measureUnitsAsInt = intent.getIntExtra(BUDDIES_MEASURE_UNITS_EXTRA, Integer.MIN_VALUE);
         boolean areMeasureUnitsValid = BuddiesServiceValidator.validateDistanceAsInt(measureUnitsAsInt);
-        if (areMeasureUnitsValid) {
+        if (areMeasureUnitsValid && this.mMeasureUnits != EnumMeasureUnits.values()[measureUnitsAsInt]) {
             this.mMeasureUnits = EnumMeasureUnits.values()[measureUnitsAsInt];
+            this.updateBuddiesStorage(BUDDIES_STORAGE_MEASURE_UNITS_AS_INT, measureUnitsAsInt);
         }
     }
 
@@ -356,13 +360,10 @@ public class BuddiesService extends Service {
         }
     }
 
-    private void updateBuddiesStorage(int updateFrequency, int imagesToShowCount, EnumOrderBy buddiesOrderBy, EnumOrderBy measureUnits) {
+    private void updateBuddiesStorage(String storageItem, int value) {
         SharedPreferences userStorage = this.getSharedPreferences(BUDDIES_STORAGE, MODE_PRIVATE);
         SharedPreferences.Editor editor = userStorage.edit();
-        editor.putInt(BUDDIES_STORAGE_UPDATE_FREQUENCY, updateFrequency);
-        editor.putInt(BUDDIES_STORAGE_IMAGES_TO_SHOW_COUNT, imagesToShowCount);
-        editor.putInt(BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, buddiesOrderBy.ordinal());
-        editor.putInt(BUDDIES_STORAGE_MEASURE_UNITS_AS_INT, measureUnits.ordinal());
+        editor.putInt(storageItem, value);
         editor.commit();
     }
 }
