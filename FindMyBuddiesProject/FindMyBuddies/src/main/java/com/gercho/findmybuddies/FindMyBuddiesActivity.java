@@ -139,7 +139,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
     private void forceUpdate() {
         // TODO add 1 min Thread.sleep() on force update and hide it by this time - if(this.mIsForceUpdateAvailable) { bla, bla... }
         Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(BuddiesService.FORCE_UPDATE);
+        userServiceIntent.setAction(BuddiesService.FORCE_UPDATING_BUDDIES_SERVICE);
         this.startService(userServiceIntent);
     }
 
@@ -170,6 +170,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
         private void handleBuddiesUpdated(String buddieModelsAsJson) {
             try {
                 BuddieModel[] buddies = FindMyBuddiesActivity.this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
+                // TODO read the enum as well
                 if (buddies.length > 0) {
                     ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count - " + buddies.length);
                 }

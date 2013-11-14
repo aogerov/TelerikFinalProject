@@ -3,6 +3,7 @@ package com.gercho.findmybuddies.broadcasts;
 import android.app.Service;
 import android.content.Intent;
 
+import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
 import com.gercho.findmybuddies.helpers.EnumOrderBy;
 import com.gercho.findmybuddies.services.BuddiesService;
 
@@ -25,9 +26,10 @@ public class BuddiesServiceBroadcast {
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendBuddiesInfoUpdate(String buddieModelsAsJson) {
+    public void sendBuddiesInfoUpdate(String buddieModelsAsJson, EnumMeasureUnits measureUnits) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, buddieModelsAsJson);
+        intent.putExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, measureUnits);
         this.mService.sendBroadcast(intent);
     }
 }

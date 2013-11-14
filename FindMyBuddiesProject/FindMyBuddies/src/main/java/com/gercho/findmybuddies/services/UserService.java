@@ -59,6 +59,8 @@ public class UserService extends Service {
     private String mSessionKeyEncrypted;
     private String mNickname;
 
+    // TODO add no network handling and register broadcast receiver for that like on BuddiesService
+
     @Override
     public void onCreate() {
         this.mHandledThread = new HandlerThread("UserServiceThread");

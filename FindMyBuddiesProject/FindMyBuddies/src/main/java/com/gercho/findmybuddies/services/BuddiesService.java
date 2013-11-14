@@ -11,11 +11,16 @@ import android.os.Looper;
 import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
 import com.gercho.findmybuddies.helpers.EnumMeasureUnits;
 import com.gercho.findmybuddies.helpers.EnumOrderBy;
+import com.gercho.findmybuddies.helpers.NetworkConnectionInfo;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
+import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
 import com.gercho.findmybuddies.validators.BuddiesServiceValidator;
 import com.google.gson.Gson;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by Gercho on 11/12/13.
@@ -26,13 +31,13 @@ public class BuddiesService extends Service {
     public static final String PAUSE_BUDDIES_SERVICE = "com.gercho.action.PAUSE_BUDDIES_SERVICE";
     public static final String RESUME_BUDDIES_SERVICE = "com.gercho.action.RESUME_BUDDIES_SERVICE";
     public static final String STOP_BUDDIES_SERVICE = "com.gercho.action.STOP_BUDDIES_SERVICE";
+    public static final String FORCE_UPDATING_BUDDIES_SERVICE = "com.gercho.action.FORCE_UPDATING_BUDDIES_SERVICE";
     public static final String GET_CURRENT_SETTINGS = "com.gercho.action.GET_CURRENT_SETTINGS";
     public static final String SET_UPDATE_FREQUENCY = "com.gercho.action.SET_UPDATE_FREQUENCY";
     public static final String SET_IMAGES_TO_SHOW_COUNT = "com.gercho.action.SET_IMAGES_TO_SHOW_COUNT";
     public static final String SET_BUDDIES_ORDER_BY = "com.gercho.action.SET_BUDDIES_ORDER_BY";
     public static final String SET_MEASURE_UNITS = "com.gercho.action.SET_MEASURE_UNITS";
     public static final String GET_BUDDIE_IMAGES = "com.gercho.action.GET_BUDDIE_IMAGES";
-    public static final String FORCE_UPDATE = "com.gercho.action.FORCE_UPDATE";
 
     public static final String BUDDIES_SERVICE_BROADCAST = "BuddiesServiceBroadcast";
     public static final String UPDATE_FREQUENCY_EXTRA = "UpdateFrequencyExtra";
@@ -41,10 +46,13 @@ public class BuddiesService extends Service {
     public static final String BUDDIES_MEASURE_UNITS_EXTRA = "BuddiesMeasureUnitsExtra";
     public static final String BUDDIES_INFO_UPDATE_EXTRA = "BuddiesInfoUpdateExtra";
 
+    private static final int UPDATE_BUDDIES_INFO_LOCK_TIME = 1000 * 50; // 50 seconds
     private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60 * 5; // 5 minutes
     private static final int IMAGES_TO_SHOW_COUNT_DEFAULT = 3;
     private static final EnumOrderBy BUDDIES_ORDER_BY_DEFAULT = EnumOrderBy.DISTANCE;
     private static final EnumMeasureUnits MEASURE_UNITS_DEFAULT = EnumMeasureUnits.KILOMETERS;
+
+    private static final String ERROR_MESSAGE_NO_NETWORK = "Can't access buddies data, no network available";
 
     private static final String BUDDIES_STORAGE = "BuddiesStorage";
     private static final String BUDDIES_STORAGE_UPDATE_FREQUENCY = "BuddiesStorageUpdateFrequency";
@@ -53,13 +61,17 @@ public class BuddiesService extends Service {
     private static final String BUDDIES_STORAGE_MEASURE_UNITS_AS_INT = "BuddiesStorageMeasureUnitsAsInt";
 
     private boolean mIsServiceAlreadyStarted;
-    private boolean mIsUpdatingAlreadyStarted;
+    private boolean mIsUpdatingActive;
+    private boolean mIsUpdateBuddiesInfoAvailable;
     private boolean mIsOnPauseMode;
     private boolean mIsNetworkAvailable;
     private boolean mIsGpsAvailable;
     private BuddiesServiceBroadcast mBroadcast;
-    private HandlerThread mHandledThread;
-    private Handler mHandler;
+    private HandlerThread mMainHandledThread;
+    private Handler mMainHandler;
+    private HandlerThread mOccasionalHandlerThread;
+    private Handler mOccasionalHandler;
+    private Timer mUpdateTimer;
     private HttpRequester mHttpRequester;
     private Gson mGson;
     private String mSessionKey;
@@ -67,16 +79,25 @@ public class BuddiesService extends Service {
     private int mImagesToShowCount;
     private EnumOrderBy mBuddiesOrderBy;
     private EnumMeasureUnits mMeasureUnits;
+    private String mCurrentBuddiesInfo;
 
     @Override
     public void onCreate() {
-        this.mHandledThread = new HandlerThread("UserServiceThread");
-        this.mHandledThread.start();
-        Looper looper = this.mHandledThread.getLooper();
-        if (looper != null) {
-            this.mHandler = new Handler(looper);
+        this.mMainHandledThread = new HandlerThread("UserServiceMainThread");
+        this.mMainHandledThread.start();
+        Looper mainLooper = this.mMainHandledThread.getLooper();
+        if (mainLooper != null) {
+            this.mMainHandler = new Handler(mainLooper);
         }
 
+        this.mOccasionalHandlerThread = new HandlerThread("UserServiceOccasionalThread");
+        this.mOccasionalHandlerThread.start();
+        Looper occasionalLooper = this.mOccasionalHandlerThread.getLooper();
+        if (occasionalLooper != null) {
+            this.mOccasionalHandler = new Handler(occasionalLooper);
+        }
+
+        this.mUpdateTimer = new Timer("UpdateTimer");
         this.mHttpRequester = new HttpRequester();
         this.mGson = new Gson();
         this.mBroadcast = new BuddiesServiceBroadcast(this);
@@ -93,6 +114,8 @@ public class BuddiesService extends Service {
             this.pauseBuddiesService();
         } else if (STOP_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
             this.stopBuddiesService();
+        } else if (FORCE_UPDATING_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
+            this.forceUpdatingBuddiesService();
         } else if (GET_CURRENT_SETTINGS.equalsIgnoreCase(action)) {
             this.getCurrentSettings();
         } else if (SET_UPDATE_FREQUENCY.equalsIgnoreCase(action)) {
@@ -112,8 +135,11 @@ public class BuddiesService extends Service {
 
     @Override
     public void onDestroy() {
-        this.mHandledThread.quit();
-        this.mHandledThread = null;
+        this.mMainHandledThread.quit();
+        this.mMainHandledThread = null;
+        this.mOccasionalHandlerThread.quit();
+        this.mOccasionalHandlerThread = null;
+        this.mUpdateTimer = null;
     }
 
     @Override
@@ -130,21 +156,19 @@ public class BuddiesService extends Service {
 
         // TODO fix the shit below, commented just for testing, uncomment on release
         // TODO made broadcast receivers:
-        // TODO on this.mIsNetworkAvailable run explicit this.updateBuddiesInfo() if !this.mIsUpdatingAlreadyStarted && !this.mIsOnPauseMode
-        // TODO and on this.mIsNetworkAvailable && this.mIsGpsAvailable run explicit this.updateCurrentPosition() if !this.mIsUpdatingAlreadyStarted && !this.mIsOnPauseMode
-        this.mIsNetworkAvailable = true;
+        // TODO on this.mIsNetworkAvailable run explicit this.updateBuddiesInfo() if !this.mIsUpdatingActive && !this.mIsOnPauseMode
+        // TODO and on this.mIsNetworkAvailable && this.mIsGpsAvailable run explicit this.updateCurrentPosition() if !this.mIsUpdatingActive && !this.mIsOnPauseMode
         this.mIsGpsAvailable = true;
+        this.mIsUpdateBuddiesInfoAvailable = true;
 //        if (!this.mIsServiceAlreadyStarted) {
-//            this.mIsServiceAlreadyStarted = true;
-
         this.readBuddiesStorage();
-        this.resumeBuddiesService();
+        this.mIsServiceAlreadyStarted = true;
 //        }
     }
 
     private void resumeBuddiesService() {
         this.mIsOnPauseMode = false;
-        this.runServiceUpdating();
+        this.forceUpdatingBuddiesService();
     }
 
     private void pauseBuddiesService() {
@@ -152,8 +176,27 @@ public class BuddiesService extends Service {
     }
 
     private void stopBuddiesService() {
-        this.mIsUpdatingAlreadyStarted = false;
+        this.mIsUpdatingActive = false;
+        this.mIsServiceAlreadyStarted = false;
         this.stopSelf();
+    }
+
+    private void forceUpdatingBuddiesService() {
+        if (this.mIsUpdateBuddiesInfoAvailable && this.mIsUpdatingActive) {
+            this.runOccasionalServiceUpdating();
+        } else if (!this.mIsUpdateBuddiesInfoAvailable) {
+            this.sendBroadcastWithBuddiesInfoUpdate();
+        }
+
+        if (!this.mIsUpdatingActive) {
+            this.mIsNetworkAvailable = NetworkConnectionInfo.isOnline(this);
+            if (this.mIsNetworkAvailable) {
+                this.mIsUpdatingActive = true;
+                this.runServiceUpdating();
+            } else {
+                ToastNotifier.makeToast(this, ERROR_MESSAGE_NO_NETWORK);
+            }
+        }
     }
 
     private void getCurrentSettings() {
@@ -197,24 +240,12 @@ public class BuddiesService extends Service {
     }
 
     private void runServiceUpdating() {
-        if (this.mIsUpdatingAlreadyStarted || !this.mIsNetworkAvailable) {
-            return;
-        }
-
-        this.mIsUpdatingAlreadyStarted = true;
-        this.mHandler.post(new Runnable() {
+        this.mMainHandler.post(new Runnable() {
             @Override
             public void run() {
-                while (BuddiesService.this.mIsUpdatingAlreadyStarted) {
-                    if (!BuddiesService.this.mIsOnPauseMode) {
-                        if (BuddiesService.this.mIsNetworkAvailable) {
-                            BuddiesService.this.updateBuddiesInfo();
-                        }
-
-                        if (BuddiesService.this.mIsNetworkAvailable && BuddiesService.this.mIsGpsAvailable) {
-                            BuddiesService.this.updateCurrentPosition();
-                        }
-                    }
+                while (BuddiesService.this.mIsUpdatingActive) {
+                    BuddiesService.this.updateBuddiesInfo();
+                    BuddiesService.this.updateCurrentPosition();
 
                     ThreadSleeper.sleep(BuddiesService.this.mUpdateFrequency);
                 }
@@ -222,18 +253,55 @@ public class BuddiesService extends Service {
         });
     }
 
+    private void runOccasionalServiceUpdating() {
+        this.mOccasionalHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                BuddiesService.this.updateBuddiesInfo();
+                BuddiesService.this.updateCurrentPosition();
+            }
+        });
+    }
+
     private void updateBuddiesInfo() {
+        if (!this.mIsNetworkAvailable || this.mIsOnPauseMode) {
+            return;
+        }
+
+        this.setUpdateBuddiesInfoTemporallyUnavailable(UPDATE_BUDDIES_INFO_LOCK_TIME);
+
         HttpResponse response = this.mHttpRequester.get(String.format(
                 "friends/all?orderBy=%s&sessionKey=%s",
                 this.mBuddiesOrderBy.toString().toLowerCase(), this.mSessionKey));
 
         if (response.isStatusOk()) {
-            this.mBroadcast.sendBuddiesInfoUpdate(response.getMessage());
+            this.mCurrentBuddiesInfo = response.getMessage();
+            this.sendBroadcastWithBuddiesInfoUpdate();
         }
     }
 
     private void updateCurrentPosition() {
+        if (!this.mIsNetworkAvailable || !this.mIsGpsAvailable) {
+            return;
+        }
+
         // TODO fill
+    }
+
+    private void sendBroadcastWithBuddiesInfoUpdate() {
+        if (!this.mIsOnPauseMode && this.mCurrentBuddiesInfo != null) {
+            this.mBroadcast.sendBuddiesInfoUpdate(this.mCurrentBuddiesInfo, this.mMeasureUnits);
+        }
+    }
+
+    private void setUpdateBuddiesInfoTemporallyUnavailable(long delay) {
+        this.mIsUpdateBuddiesInfoAvailable = false;
+        this.mUpdateTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                BuddiesService.this.mIsUpdateBuddiesInfoAvailable = true;
+            }
+        }, delay);
     }
 
     private void readBuddiesStorage() {
