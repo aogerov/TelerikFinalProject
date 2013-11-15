@@ -174,7 +174,6 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
                     return;
                 }
 
-
                 boolean isStatusOk = intent.getBooleanExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, false);
 
                 boolean buddieRemovedResult = intent.getBooleanExtra(BuddiesService.BUDDIE_REMOVED_RESULT_EXTRA, false);
@@ -185,9 +184,15 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
                     return;
                 }
 
-                String requestSendResult = intent.getStringExtra(BuddiesService.REQUESTS_SEND_RESULT_EXTRA);
-                if (requestSendResult != null) {
-                    this.handleRequestSendResult(requestSendResult, isStatusOk);
+                String requestSendResponseMessage = intent.getStringExtra(BuddiesService.REQUESTS_SEND_RESULT_EXTRA);
+                if (requestSendResponseMessage != null) {
+                    this.handleRequestSendResult(isStatusOk);
+                    return;
+                }
+
+                String responseToRequestResponseMessage = intent.getStringExtra(BuddiesService.RESPONSE_TO_REQUEST_EXTRA);
+                if (responseToRequestResponseMessage != null) {
+                    this.handleResponseToRequestResult(isStatusOk);
                     return;
                 }
 
@@ -241,11 +246,19 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             }
         }
 
-        private void handleRequestSendResult(String requestSendResult, boolean isStatusOk) {
+        private void handleRequestSendResult(boolean isStatusOk) {
             if (isStatusOk) {
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, "request successfully send");
             } else {
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, "request was unable to be send");
+            }
+        }
+
+        private void handleResponseToRequestResult(boolean isStatusOk) {
+            if (isStatusOk) {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "response successfully send");
+            } else {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "response failed, please try again");
             }
         }
     }

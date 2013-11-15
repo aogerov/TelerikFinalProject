@@ -117,6 +117,14 @@ namespace FindMyBuddies.Api.Assists
             }
         }
 
+        public static void ValidateIdConflicts(User user, User friend)
+        {
+            if (user.Id == friend.Id)
+            {
+                throw new ArgumentException("Both user ID's are one and the same");
+            }
+        }
+
         private static void ValidateUsername(string username)
         {
             if (username == null)

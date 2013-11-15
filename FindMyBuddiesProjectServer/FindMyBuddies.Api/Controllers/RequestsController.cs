@@ -64,8 +64,9 @@ namespace FindMyBuddies.Api.Controllers
             {
                 using (var context = new FindMyBuddiesContext())
                 {
-                    var friendFound = Validator.ValidateFriendInDb(context, model.Id, model.Nickname);
                     var userWhoMakesRequest = Validator.ValidateSessionKey(context, sessionKey);
+                    var friendFound = Validator.ValidateFriendInDb(context, model.Id, model.Nickname);
+                    Validator.ValidateIdConflicts(userWhoMakesRequest, friendFound);
                     var friendRequest = Parser.CreateFriendRequest(userWhoMakesRequest);
 
                     if (friendFound.FriendRequests.FirstOrDefault(
@@ -96,7 +97,8 @@ namespace FindMyBuddies.Api.Controllers
                     var userWhoRespondsToRequest = Validator.ValidateSessionKey(context, sessionKey);                    
                     var friendWhoMadeRequest = Validator.ValidateFriendInDb(
                         context, requestResponse.FromUserId, requestResponse.FromUserNickname);
-                    
+
+                    Validator.ValidateIdConflicts(userWhoRespondsToRequest, friendWhoMadeRequest);
                     var request = Validator.ValidateRequestExistence(
                         context, userWhoRespondsToRequest, friendWhoMadeRequest);
 

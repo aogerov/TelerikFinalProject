@@ -25,6 +25,7 @@ import com.gercho.findmybuddies.http.HttpResponse;
 import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.models.CoordinatesModel;
+import com.gercho.findmybuddies.models.ResponseModel;
 import com.gercho.findmybuddies.validators.BuddiesValidator;
 import com.google.gson.Gson;
 
@@ -43,9 +44,12 @@ public class BuddiesService extends Service {
     public static final String BUDDIE_REMOVED_RESULT_EXTRA = "BuddieRemovedResultExtra";
     public static final String ALL_REQUESTS_EXTRA = "AllRequestsExtra";
     public static final String REQUESTS_SEND_RESULT_EXTRA = "RequestSendResultExtra";
+    public static final String REQUESTS_IS_ACCEPTED_EXTRA = "RequestIsAcceptedExtra";
+    public static final String REQUESTS_IS_LEFT_FOR_LATER_EXTRA = "RequestIsLeftForLaterExtra";
+    public static final String RESPONSE_TO_REQUEST_EXTRA = "ResponseToRequestExtra";
     public static final String IS_HTTP_STATUS_OK_EXTRA = "HttpIsStatusOkExtra";
-    public static final String BUDDIE_NICKNAME_EXTRA = "BuddieNicknameExtra";
     public static final String BUDDIE_ID_EXTRA = "BuddieIdExtra";
+    public static final String BUDDIE_NICKNAME_EXTRA = "BuddieNicknameExtra";
     public static final String UPDATE_FREQUENCY_EXTRA = "UpdateFrequencyExtra";
     public static final String IMAGES_TO_SHOW_COUNT_EXTRA = "ImagesToShowCountExtra";
     public static final String BUDDIES_ORDER_BY_TYPES_EXTRA = "BuddiesOrderByTypesExtra";
@@ -194,9 +198,11 @@ public class BuddiesService extends Service {
 
         // this is just for testing, remove on release!!!
         Intent intent = new Intent();
-        intent.putExtra(BUDDIE_ID_EXTRA, 17);
+        intent.putExtra(BUDDIE_ID_EXTRA, 18);
         intent.putExtra(BUDDIE_NICKNAME_EXTRA, "fantas");
-        this.sendBuddieRequest(intent);
+        intent.putExtra(REQUESTS_IS_ACCEPTED_EXTRA, true);
+        intent.putExtra(REQUESTS_IS_LEFT_FOR_LATER_EXTRA, true);
+        this.respondToBuddieRequest(intent);
     }
 
     private void forceUpdatingBuddiesService() {
@@ -408,7 +414,29 @@ public class BuddiesService extends Service {
     }
 
     private void respondToBuddieRequest(Intent intent) {
-        // TODO fill
+        int buddieId = intent.getIntExtra(BUDDIE_ID_EXTRA, Integer.MIN_VALUE);
+        String buddieNickname = intent.getStringExtra(BUDDIE_NICKNAME_EXTRA);
+        boolean isAccepted = intent.getBooleanExtra(REQUESTS_IS_ACCEPTED_EXTRA, false);
+        boolean isLeftForLater = intent.getBooleanExtra(REQUESTS_IS_LEFT_FOR_LATER_EXTRA, false);
+        if (buddieId != Integer.MIN_VALUE && buddieNickname != null) {
+            ResponseModel responseModel = new ResponseModel(buddieId, buddieNickname, isAccepted, isLeftForLater);
+            final String responseAsJson = this.mGson.toJson(responseModel);
+
+            this.mUserHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    BuddiesService.this.respondToBuddieRequestHttpRequest(responseAsJson);
+                }
+            });
+        }
+    }
+
+    private void respondToBuddieRequestHttpRequest(String responseAsJson){
+        HttpResponse response = this.mHttpRequester.post(String.format(
+                "requests/response?sessionKey=%s", this.mSessionKey),
+                responseAsJson);
+
+        this.mBroadcast.sendBroadcastWithResponseToBuddieRequest(response.getMessage(), response.isStatusOk());
     }
 
     private void sendNewImage(Intent intent) {
