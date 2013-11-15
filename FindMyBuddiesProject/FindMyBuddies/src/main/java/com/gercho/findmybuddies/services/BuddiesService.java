@@ -15,7 +15,7 @@ import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
 import com.gercho.findmybuddies.devices.LocationInfo;
 import com.gercho.findmybuddies.devices.NetworkConnectionInfo;
 import com.gercho.findmybuddies.enums.MeasureUnits;
-import com.gercho.findmybuddies.enums.OrderBy;
+import com.gercho.findmybuddies.enums.OrderByTypes;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
@@ -38,26 +38,33 @@ public class BuddiesService extends Service {
     public static final String RESUME_BUDDIES_SERVICE = "com.gercho.action.RESUME_BUDDIES_SERVICE";
     public static final String STOP_BUDDIES_SERVICE = "com.gercho.action.STOP_BUDDIES_SERVICE";
     public static final String FORCE_UPDATING_BUDDIES_SERVICE = "com.gercho.action.FORCE_UPDATING_BUDDIES_SERVICE";
+    public static final String SEARCH_FOR_NEW_BUDDIE = "com.gercho.action.SEARCH_FOR_NEW_BUDDIE";
+    public static final String REMOVE_EXISTING_BUDDIE = "com.gercho.action.REMOVE_EXISTING_BUDDIE";
+    public static final String GET_ALL_REQUESTS = "com.gercho.action.GET_ALL_REQUESTS";
+    public static final String GET_ALL_NEW_REQUESTS = "com.gercho.action.GET_ALL_NEW_REQUESTS";
+    public static final String SEND_BUDDIE_REQUEST = "com.gercho.action.SEND_BUDDIE_REQUEST";
+    public static final String RESPOND_TO_BUDDIE_REQUEST = "com.gercho.action.RESPOND_TO_BUDDIE_REQUEST";
+    public static final String SEND_NEW_IMAGE = "com.gercho.action.SEND_NEW_IMAGE";
+    public static final String GET_BUDDIE_IMAGES = "com.gercho.action.GET_BUDDIE_IMAGES";
+    public static final String ANDROID_CONNECTIVITY_CHANGE = "android.net.conn.CONNECTIVITY_CHANGE";
+    public static final String ANDROID_GPS_ENABLED_CHANGE = "android.location.GPS_ENABLED_CHANG";
     public static final String GET_CURRENT_SETTINGS = "com.gercho.action.GET_CURRENT_SETTINGS";
     public static final String SET_UPDATE_FREQUENCY = "com.gercho.action.SET_UPDATE_FREQUENCY";
     public static final String SET_IMAGES_TO_SHOW_COUNT = "com.gercho.action.SET_IMAGES_TO_SHOW_COUNT";
     public static final String SET_BUDDIES_ORDER_BY = "com.gercho.action.SET_BUDDIES_ORDER_BY";
     public static final String SET_MEASURE_UNITS = "com.gercho.action.SET_MEASURE_UNITS";
-    public static final String GET_BUDDIE_IMAGES = "com.gercho.action.GET_BUDDIE_IMAGES";
-    public static final String ANDROID_CONNECTIVITY_CHANGE = "android.net.conn.CONNECTIVITY_CHANGE";
-    public static final String ANDROID_GPS_ENABLED_CHANGE = "android.location.GPS_ENABLED_CHANG";
 
     public static final String BUDDIES_SERVICE_BROADCAST = "BuddiesServiceBroadcast";
     public static final String UPDATE_FREQUENCY_EXTRA = "UpdateFrequencyExtra";
     public static final String IMAGES_TO_SHOW_COUNT_EXTRA = "ImagesToShowCountExtra";
-    public static final String BUDDIES_ORDER_BY_EXTRA = "BuddiesOrderByExtra";
+    public static final String BUDDIES_ORDER_BY_TYPES_EXTRA = "BuddiesOrderByTypesExtra";
     public static final String BUDDIES_MEASURE_UNITS_EXTRA = "BuddiesMeasureUnitsExtra";
     public static final String BUDDIES_INFO_UPDATE_EXTRA = "BuddiesInfoUpdateExtra";
 
     private static final int UPDATING_LOCK_TIME = 1000 * 50; // 50 seconds
     private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60 * 5; // 5 minutes
     private static final int IMAGES_TO_SHOW_COUNT_DEFAULT = 3;
-    private static final OrderBy BUDDIES_ORDER_BY_DEFAULT = OrderBy.DISTANCE;
+    private static final OrderByTypes BUDDIES_ORDER_BY_DEFAULT = OrderByTypes.DISTANCE;
     private static final MeasureUnits MEASURE_UNITS_DEFAULT = MeasureUnits.KILOMETERS;
 
     private static final String ERROR_MESSAGE_NO_NETWORK = "Can't access buddies, no network available";
@@ -88,35 +95,49 @@ public class BuddiesService extends Service {
     private String mSessionKey;
     private int mUpdateFrequency;
     private int mImagesToShowCount;
-    private OrderBy mBuddiesOrderBy;
+    private OrderByTypes mOrderByTypes;
     private MeasureUnits mMeasureUnits;
     private String mCurrentBuddiesInfo;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
-        if (START_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
+        if (START_BUDDIES_SERVICE.equals(action)) {
             this.startBuddiesService(intent);
-        } else if (RESUME_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
+        } else if (RESUME_BUDDIES_SERVICE.equals(action)) {
             this.resumeBuddiesService();
-        } else if (PAUSE_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
+        } else if (PAUSE_BUDDIES_SERVICE.equals(action)) {
             this.pauseBuddiesService();
-        } else if (STOP_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
+        } else if (STOP_BUDDIES_SERVICE.equals(action)) {
             this.stopBuddiesService();
-        } else if (FORCE_UPDATING_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
+        } else if (FORCE_UPDATING_BUDDIES_SERVICE.equals(action)) {
             this.forceUpdatingBuddiesService();
-        } else if (GET_CURRENT_SETTINGS.equalsIgnoreCase(action)) {
+        } else if (SEARCH_FOR_NEW_BUDDIE.equals(action)) {
+            this.searchForNewBuddie(intent);
+        } else if (REMOVE_EXISTING_BUDDIE.equals(action)) {
+            this.removeExistingBuddie(intent);
+        } else if (GET_ALL_REQUESTS.equals(action)) {
+            this.getAllRequests();
+        } else if (GET_ALL_NEW_REQUESTS.equals(action)) {
+            this.getAllNewRequests();
+        } else if (SEND_BUDDIE_REQUEST.equals(action)) {
+            this.sendBuddieRequest(intent);
+        } else if (RESPOND_TO_BUDDIE_REQUEST.equals(action)) {
+            this.respondToBuddieRequest(intent);
+        } else if (SEND_NEW_IMAGE.equals(action)) {
+            this.sendNewImage(intent);
+        } else if (GET_BUDDIE_IMAGES.equals(action)) {
+            this.getBuddieImages();
+        } else if (GET_CURRENT_SETTINGS.equals(action)) {
             this.getCurrentSettings();
-        } else if (SET_UPDATE_FREQUENCY.equalsIgnoreCase(action)) {
+        } else if (SET_UPDATE_FREQUENCY.equals(action)) {
             this.setUpdateFrequency(intent);
-        } else if (SET_IMAGES_TO_SHOW_COUNT.equalsIgnoreCase(action)) {
+        } else if (SET_IMAGES_TO_SHOW_COUNT.equals(action)) {
             this.setImagesToShowCount(intent);
-        } else if (SET_BUDDIES_ORDER_BY.equalsIgnoreCase(action)) {
+        } else if (SET_BUDDIES_ORDER_BY.equals(action)) {
             this.setBuddiesOrderBy(intent);
-        } else if (SET_MEASURE_UNITS.equalsIgnoreCase(action)) {
+        } else if (SET_MEASURE_UNITS.equals(action)) {
             this.setMeasureUnits(intent);
-        } else if (GET_BUDDIE_IMAGES.equalsIgnoreCase(action)) {
-            this.getBuddieImages(intent);
         }
 
         return START_REDELIVER_INTENT;
@@ -211,9 +232,41 @@ public class BuddiesService extends Service {
         }
     }
 
+    private void searchForNewBuddie(Intent intent) {
+        // TODO fill
+    }
+
+    private void removeExistingBuddie(Intent intent) {
+        // TODO fill
+    }
+
+    private void getAllRequests() {
+        // TODO fill
+    }
+
+    private void getAllNewRequests() {
+        // TODO fill
+    }
+
+    private void sendBuddieRequest(Intent intent) {
+        // TODO fill
+    }
+
+    private void respondToBuddieRequest(Intent intent) {
+        // TODO fill
+    }
+
+    private void sendNewImage(Intent intent) {
+        // TODO fill
+    }
+
+    private void getBuddieImages() {
+        // TODO fill
+    }
+
     private void getCurrentSettings() {
         this.mBroadcast.sendCurrentSettings(
-                this.mUpdateFrequency, this.mImagesToShowCount, this.mBuddiesOrderBy, this.mMeasureUnits);
+                this.mUpdateFrequency, this.mImagesToShowCount, this.mOrderByTypes, this.mMeasureUnits);
     }
 
     private void setUpdateFrequency(Intent intent) {
@@ -235,10 +288,10 @@ public class BuddiesService extends Service {
     }
 
     private void setBuddiesOrderBy(Intent intent) {
-        int buddiesOrderByAsInt = intent.getIntExtra(BUDDIES_ORDER_BY_EXTRA, Integer.MIN_VALUE);
+        int buddiesOrderByAsInt = intent.getIntExtra(BUDDIES_ORDER_BY_TYPES_EXTRA, Integer.MIN_VALUE);
         boolean isBuddiesOrderByValid = BuddiesValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
-        if (isBuddiesOrderByValid && this.mBuddiesOrderBy != OrderBy.values()[buddiesOrderByAsInt]) {
-            this.mBuddiesOrderBy = OrderBy.values()[buddiesOrderByAsInt];
+        if (isBuddiesOrderByValid && this.mOrderByTypes != OrderByTypes.values()[buddiesOrderByAsInt]) {
+            this.mOrderByTypes = OrderByTypes.values()[buddiesOrderByAsInt];
             this.updateBuddiesStorage(BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, buddiesOrderByAsInt);
         }
     }
@@ -250,10 +303,6 @@ public class BuddiesService extends Service {
             this.mMeasureUnits = MeasureUnits.values()[measureUnitsAsInt];
             this.updateBuddiesStorage(BUDDIES_STORAGE_MEASURE_UNITS_AS_INT, measureUnitsAsInt);
         }
-    }
-
-    private void getBuddieImages(Intent intent) {
-        // TODO fill
     }
 
     private void startAutomaticUpdating() {
@@ -290,7 +339,7 @@ public class BuddiesService extends Service {
 
         HttpResponse response = this.mHttpRequester.get(String.format(
                 "friends/all?orderBy=%s&sessionKey=%s",
-                this.mBuddiesOrderBy.toString().toLowerCase(), this.mSessionKey));
+                this.mOrderByTypes.toString().toLowerCase(), this.mSessionKey));
 
         if (response.isStatusOk()) {
             this.mCurrentBuddiesInfo = response.getMessage();
@@ -356,9 +405,9 @@ public class BuddiesService extends Service {
                 BUDDIES_STORAGE_BUDDIES_ORDER_BY_AS_INT, Integer.MIN_VALUE);
         boolean isBuddiesOrderByValid = BuddiesValidator.validateBuddiesOrderByAsInt(buddiesOrderByAsInt);
         if (isBuddiesOrderByValid) {
-            this.mBuddiesOrderBy = OrderBy.values()[buddiesOrderByAsInt];
+            this.mOrderByTypes = OrderByTypes.values()[buddiesOrderByAsInt];
         } else {
-            this.mBuddiesOrderBy = BUDDIES_ORDER_BY_DEFAULT;
+            this.mOrderByTypes = BUDDIES_ORDER_BY_DEFAULT;
         }
 
         int measureUnitsAsInt = buddiesStorage.getInt(

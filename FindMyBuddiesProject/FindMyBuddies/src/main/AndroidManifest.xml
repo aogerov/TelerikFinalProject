@@ -47,12 +47,19 @@
                 <action android:name="com.gercho.action.RESUME_BUDDIES_SERVICE" />
                 <action android:name="com.gercho.action.STOP_BUDDIES_SERVICE" />
                 <action android:name="com.gercho.action.FORCE_UPDATING_BUDDIES_SERVICE" />
+                <action android:name="com.gercho.action.SEARCH_FOR_NEW_BUDDIE" />
+                <action android:name="com.gercho.action.REMOVE_EXISTING_BUDDIE" />
+                <action android:name="com.gercho.action.GET_ALL_REQUESTS" />
+                <action android:name="com.gercho.action.GET_ALL_NEW_REQUESTS" />
+                <action android:name="com.gercho.action.SEND_BUDDIE_REQUEST" />
+                <action android:name="com.gercho.action.RESPOND_TO_BUDDIE_REQUEST" />
+                <action android:name="com.gercho.action.SEND_NEW_IMAGE" />
+                <action android:name="com.gercho.action.GET_BUDDIE_IMAGES" />
                 <action android:name="com.gercho.action.GET_CURRENT_SETTINGS" />
                 <action android:name="com.gercho.action.SET_UPDATE_FREQUENCY" />
                 <action android:name="com.gercho.action.SET_IMAGES_TO_SHOW_COUNT" />
                 <action android:name="com.gercho.action.SET_BUDDIES_ORDER_BY" />
                 <action android:name="com.gercho.action.SET_MEASURE_UNITS" />
-                <action android:name="com.gercho.action.GET_BUDDIE_IMAGES" />
             </intent-filter>
         </service>
 

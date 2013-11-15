@@ -59,7 +59,7 @@ public class UserService extends Service {
     private String mSessionKeyEncrypted;
     private String mNickname;
 
-    // TODO add no network handling and register broadcast receiver for that like on BuddiesService
+    // TODO add no network handling and close this service from MailActivity on login/register
 
     @Override
     public void onCreate() {

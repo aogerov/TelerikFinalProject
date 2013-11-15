@@ -1,7 +1,7 @@
 package com.gercho.findmybuddies.validators;
 
 import com.gercho.findmybuddies.enums.MeasureUnits;
-import com.gercho.findmybuddies.enums.OrderBy;
+import com.gercho.findmybuddies.enums.OrderByTypes;
 
 /**
  * Created by Gercho on 11/12/13.
@@ -40,7 +40,7 @@ public class BuddiesValidator {
     }
 
     public static boolean validateBuddiesOrderByAsInt(int buddiesOrderBy) {
-        if (buddiesOrderBy < 0 || buddiesOrderBy >= OrderBy.values().length) {
+        if (buddiesOrderBy < 0 || buddiesOrderBy >= OrderByTypes.values().length) {
             return false;
         }
 
