@@ -72,4 +72,11 @@ public class BuddiesServiceBroadcast {
         intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
         this.mService.sendBroadcast(intent);
     }
+
+    public void sendBroadcastWithBuddieImages(String buddieImagesAsJson, boolean isStatusOk) {
+        Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
+        intent.putExtra(BuddiesService.BUDDIE_IMAGES_EXTRA, buddieImagesAsJson);
+        intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
+        this.mService.sendBroadcast(intent);
+    }
 }

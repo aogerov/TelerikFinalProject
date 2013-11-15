@@ -47,6 +47,7 @@ public class BuddiesService extends Service {
     public static final String REQUESTS_IS_ACCEPTED_EXTRA = "RequestIsAcceptedExtra";
     public static final String REQUESTS_IS_LEFT_FOR_LATER_EXTRA = "RequestIsLeftForLaterExtra";
     public static final String RESPONSE_TO_REQUEST_EXTRA = "ResponseToRequestExtra";
+    public static final String BUDDIE_IMAGES_EXTRA = "BuddieImagesExtra";
     public static final String IS_HTTP_STATUS_OK_EXTRA = "HttpIsStatusOkExtra";
     public static final String BUDDIE_ID_EXTRA = "BuddieIdExtra";
     public static final String BUDDIE_NICKNAME_EXTRA = "BuddieNicknameExtra";
@@ -122,7 +123,7 @@ public class BuddiesService extends Service {
         } else if (AppActions.SEND_NEW_IMAGE.equals(action)) {
             this.sendNewImage(intent);
         } else if (AppActions.GET_BUDDIE_IMAGES.equals(action)) {
-            this.getBuddieImages();
+            this.getBuddieImages(intent);
         } else if (AppActions.GET_CURRENT_SETTINGS.equals(action)) {
             this.getCurrentSettings();
         } else if (AppActions.SET_UPDATE_FREQUENCY.equals(action)) {
@@ -342,7 +343,7 @@ public class BuddiesService extends Service {
                 "friends/remove?sessionKey=%s", this.mSessionKey),
                 buddieAsJson);
 
-        this.mBroadcast.sendBroadcastWithBuddieRemoveResult(buddieId, buddieNickname,response.isStatusOk());
+        this.mBroadcast.sendBroadcastWithBuddieRemoveResult(buddieId, buddieNickname, response.isStatusOk());
     }
 
     private void searchForNewBuddie(Intent intent) {
@@ -423,7 +424,7 @@ public class BuddiesService extends Service {
         }
     }
 
-    private void respondToBuddieRequestHttpRequest(String responseAsJson){
+    private void respondToBuddieRequestHttpRequest(String responseAsJson) {
         HttpResponse response = this.mHttpRequester.post(String.format(
                 "requests/response?sessionKey=%s", this.mSessionKey),
                 responseAsJson);
@@ -435,21 +436,29 @@ public class BuddiesService extends Service {
         // TODO fill
     }
 
-    private void getBuddieImages() {
-        this.mUserHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                BuddiesService.this.getBuddieImagesHttpRequest();
-            }
-        });
+    private void getBuddieImages(Intent intent) {
+        int buddieId = intent.getIntExtra(BUDDIE_ID_EXTRA, Integer.MIN_VALUE);
+        String buddieNickname = intent.getStringExtra(BUDDIE_NICKNAME_EXTRA);
+        if (buddieId != Integer.MIN_VALUE && buddieNickname != null) {
+            BuddieModel buddieModel = new BuddieModel(buddieId, buddieNickname);
+            final String buddieAsJson = this.mGson.toJson(buddieModel);
+
+            this.mUserHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    BuddiesService.this.getBuddieImagesHttpRequest(buddieAsJson);
+                }
+            });
+        }
     }
 
-    private void getBuddieImagesHttpRequest(){
-        HttpResponse response = this.mHttpRequester.get(String.format(
+    private void getBuddieImagesHttpRequest(String buddieAsJson) {
+        HttpResponse response = this.mHttpRequester.post(String.format(
                 "images/get?imagesCount=%s&sessionKey=%s",
-                this.mImagesToShowCount, this.mSessionKey));
+                this.mImagesToShowCount, this.mSessionKey),
+                buddieAsJson);
 
-        this.mBroadcast.sendBroadcastWithAllRequests(response.getMessage(), response.isStatusOk());
+        this.mBroadcast.sendBroadcastWithBuddieImages(response.getMessage(), response.isStatusOk());
     }
 
     private void getCurrentSettings() {

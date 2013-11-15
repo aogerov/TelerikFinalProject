@@ -16,10 +16,12 @@ import android.widget.ListView;
 
 import com.gercho.findmybuddies.enums.MeasureUnits;
 import com.gercho.findmybuddies.helpers.AppActions;
+import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
+import com.gercho.findmybuddies.models.ImageModel;
 import com.gercho.findmybuddies.models.RequestModel;
 import com.gercho.findmybuddies.services.BuddiesService;
 import com.google.gson.Gson;
@@ -158,7 +160,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
         Gson mGson;
 
-        private BuddiesServiceUpdateReceiver(){
+        private BuddiesServiceUpdateReceiver() {
             this.mGson = new Gson();
         }
 
@@ -175,6 +177,18 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
                 }
 
                 boolean isStatusOk = intent.getBooleanExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, false);
+
+                String buddieSearchResultAsJson = intent.getStringExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA);
+                if (buddieSearchResultAsJson != null) {
+                    this.handleBuddieSearchResult(buddieSearchResultAsJson, isStatusOk);
+                    return;
+                }
+
+                String allRequestsAsJson = intent.getStringExtra(BuddiesService.ALL_REQUESTS_EXTRA);
+                if (allRequestsAsJson != null) {
+                    this.handleAllRequestsResult(allRequestsAsJson, isStatusOk);
+                    return;
+                }
 
                 boolean buddieRemovedResult = intent.getBooleanExtra(BuddiesService.BUDDIE_REMOVED_RESULT_EXTRA, false);
                 if (buddieRemovedResult) {
@@ -196,19 +210,10 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
                     return;
                 }
 
-                if (!isStatusOk) {
-                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "Occurred error in connecting the database");
+                String buddieImagesAsJson = intent.getStringExtra(BuddiesService.BUDDIE_IMAGES_EXTRA);
+                if (buddieImagesAsJson != null) {
+                    this.handleBuddieImagesResult(buddieImagesAsJson, isStatusOk);
                     return;
-                }
-
-                String buddieSearchResultAsJson = intent.getStringExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA);
-                if (buddieSearchResultAsJson != null) {
-                    this.handleBuddieSearchResult(buddieSearchResultAsJson);
-                }
-
-                String allRequestsAsJson = intent.getStringExtra(BuddiesService.ALL_REQUESTS_EXTRA);
-                if (allRequestsAsJson != null) {
-                    this.handleAllRequests(allRequestsAsJson);
                 }
             }
         }
@@ -217,7 +222,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             BuddieModel[] buddies = this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
             MeasureUnits measureUnits = MeasureUnits.values()[measureUnitsAsInt];
             if (buddies != null && buddies.length > 0) {
-//                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count - " + buddies.length + " measure units - " + measureUnits);
+                LogHelper.logThreadId("buddies count: " + buddies.length + ", measure units: " + measureUnits + ", new requests: " + newBuddieRequestsCount);
             }
         }
 
@@ -229,7 +234,12 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             }
         }
 
-        private void handleBuddieSearchResult(String buddieSearchResultAsJson) {
+        private void handleBuddieSearchResult(String buddieSearchResultAsJson, boolean isStatusOk) {
+            if (!isStatusOk) {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "Occurred error in connecting the database");
+                return;
+            }
+
             BuddieFoundModel buddie = this.mGson.fromJson(buddieSearchResultAsJson, BuddieFoundModel.class);
             if (buddie != null) {
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
@@ -239,7 +249,12 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             }
         }
 
-        private void handleAllRequests(String allRequestsAsJson) {
+        private void handleAllRequestsResult(String allRequestsAsJson, boolean isStatusOk) {
+            if (!isStatusOk) {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "Occurred error in connecting the database");
+                return;
+            }
+
             RequestModel[] allRequests = this.mGson.fromJson(allRequestsAsJson, RequestModel[].class);
             if (allRequests != null) { // && allRequests.length > 0
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, "there are " + allRequests.length + " current requests");
@@ -259,6 +274,18 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, "response successfully send");
             } else {
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, "response failed, please try again");
+            }
+        }
+
+        private void handleBuddieImagesResult(String buddieImagesAsJson, boolean isStatusOk) {
+            if (!isStatusOk) {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "Occurred error in connecting the database");
+                return;
+            }
+
+            ImageModel[] images = this.mGson.fromJson(buddieImagesAsJson, ImageModel[].class);
+            if (images != null && images.length > 0) {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "images count: " + images.length);
             }
         }
     }
