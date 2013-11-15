@@ -195,14 +195,6 @@ public class BuddiesService extends Service {
         this.mIsOnPauseMode = false;
         this.mNewBuddieRequestsCount = 0;
         this.forceUpdatingBuddiesService();
-
-        // this is just for testing, remove on release!!!
-        Intent intent = new Intent();
-        intent.putExtra(BUDDIE_ID_EXTRA, 18);
-        intent.putExtra(BUDDIE_NICKNAME_EXTRA, "fantas");
-        intent.putExtra(REQUESTS_IS_ACCEPTED_EXTRA, true);
-        intent.putExtra(REQUESTS_IS_LEFT_FOR_LATER_EXTRA, true);
-        this.respondToBuddieRequest(intent);
     }
 
     private void forceUpdatingBuddiesService() {
@@ -444,7 +436,20 @@ public class BuddiesService extends Service {
     }
 
     private void getBuddieImages() {
-        // TODO fill
+        this.mUserHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                BuddiesService.this.getBuddieImagesHttpRequest();
+            }
+        });
+    }
+
+    private void getBuddieImagesHttpRequest(){
+        HttpResponse response = this.mHttpRequester.get(String.format(
+                "images/get?imagesCount=%s&sessionKey=%s",
+                this.mImagesToShowCount, this.mSessionKey));
+
+        this.mBroadcast.sendBroadcastWithAllRequests(response.getMessage(), response.isStatusOk());
     }
 
     private void getCurrentSettings() {
