@@ -33,9 +33,9 @@ namespace FindMyBuddies.Api.Controllers
             return responseMsg;
         }
 
-        // api/requests/allNew?sessionKey={sessionKey}
+        // api/requests/newRequestsCount?sessionKey={sessionKey}
         [HttpGet]
-        [ActionName("allNew")]
+        [ActionName("newRequestsCount")]
         public HttpResponseMessage GetAllNotShowedFriends([FromUri]string sessionKey)
         {
             var responseMsg = this.PerformOperationAndHandleExeptions(() =>
@@ -45,9 +45,9 @@ namespace FindMyBuddies.Api.Controllers
                     var user = Validator.ValidateSessionKey(context, sessionKey);
 
                     var friendRequests = user.FriendRequests.Where(r => !r.IsShowed).OrderBy(r => r.FromUserNickname);
-                    var friendRequestModels = Parser.FriendRequestsToFriendRequestModels(friendRequests);
+                    int friendRequestsCount = friendRequests.Count();
 
-                    var response = this.Request.CreateResponse(HttpStatusCode.OK, friendRequestModels);
+                    var response = this.Request.CreateResponse(HttpStatusCode.OK, friendRequestsCount);
                     return response;
                 }
             });
