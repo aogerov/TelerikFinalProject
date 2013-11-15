@@ -22,6 +22,7 @@ import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
+import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.models.CoordinatesModel;
 import com.gercho.findmybuddies.validators.BuddiesValidator;
@@ -40,7 +41,9 @@ public class BuddiesService extends Service {
     public static final String NEW_BUDDIE_REQUESTS_EXTRA = "NewBuddieRequestsExtra";
     public static final String BUDDIE_SEARCH_RESULT_EXTRA = "BuddieSearchResultExtra";
     public static final String BUDDIE_REMOVED_RESULT_EXTRA = "BuddieRemovedResultExtra";
-    public static final String BUDDIE_REMOVE_IS_STATUS_OK_EXTRA = "BuddieRemoveIsStatusOkExtra";
+    public static final String ALL_REQUESTS_EXTRA = "AllRequestsExtra";
+    public static final String REQUESTS_SEND_RESULT_EXTRA = "RequestSendResultExtra";
+    public static final String IS_HTTP_STATUS_OK_EXTRA = "HttpIsStatusOkExtra";
     public static final String BUDDIE_NICKNAME_EXTRA = "BuddieNicknameExtra";
     public static final String BUDDIE_ID_EXTRA = "BuddieIdExtra";
     public static final String UPDATE_FREQUENCY_EXTRA = "UpdateFrequencyExtra";
@@ -191,9 +194,9 @@ public class BuddiesService extends Service {
 
         // this is just for testing, remove on release!!!
         Intent intent = new Intent();
-        intent.putExtra(BUDDIE_ID_EXTRA, 20);
-        intent.putExtra(BUDDIE_NICKNAME_EXTRA, "  kalOjan ");
-        this.removeExistingBuddie(intent);
+        intent.putExtra(BUDDIE_ID_EXTRA, 17);
+        intent.putExtra(BUDDIE_NICKNAME_EXTRA, "fantas");
+        this.sendBuddieRequest(intent);
     }
 
     private void forceUpdatingBuddiesService() {
@@ -320,29 +323,6 @@ public class BuddiesService extends Service {
         }, delay);
     }
 
-    private void searchForNewBuddie(Intent intent) {
-        final String buddieNickname = intent.getStringExtra(BUDDIE_NICKNAME_EXTRA);
-        if (buddieNickname != null) {
-            this.mUserHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    BuddiesService.this.searchForNewBuddieHttpRequest(buddieNickname);
-                }
-            });
-        }
-    }
-
-    private void searchForNewBuddieHttpRequest(String buddieNickname) {
-        HttpResponse response = this.mHttpRequester.get(String.format(
-                "friends/find?friendNickname=%s&sessionKey=%s",
-                buddieNickname, this.mSessionKey));
-
-        if (response.isStatusOk()) {
-            String buddieSearchResult = response.getMessage();
-            this.mBroadcast.sendBroadcastWithBuddieSearchResult(buddieSearchResult);
-        }
-    }
-
     private void removeExistingBuddie(Intent intent) {
         final int buddieId = intent.getIntExtra(BUDDIE_ID_EXTRA, Integer.MIN_VALUE);
         final String buddieNickname = intent.getStringExtra(BUDDIE_NICKNAME_EXTRA);
@@ -364,15 +344,67 @@ public class BuddiesService extends Service {
                 "friends/remove?sessionKey=%s", this.mSessionKey),
                 buddieAsJson);
 
-        this.mBroadcast.sendBroadcastWithBuddieRemoveResult(response.isStatusOk(), buddieId, buddieNickname);
+        this.mBroadcast.sendBroadcastWithBuddieRemoveResult(buddieId, buddieNickname,response.isStatusOk());
+    }
+
+    private void searchForNewBuddie(Intent intent) {
+        final String buddieNickname = intent.getStringExtra(BUDDIE_NICKNAME_EXTRA);
+        if (buddieNickname != null) {
+            this.mUserHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    BuddiesService.this.searchForNewBuddieHttpRequest(buddieNickname);
+                }
+            });
+        }
+    }
+
+    private void searchForNewBuddieHttpRequest(String buddieNickname) {
+        HttpResponse response = this.mHttpRequester.get(String.format(
+                "friends/find?friendNickname=%s&sessionKey=%s",
+                buddieNickname, this.mSessionKey));
+
+        this.mBroadcast.sendBroadcastWithBuddieSearchResult(response.getMessage(), response.isStatusOk());
     }
 
     private void getAllRequests() {
-        // TODO fill
+        this.mUserHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                BuddiesService.this.getAllRequestsHttpRequest();
+            }
+        });
+    }
+
+    private void getAllRequestsHttpRequest() {
+        HttpResponse response = this.mHttpRequester.get(String.format(
+                "requests/all?sessionKey=%s", this.mSessionKey));
+
+        this.mBroadcast.sendBroadcastWithAllRequests(response.getMessage(), response.isStatusOk());
     }
 
     private void sendBuddieRequest(Intent intent) {
-        // TODO fill
+        int buddieId = intent.getIntExtra(BUDDIE_ID_EXTRA, Integer.MIN_VALUE);
+        String buddieNickname = intent.getStringExtra(BUDDIE_NICKNAME_EXTRA);
+        if (buddieId != Integer.MIN_VALUE && buddieNickname != null) {
+            BuddieFoundModel buddieFoundModel = new BuddieFoundModel(buddieId, buddieNickname);
+            final String buddieAsJson = this.mGson.toJson(buddieFoundModel);
+
+            this.mUserHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    BuddiesService.this.sendBuddieRequestHttpRequest(buddieAsJson);
+                }
+            });
+        }
+    }
+
+    private void sendBuddieRequestHttpRequest(String buddieAsJson) {
+        HttpResponse response = this.mHttpRequester.post(String.format(
+                "requests/add?sessionKey=%s", this.mSessionKey),
+                buddieAsJson);
+
+        this.mBroadcast.sendBroadcastWithBuddieRequestSendResult(response.getMessage(), response.isStatusOk());
     }
 
     private void respondToBuddieRequest(Intent intent) {

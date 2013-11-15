@@ -15,6 +15,11 @@ public class BuddieFoundModel {
         this.isOnline = isOnline;
     }
 
+    public BuddieFoundModel(int id, String nickname) {
+        this.id = id;
+        this.nickname = nickname;
+    }
+
     public int getId() {
         return id;
     }

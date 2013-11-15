@@ -36,18 +36,33 @@ public class BuddiesServiceBroadcast {
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendBroadcastWithBuddieSearchResult(String buddieSearchResult) {
+    public void sendBroadcastWithBuddieSearchResult(String buddieSearchResultAsJson, boolean isStatusOk) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
-        intent.putExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA, buddieSearchResult);
+        intent.putExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA, buddieSearchResultAsJson);
+        intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendBroadcastWithBuddieRemoveResult(boolean isStatusOk, int buddieId, String buddieNickname) {
+    public void sendBroadcastWithBuddieRemoveResult(int buddieId, String buddieNickname, boolean isStatusOk) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.BUDDIE_REMOVED_RESULT_EXTRA, true);
-        intent.putExtra(BuddiesService.BUDDIE_REMOVE_IS_STATUS_OK_EXTRA, isStatusOk);
         intent.putExtra(BuddiesService.BUDDIE_ID_EXTRA, buddieId);
         intent.putExtra(BuddiesService.BUDDIE_NICKNAME_EXTRA, buddieNickname);
+        intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
+        this.mService.sendBroadcast(intent);
+    }
+
+    public void sendBroadcastWithAllRequests(String allRequestsAsJson, boolean isStatusOk) {
+        Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
+        intent.putExtra(BuddiesService.ALL_REQUESTS_EXTRA, allRequestsAsJson);
+        intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
+        this.mService.sendBroadcast(intent);
+    }
+
+    public void sendBroadcastWithBuddieRequestSendResult(String responseMessage, boolean isStatusOk) {
+        Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
+        intent.putExtra(BuddiesService.REQUESTS_SEND_RESULT_EXTRA, responseMessage);
+        intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
         this.mService.sendBroadcast(intent);
     }
 }

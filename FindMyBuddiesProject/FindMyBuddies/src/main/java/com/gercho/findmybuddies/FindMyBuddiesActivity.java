@@ -16,11 +16,11 @@ import android.widget.ListView;
 
 import com.gercho.findmybuddies.enums.MeasureUnits;
 import com.gercho.findmybuddies.helpers.AppActions;
-import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
+import com.gercho.findmybuddies.models.RequestModel;
 import com.gercho.findmybuddies.services.BuddiesService;
 import com.google.gson.Gson;
 
@@ -38,14 +38,11 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
     private boolean mIsLoggingInProgress;
 
     private BuddiesServiceUpdateReceiver mBuddiesServiceUpdateReceiver;
-    private Gson mGson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.activity_find_my_buddies);
-
-        this.mGson = new Gson();
 
 //        this.mCoursePagerAdapter = new CoursePagerAdapter(
 //                this.getSupportFragmentManager(), this);
@@ -159,6 +156,12 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
     private class BuddiesServiceUpdateReceiver extends BroadcastReceiver {
 
+        Gson mGson;
+
+        private BuddiesServiceUpdateReceiver(){
+            this.mGson = new Gson();
+        }
+
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -168,54 +171,81 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
                 int newBuddieRequestsCount = intent.getIntExtra(BuddiesService.NEW_BUDDIE_REQUESTS_EXTRA, 0);
                 if (buddieModelsAsJson != null && measureUnitsAsInt != Integer.MIN_VALUE) {
                     this.handleBuddiesUpdated(buddieModelsAsJson, measureUnitsAsInt, newBuddieRequestsCount);
+                    return;
                 }
 
-                String buddieSearchResult = intent.getStringExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA);
-                if (buddieSearchResult != null) {
-                    this.handleBuddieSearchResult(buddieSearchResult);
-                }
+
+                boolean isStatusOk = intent.getBooleanExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, false);
 
                 boolean buddieRemovedResult = intent.getBooleanExtra(BuddiesService.BUDDIE_REMOVED_RESULT_EXTRA, false);
                 if (buddieRemovedResult) {
-                    boolean isStatusOk = intent.getBooleanExtra(BuddiesService.BUDDIE_REMOVE_IS_STATUS_OK_EXTRA, false);
                     int buddieId = intent.getIntExtra(BuddiesService.BUDDIE_ID_EXTRA, Integer.MIN_VALUE);
                     String buddieNickname = intent.getStringExtra(BuddiesService.BUDDIE_NICKNAME_EXTRA);
-                    this.handleBuddieRemovedResult(isStatusOk, buddieId, buddieNickname);
+                    this.handleBuddieRemovedResult(buddieId, buddieNickname, isStatusOk);
+                    return;
+                }
+
+                String requestSendResult = intent.getStringExtra(BuddiesService.REQUESTS_SEND_RESULT_EXTRA);
+                if (requestSendResult != null) {
+                    this.handleRequestSendResult(requestSendResult, isStatusOk);
+                    return;
+                }
+
+                if (!isStatusOk) {
+                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "Occurred error in connecting the database");
+                    return;
+                }
+
+                String buddieSearchResultAsJson = intent.getStringExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA);
+                if (buddieSearchResultAsJson != null) {
+                    this.handleBuddieSearchResult(buddieSearchResultAsJson);
+                }
+
+                String allRequestsAsJson = intent.getStringExtra(BuddiesService.ALL_REQUESTS_EXTRA);
+                if (allRequestsAsJson != null) {
+                    this.handleAllRequests(allRequestsAsJson);
                 }
             }
         }
 
         private void handleBuddiesUpdated(String buddieModelsAsJson, int measureUnitsAsInt, int newBuddieRequestsCount) {
-            try {
-                BuddieModel[] buddies = FindMyBuddiesActivity.this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
-                MeasureUnits measureUnits = MeasureUnits.values()[measureUnitsAsInt];
-                if (buddies.length > 0) {
+            BuddieModel[] buddies = this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
+            MeasureUnits measureUnits = MeasureUnits.values()[measureUnitsAsInt];
+            if (buddies != null && buddies.length > 0) {
 //                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count - " + buddies.length + " measure units - " + measureUnits);
-                }
-            } catch (Exception ex) {
-                LogHelper.logThreadId("handleBuddiesUpdated fromJson() parse error");
             }
         }
 
-        private void handleBuddieSearchResult(String buddieSearchResult) {
-            try {
-                BuddieFoundModel buddie = FindMyBuddiesActivity.this.mGson.fromJson(buddieSearchResult, BuddieFoundModel.class);
-                if (buddie != null) {
-                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
-                } else {
-                    // TODO validate before sending the buddie, if its not in buddie list already
-                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "no matches found");
-                }
-            } catch (Exception ex) {
-                LogHelper.logThreadId("handleBuddieSearchResult fromJson() parse error");
-            }
-        }
-
-        private void handleBuddieRemovedResult(boolean isStatusOk, int buddieId, String buddieNickname) {
+        private void handleBuddieRemovedResult(int buddieId, String buddieNickname, boolean isStatusOk) {
             if (isStatusOk) {
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " successfully removed");
             } else {
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " was not removed");
+            }
+        }
+
+        private void handleBuddieSearchResult(String buddieSearchResultAsJson) {
+            BuddieFoundModel buddie = this.mGson.fromJson(buddieSearchResultAsJson, BuddieFoundModel.class);
+            if (buddie != null) {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
+            } else {
+                // TODO validate before sending the buddie, if its not in buddie list already
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "no matches found");
+            }
+        }
+
+        private void handleAllRequests(String allRequestsAsJson) {
+            RequestModel[] allRequests = this.mGson.fromJson(allRequestsAsJson, RequestModel[].class);
+            if (allRequests != null) { // && allRequests.length > 0
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "there are " + allRequests.length + " current requests");
+            }
+        }
+
+        private void handleRequestSendResult(String requestSendResult, boolean isStatusOk) {
+            if (isStatusOk) {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "request successfully send");
+            } else {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "request was unable to be send");
             }
         }
     }
