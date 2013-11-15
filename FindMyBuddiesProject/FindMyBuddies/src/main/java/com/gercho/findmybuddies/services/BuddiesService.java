@@ -191,8 +191,8 @@ public class BuddiesService extends Service {
 
         // this is just for testing, remove on release!!!
         Intent intent = new Intent();
-        intent.putExtra(BUDDIE_ID_EXTRA, 19);
-        intent.putExtra(BUDDIE_NICKNAME_EXTRA, "niKolA");
+        intent.putExtra(BUDDIE_ID_EXTRA, 20);
+        intent.putExtra(BUDDIE_NICKNAME_EXTRA, "  kalOjan ");
         this.removeExistingBuddie(intent);
     }
 

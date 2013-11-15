@@ -201,10 +201,10 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             try {
                 BuddieFoundModel buddie = FindMyBuddiesActivity.this.mGson.fromJson(buddieSearchResult, BuddieFoundModel.class);
                 if (buddie != null) {
-//                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
+                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
                 } else {
                     // TODO validate before sending the buddie, if its not in buddie list already
-//                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "no matches found");
+                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "no matches found");
                 }
             } catch (Exception ex) {
                 LogHelper.logThreadId("handleBuddieSearchResult fromJson() parse error");
@@ -213,7 +213,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
         private void handleBuddieRemovedResult(boolean isStatusOk, int buddieId, String buddieNickname) {
             if (isStatusOk) {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " is removed");
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " successfully removed");
             } else {
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " was not removed");
             }
