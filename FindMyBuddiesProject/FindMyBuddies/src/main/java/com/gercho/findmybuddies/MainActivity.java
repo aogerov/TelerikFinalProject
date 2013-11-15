@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.gercho.findmybuddies.helpers.AppActions;
 import com.gercho.findmybuddies.helpers.ProgressBarController;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.services.UserService;
@@ -59,7 +60,7 @@ public class MainActivity extends Activity {
             this.registerReceiver(this.mUserServiceUpdateReceiver, intentFilter);
 
             Intent userServiceIntent = new Intent();
-            userServiceIntent.setAction(UserService.START_USER_SERVICE);
+            userServiceIntent.setAction(AppActions.START_USER_SERVICE);
             this.startService(userServiceIntent);
         }
     }
@@ -116,7 +117,7 @@ public class MainActivity extends Activity {
 
     private void handleLogin() {
         Intent loginServiceIntent = new Intent();
-        loginServiceIntent.setAction(UserService.LOGIN);
+        loginServiceIntent.setAction(AppActions.LOGIN);
         String username = this.getTextFromTextView(R.id.editText_username);
         loginServiceIntent.putExtra(UserService.USERNAME_EXTRA, username);
         String password = this.getTextFromTextView(R.id.editText_password);
@@ -126,7 +127,7 @@ public class MainActivity extends Activity {
 
     private void handleRegister() {
         Intent registerServiceIntent = new Intent();
-        registerServiceIntent.setAction(UserService.REGISTER);
+        registerServiceIntent.setAction(AppActions.REGISTER);
         String username = this.getTextFromTextView(R.id.editText_username);
         registerServiceIntent.putExtra(UserService.USERNAME_EXTRA, username);
         String password = this.getTextFromTextView(R.id.editText_password);
@@ -251,7 +252,7 @@ public class MainActivity extends Activity {
 
         private void startAdditionalServices() {
             Intent additionalServicesIntent = new Intent();
-            additionalServicesIntent.setAction(UserService.START_ADDITIONAL_SERVICES);
+            additionalServicesIntent.setAction(AppActions.START_ADDITIONAL_SERVICES);
             MainActivity.this.startService(additionalServicesIntent);
         }
     }

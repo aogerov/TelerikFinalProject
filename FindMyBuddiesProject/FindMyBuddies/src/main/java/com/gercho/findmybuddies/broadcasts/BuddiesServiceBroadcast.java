@@ -28,10 +28,17 @@ public class BuddiesServiceBroadcast {
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendBuddiesInfoUpdate(String buddieModelsAsJson, MeasureUnits measureUnits) {
+    public void sendBuddiesInfoUpdate(String buddieModelsAsJson, MeasureUnits measureUnits, int newBuddieRequestsCount) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, buddieModelsAsJson);
         intent.putExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, measureUnits.ordinal());
+        intent.putExtra(BuddiesService.NEW_BUDDIE_REQUESTS_EXTRA, newBuddieRequestsCount);
+        this.mService.sendBroadcast(intent);
+    }
+
+    public void sendBroadcastWithBuddieSearchResult(String buddieSearchResult) {
+        Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
+        intent.putExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA, buddieSearchResult);
         this.mService.sendBroadcast(intent);
     }
 }

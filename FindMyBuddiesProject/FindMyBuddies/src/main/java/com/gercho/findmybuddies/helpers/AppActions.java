@@ -15,14 +15,13 @@ public class AppActions {
 
     // BuddiesService actions
     public static final String START_BUDDIES_SERVICE = "com.gercho.action.START_BUDDIES_SERVICE";
-    public static final String PAUSE_BUDDIES_SERVICE = "com.gercho.action.PAUSE_BUDDIES_SERVICE";
     public static final String RESUME_BUDDIES_SERVICE = "com.gercho.action.RESUME_BUDDIES_SERVICE";
-    public static final String STOP_BUDDIES_SERVICE = "com.gercho.action.STOP_BUDDIES_SERVICE";
     public static final String FORCE_UPDATING_BUDDIES_SERVICE = "com.gercho.action.FORCE_UPDATING_BUDDIES_SERVICE";
+    public static final String PAUSE_BUDDIES_SERVICE = "com.gercho.action.PAUSE_BUDDIES_SERVICE";
+    public static final String STOP_BUDDIES_SERVICE = "com.gercho.action.STOP_BUDDIES_SERVICE";
     public static final String SEARCH_FOR_NEW_BUDDIE = "com.gercho.action.SEARCH_FOR_NEW_BUDDIE";
     public static final String REMOVE_EXISTING_BUDDIE = "com.gercho.action.REMOVE_EXISTING_BUDDIE";
     public static final String GET_ALL_REQUESTS = "com.gercho.action.GET_ALL_REQUESTS";
-    public static final String GET_ALL_NEW_REQUESTS = "com.gercho.action.GET_ALL_NEW_REQUESTS";
     public static final String SEND_BUDDIE_REQUEST = "com.gercho.action.SEND_BUDDIE_REQUEST";
     public static final String RESPOND_TO_BUDDIE_REQUEST = "com.gercho.action.RESPOND_TO_BUDDIE_REQUEST";
     public static final String SEND_NEW_IMAGE = "com.gercho.action.SEND_NEW_IMAGE";

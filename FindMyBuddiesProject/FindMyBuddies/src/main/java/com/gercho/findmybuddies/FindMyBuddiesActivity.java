@@ -15,11 +15,13 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.gercho.findmybuddies.enums.MeasureUnits;
+import com.gercho.findmybuddies.helpers.AppActions;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
+import com.gercho.findmybuddies.helpers.ToastNotifier;
+import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.services.BuddiesService;
-import com.gercho.findmybuddies.services.UserService;
 import com.google.gson.Gson;
 
 /**
@@ -73,7 +75,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
         }
 
         Intent buddiesServiceIntent = new Intent();
-        buddiesServiceIntent.setAction(BuddiesService.RESUME_BUDDIES_SERVICE);
+        buddiesServiceIntent.setAction(AppActions.RESUME_BUDDIES_SERVICE);
         this.startService(buddiesServiceIntent);
     }
 
@@ -87,7 +89,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
         }
 
         Intent buddiesServiceIntent = new Intent();
-        buddiesServiceIntent.setAction(BuddiesService.PAUSE_BUDDIES_SERVICE);
+        buddiesServiceIntent.setAction(AppActions.PAUSE_BUDDIES_SERVICE);
         this.startService(buddiesServiceIntent);
     }
 
@@ -138,17 +140,17 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
     private void forceUpdate() {
         Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(BuddiesService.FORCE_UPDATING_BUDDIES_SERVICE);
+        userServiceIntent.setAction(AppActions.FORCE_UPDATING_BUDDIES_SERVICE);
         this.startService(userServiceIntent);
     }
 
     private void logout() {
         Intent buddiesServiceIntent = new Intent();
-        buddiesServiceIntent.setAction(BuddiesService.STOP_BUDDIES_SERVICE);
+        buddiesServiceIntent.setAction(AppActions.STOP_BUDDIES_SERVICE);
         this.startService(buddiesServiceIntent);
 
         Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(UserService.LOGOUT);
+        userServiceIntent.setAction(AppActions.LOGOUT);
         this.startService(userServiceIntent);
 
         Intent mainActivityIntent = new Intent(this, MainActivity.class);
@@ -163,14 +165,19 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             if (action != null && action.equals(BuddiesService.BUDDIES_SERVICE_BROADCAST)) {
                 String buddieModelsAsJson = intent.getStringExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA);
                 int measureUnitsAsInt = intent.getIntExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, Integer.MIN_VALUE);
-
+                int newBuddieRequestsCount = intent.getIntExtra(BuddiesService.NEW_BUDDIE_REQUESTS_EXTRA, 0);
                 if (buddieModelsAsJson != null && measureUnitsAsInt != Integer.MIN_VALUE) {
-                    this.handleBuddiesUpdated(buddieModelsAsJson, measureUnitsAsInt);
+                    this.handleBuddiesUpdated(buddieModelsAsJson, measureUnitsAsInt, newBuddieRequestsCount);
+                }
+
+                String buddieSearchResult = intent.getStringExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA);
+                if (buddieSearchResult != null) {
+                    this.handleBuddieSearchResult(buddieSearchResult);
                 }
             }
         }
 
-        private void handleBuddiesUpdated(String buddieModelsAsJson, int measureUnitsAsInt) {
+        private void handleBuddiesUpdated(String buddieModelsAsJson, int measureUnitsAsInt, int newBuddieRequestsCount) {
             try {
                 BuddieModel[] buddies = FindMyBuddiesActivity.this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
                 MeasureUnits measureUnits = MeasureUnits.values()[measureUnitsAsInt];
@@ -178,7 +185,21 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 //                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count - " + buddies.length + " measure units - " + measureUnits);
                 }
             } catch (Exception ex) {
-                LogHelper.logThreadId("updateBuddiesInfo fromJson() parse error");
+                LogHelper.logThreadId("handleBuddiesUpdated fromJson() parse error");
+            }
+        }
+
+        private void handleBuddieSearchResult(String buddieSearchResult) {
+            try {
+                BuddieFoundModel buddie = FindMyBuddiesActivity.this.mGson.fromJson(buddieSearchResult, BuddieFoundModel.class);
+                if (buddie != null) {
+                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
+                } else {
+                    // TODO validate before sending the buddie, if its not in buddie list already
+                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "no matches found");
+                }
+            } catch (Exception ex) {
+                LogHelper.logThreadId("handleBuddieSearchResult fromJson() parse error");
             }
         }
     }
