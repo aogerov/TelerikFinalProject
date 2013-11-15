@@ -1,4 +1,4 @@
-package com.gercho.findmybuddies.helpers;
+package com.gercho.findmybuddies.devices;
 
 import android.app.Service;
 import android.content.Context;
@@ -14,7 +14,7 @@ import java.util.Calendar;
 /**
  * Created by Gercho on 11/14/13.
  */
-public class LocationUpdater implements LocationListener {
+public class LocationInfo implements LocationListener {
 
     private static final long TIME_REVERENCE_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 20; // 20 days
     private static final int UPDATES_MIN_TIME = 1000 * 20; // 20 seconds
@@ -23,7 +23,7 @@ public class LocationUpdater implements LocationListener {
     Service mService;
     LocationManager mLocationManager;
 
-    public LocationUpdater(Service service) {
+    public LocationInfo(Service service) {
         this.mService = service;
         this.mLocationManager = (LocationManager) this.mService.getSystemService(Context.LOCATION_SERVICE);
         this.mLocationManager.requestLocationUpdates(

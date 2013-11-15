@@ -1,8 +1,7 @@
-package com.gercho.findmybuddies.helpers;
+package com.gercho.findmybuddies.devices;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 
 /**
  * Created by Gercho on 11/14/13.
@@ -13,7 +12,7 @@ public class NetworkConnectionInfo {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        android.net.NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         boolean isConnected = activeNetworkInfo != null && activeNetworkInfo.isConnected();
         if (isConnected) {
             return true;

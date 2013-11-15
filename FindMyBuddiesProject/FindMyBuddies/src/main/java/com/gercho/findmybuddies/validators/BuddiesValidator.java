@@ -6,7 +6,7 @@ import com.gercho.findmybuddies.enums.OrderBy;
 /**
  * Created by Gercho on 11/12/13.
  */
-public class BuddiesServiceValidator {
+public class BuddiesValidator {
 
     public static final int UPDATE_FREQUENCY_MIN_MILLISECONDS = 1000 * 60; // 1 minute
     public static final int UPDATE_FREQUENCY_MAX_MILLISECONDS = 1000 * 60 * 100; // 100 minutes
