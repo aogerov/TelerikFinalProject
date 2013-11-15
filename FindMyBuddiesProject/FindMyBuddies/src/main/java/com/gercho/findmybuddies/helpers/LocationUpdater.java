@@ -17,8 +17,8 @@ import java.util.Calendar;
 public class LocationUpdater implements LocationListener {
 
     private static final long TIME_REVERENCE_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 20; // 20 days
-    private static final int UPDATES_MIN_TIME = 1000 * 30; // 30 seconds
-    private static final int UPDATES_MIN_DISTANCE = 10; // 10 meters
+    private static final int UPDATES_MIN_TIME = 1000 * 20; // 20 seconds
+    private static final int UPDATES_MIN_DISTANCE = 5; // 5 meters
 
     Service mService;
     LocationManager mLocationManager;

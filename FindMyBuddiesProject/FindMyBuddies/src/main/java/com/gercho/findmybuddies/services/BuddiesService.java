@@ -95,35 +95,6 @@ public class BuddiesService extends Service {
     private String mCurrentBuddiesInfo;
 
     @Override
-    public void onCreate() {
-        this.mStatusChangeReceiver = new StatusChangeReceiver();
-        IntentFilter networkIntentFilter = new IntentFilter();
-        networkIntentFilter.addAction(ANDROID_CONNECTIVITY_CHANGE);
-        networkIntentFilter.addAction(ANDROID_GPS_ENABLED_CHANGE);
-        this.registerReceiver(this.mStatusChangeReceiver, networkIntentFilter);
-
-        this.mMainHandledThread = new HandlerThread("UserServiceMainThread");
-        this.mMainHandledThread.start();
-        Looper mainLooper = this.mMainHandledThread.getLooper();
-        if (mainLooper != null) {
-            this.mMainHandler = new Handler(mainLooper);
-        }
-
-        this.mOccasionalHandlerThread = new HandlerThread("UserServiceOccasionalThread");
-        this.mOccasionalHandlerThread.start();
-        Looper occasionalLooper = this.mOccasionalHandlerThread.getLooper();
-        if (occasionalLooper != null) {
-            this.mOccasionalHandler = new Handler(occasionalLooper);
-        }
-
-        this.mUpdateTimer = new Timer("UpdateTimer");
-        this.mLocationUpdater = new LocationUpdater(this);
-        this.mHttpRequester = new HttpRequester();
-        this.mGson = new Gson();
-        this.mBroadcast = new BuddiesServiceBroadcast(this);
-    }
-
-    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
         if (START_BUDDIES_SERVICE.equalsIgnoreCase(action)) {
@@ -154,20 +125,6 @@ public class BuddiesService extends Service {
     }
 
     @Override
-    public void onDestroy() {
-        if (this.mStatusChangeReceiver != null) {
-            this.unregisterReceiver(this.mStatusChangeReceiver);
-            this.mStatusChangeReceiver = null;
-        }
-
-        this.mMainHandledThread.quit();
-        this.mMainHandledThread = null;
-        this.mOccasionalHandlerThread.quit();
-        this.mOccasionalHandlerThread = null;
-        this.mUpdateTimer = null;
-    }
-
-    @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
@@ -179,11 +136,36 @@ public class BuddiesService extends Service {
             this.mSessionKey = sessionKey;
         }
 
-        // TODO made broadcast receivers:
-        // TODO on this.mIsNetworkAvailable run explicit this.updateBuddiesInfo() if !this.mIsUpdatingActive && !this.mIsOnPauseMode
-        this.mIsUpdatingAvailable = true;
         if (!this.mIsServiceAlreadyStarted) {
             this.mIsServiceAlreadyStarted = true;
+            this.mIsUpdatingAvailable = true;
+
+            this.mStatusChangeReceiver = new StatusChangeReceiver();
+            IntentFilter statusChangeIntentFilter = new IntentFilter();
+            statusChangeIntentFilter.addAction(ANDROID_CONNECTIVITY_CHANGE);
+            statusChangeIntentFilter.addAction(ANDROID_GPS_ENABLED_CHANGE);
+            this.registerReceiver(this.mStatusChangeReceiver, statusChangeIntentFilter);
+
+            this.mMainHandledThread = new HandlerThread("UserServiceMainThread");
+            this.mMainHandledThread.start();
+            Looper mainLooper = this.mMainHandledThread.getLooper();
+            if (mainLooper != null) {
+                this.mMainHandler = new Handler(mainLooper);
+            }
+
+            this.mOccasionalHandlerThread = new HandlerThread("UserServiceOccasionalThread");
+            this.mOccasionalHandlerThread.start();
+            Looper occasionalLooper = this.mOccasionalHandlerThread.getLooper();
+            if (occasionalLooper != null) {
+                this.mOccasionalHandler = new Handler(occasionalLooper);
+            }
+
+            this.mUpdateTimer = new Timer("UpdateTimer");
+            this.mLocationUpdater = new LocationUpdater(this);
+            this.mHttpRequester = new HttpRequester();
+            this.mGson = new Gson();
+            this.mBroadcast = new BuddiesServiceBroadcast(this);
+
             this.readBuddiesStorage();
         }
     }
@@ -198,22 +180,32 @@ public class BuddiesService extends Service {
     }
 
     private void stopBuddiesService() {
-        this.mIsUpdatingActive = false;
-        this.mIsServiceAlreadyStarted = false;
+        if (this.mIsServiceAlreadyStarted) {
+            this.mIsServiceAlreadyStarted = false;
+            this.mIsUpdatingActive = false;
+
+            this.unregisterReceiver(this.mStatusChangeReceiver);
+            this.mStatusChangeReceiver = null;
+
+            this.mMainHandledThread.quit();
+            this.mMainHandledThread = null;
+            this.mOccasionalHandlerThread.quit();
+            this.mOccasionalHandlerThread = null;
+            this.mUpdateTimer = null;
+        }
+
         this.stopSelf();
     }
 
     private void forceUpdatingBuddiesService() {
         if (!this.mIsUpdatingAvailable) {
             this.sendBroadcastWithBuddiesInfoUpdate();
-        } else if (this.mIsUpdatingActive) {
-            this.runOccasionalServiceUpdating();
         }
 
-        if (!this.mIsUpdatingActive) {
-            this.mIsNetworkAvailable = NetworkConnectionInfo.isOnline(this);
-            this.mIsGpsAvailable = this.mLocationUpdater.isProviderEnabled();
-
+        this.validateStatusAvailabilities();
+        if (this.mIsUpdatingActive) {
+            this.runOccasionalServiceUpdating();
+        } else {
             if (this.mIsNetworkAvailable) {
                 this.mIsUpdatingActive = true;
                 this.runServiceUpdating();
@@ -276,6 +268,7 @@ public class BuddiesService extends Service {
 
                     BuddiesService.this.setUpdatingTemporallyUnavailable(UPDATING_LOCK_TIME);
                     ThreadSleeper.sleep(BuddiesService.this.mUpdateFrequency);
+                    BuddiesService.this.validateStatusAvailabilities();
                 }
             }
         });
@@ -323,6 +316,11 @@ public class BuddiesService extends Service {
                 LogHelper.logThreadId("updateCurrentPosition() error: " + response.getMessage());
             }
         }
+    }
+
+    private void validateStatusAvailabilities(){
+        this.mIsNetworkAvailable = NetworkConnectionInfo.isOnline(this);
+        this.mIsGpsAvailable = this.mLocationUpdater.isProviderEnabled();
     }
 
     private void sendBroadcastWithBuddiesInfoUpdate() {
@@ -389,6 +387,7 @@ public class BuddiesService extends Service {
     }
 
     private class StatusChangeReceiver extends BroadcastReceiver {
+
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -405,7 +404,9 @@ public class BuddiesService extends Service {
 
             NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
             BuddiesService.this.mIsNetworkAvailable = activeNetworkInfo != null && activeNetworkInfo.isConnected();
-            if (!BuddiesService.this.mIsNetworkAvailable) {
+            if (BuddiesService.this.mIsNetworkAvailable) {
+                BuddiesService.this.forceUpdatingBuddiesService();
+            } else {
                 ToastNotifier.makeToast(BuddiesService.this, ERROR_MESSAGE_NO_NETWORK);
             }
         }

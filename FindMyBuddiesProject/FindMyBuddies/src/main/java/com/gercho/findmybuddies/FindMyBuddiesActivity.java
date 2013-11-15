@@ -143,7 +143,6 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
     }
 
     private void logout() {
-        // TODO send "popup" to the user, saying that "logging out will dismiss your current session and the session if you logged from other devices", on yes logout, on no nothing happens
         Intent buddiesServiceIntent = new Intent();
         buddiesServiceIntent.setAction(BuddiesService.STOP_BUDDIES_SERVICE);
         this.startService(buddiesServiceIntent);
