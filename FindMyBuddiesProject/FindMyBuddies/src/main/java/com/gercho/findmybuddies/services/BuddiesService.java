@@ -22,6 +22,7 @@ import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
+import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.models.CoordinatesModel;
 import com.gercho.findmybuddies.validators.BuddiesValidator;
 import com.google.gson.Gson;
@@ -37,8 +38,11 @@ public class BuddiesService extends Service {
     public static final String BUDDIES_SERVICE_BROADCAST = "BuddiesServiceBroadcast";
     public static final String BUDDIES_INFO_UPDATE_EXTRA = "BuddiesInfoUpdateExtra";
     public static final String NEW_BUDDIE_REQUESTS_EXTRA = "NewBuddieRequestsExtra";
-    public static final String BUDDIE_NICKNAME_EXTRA = "BuddieNicknameExtra";
     public static final String BUDDIE_SEARCH_RESULT_EXTRA = "BuddieSearchResultExtra";
+    public static final String BUDDIE_REMOVED_RESULT_EXTRA = "BuddieRemovedResultExtra";
+    public static final String BUDDIE_REMOVE_IS_STATUS_OK_EXTRA = "BuddieRemoveIsStatusOkExtra";
+    public static final String BUDDIE_NICKNAME_EXTRA = "BuddieNicknameExtra";
+    public static final String BUDDIE_ID_EXTRA = "BuddieIdExtra";
     public static final String UPDATE_FREQUENCY_EXTRA = "UpdateFrequencyExtra";
     public static final String IMAGES_TO_SHOW_COUNT_EXTRA = "ImagesToShowCountExtra";
     public static final String BUDDIES_ORDER_BY_TYPES_EXTRA = "BuddiesOrderByTypesExtra";
@@ -187,8 +191,9 @@ public class BuddiesService extends Service {
 
         // this is just for testing, remove on release!!!
         Intent intent = new Intent();
-        intent.putExtra(BUDDIE_NICKNAME_EXTRA, "nikola");
-        this.searchForNewBuddie(intent);
+        intent.putExtra(BUDDIE_ID_EXTRA, 19);
+        intent.putExtra(BUDDIE_NICKNAME_EXTRA, "niKolA");
+        this.removeExistingBuddie(intent);
     }
 
     private void forceUpdatingBuddiesService() {
@@ -258,23 +263,6 @@ public class BuddiesService extends Service {
         });
     }
 
-    private void updateCurrentPosition() {
-        if (!this.mIsUpdatingAvailable || !this.mIsNetworkAvailable || !this.mIsGpsAvailable) {
-            return;
-        }
-
-        CoordinatesModel coordinatesModel = this.mLocationInfo.getLastKnownLocation();
-        if (coordinatesModel != null) {
-            String coordinatesModelAsJson = this.mGson.toJson(coordinatesModel);
-            HttpResponse response = this.mHttpRequester.post(
-                    "coordinates/update?sessionKey=" + this.mSessionKey, coordinatesModelAsJson);
-
-            if (response.isStatusOk()) {
-                LogHelper.logThreadId("updateCurrentPosition() error: " + response.getMessage());
-            }
-        }
-    }
-
     private void updateBuddiesInfo() {
         if (!this.mIsUpdatingAvailable || !this.mIsNetworkAvailable || this.mIsOnPauseMode) {
             return;
@@ -295,6 +283,23 @@ public class BuddiesService extends Service {
         if (allBuddiesResponse.isStatusOk()) {
             this.mCurrentBuddiesInfo = allBuddiesResponse.getMessage();
             this.sendBroadcastWithBuddiesInfoUpdate();
+        }
+    }
+
+    private void updateCurrentPosition() {
+        if (!this.mIsUpdatingAvailable || !this.mIsNetworkAvailable || !this.mIsGpsAvailable) {
+            return;
+        }
+
+        CoordinatesModel coordinatesModel = this.mLocationInfo.getLastKnownLocation();
+        if (coordinatesModel != null) {
+            String coordinatesModelAsJson = this.mGson.toJson(coordinatesModel);
+            HttpResponse response = this.mHttpRequester.post(
+                    "coordinates/update?sessionKey=" + this.mSessionKey, coordinatesModelAsJson);
+
+            if (response.isStatusOk()) {
+                LogHelper.logThreadId("updateCurrentPosition() error: " + response.getMessage());
+            }
         }
     }
 
@@ -339,7 +344,27 @@ public class BuddiesService extends Service {
     }
 
     private void removeExistingBuddie(Intent intent) {
-        // TODO fill
+        final int buddieId = intent.getIntExtra(BUDDIE_ID_EXTRA, Integer.MIN_VALUE);
+        final String buddieNickname = intent.getStringExtra(BUDDIE_NICKNAME_EXTRA);
+        if (buddieId != Integer.MIN_VALUE && buddieNickname != null) {
+            BuddieModel buddieModel = new BuddieModel(buddieId, buddieNickname);
+            final String buddieAsJson = this.mGson.toJson(buddieModel);
+
+            this.mUserHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    BuddiesService.this.removeExistingBuddieHttpRequest(buddieAsJson, buddieId, buddieNickname);
+                }
+            });
+        }
+    }
+
+    private void removeExistingBuddieHttpRequest(String buddieAsJson, int buddieId, String buddieNickname) {
+        HttpResponse response = this.mHttpRequester.post(String.format(
+                "friends/remove?sessionKey=%s", this.mSessionKey),
+                buddieAsJson);
+
+        this.mBroadcast.sendBroadcastWithBuddieRemoveResult(response.isStatusOk(), buddieId, buddieNickname);
     }
 
     private void getAllRequests() {

@@ -45,9 +45,9 @@ namespace FindMyBuddies.Api.Controllers
                     var user = Validator.ValidateSessionKey(context, sessionKey);
 
                     var friendRequests = user.FriendRequests.Where(r => !r.IsShowed).OrderBy(r => r.FromUserNickname);
-                    int friendRequestsCount = friendRequests.Count();
+                    int newFriendRequestsCount = friendRequests.Count();
 
-                    var response = this.Request.CreateResponse(HttpStatusCode.OK, friendRequestsCount);
+                    var response = this.Request.CreateResponse(HttpStatusCode.OK, newFriendRequestsCount);
                     return response;
                 }
             });

@@ -29,6 +29,11 @@ public class BuddieModel {
         this.distanceInMilesAsString = distanceInMilesAsString;
     }
 
+    public BuddieModel(int id, String nickname) {
+        this.id = id;
+        this.nickname = nickname;
+    }
+
     public int getId() {
         return id;
     }

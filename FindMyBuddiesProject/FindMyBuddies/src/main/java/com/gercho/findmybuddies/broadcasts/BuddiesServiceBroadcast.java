@@ -41,4 +41,13 @@ public class BuddiesServiceBroadcast {
         intent.putExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA, buddieSearchResult);
         this.mService.sendBroadcast(intent);
     }
+
+    public void sendBroadcastWithBuddieRemoveResult(boolean isStatusOk, int buddieId, String buddieNickname) {
+        Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
+        intent.putExtra(BuddiesService.BUDDIE_REMOVED_RESULT_EXTRA, true);
+        intent.putExtra(BuddiesService.BUDDIE_REMOVE_IS_STATUS_OK_EXTRA, isStatusOk);
+        intent.putExtra(BuddiesService.BUDDIE_ID_EXTRA, buddieId);
+        intent.putExtra(BuddiesService.BUDDIE_NICKNAME_EXTRA, buddieNickname);
+        this.mService.sendBroadcast(intent);
+    }
 }

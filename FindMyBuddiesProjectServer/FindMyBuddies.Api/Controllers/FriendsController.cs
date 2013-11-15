@@ -87,18 +87,32 @@ namespace FindMyBuddies.Api.Controllers
                 {
                     var user = Validator.ValidateSessionKey(context, sessionKey);
                     var friend = Validator.ValidateFriendInDb(context, model.Id, model.Nickname);
+                    bool isErrorInRemoveAppeared = false;
 
                     if (user.Friends.Contains(friend))
                     {
                         user.Friends.Remove(friend);
+                    }
+                    else
+                    {
+                        isErrorInRemoveAppeared = true;
                     }
 
                     if (friend.Friends.Contains(user))
                     {
                         friend.Friends.Remove(user);
                     }
+                    else
+                    {
+                        isErrorInRemoveAppeared = true;
+                    }
 
                     context.SaveChanges();
+                    if (isErrorInRemoveAppeared)
+                    {
+                        throw new ArgumentException("Error in friends removing appeared");
+                    }
+
                     var response = this.Request.CreateResponse(HttpStatusCode.OK);
                     return response;
                 }

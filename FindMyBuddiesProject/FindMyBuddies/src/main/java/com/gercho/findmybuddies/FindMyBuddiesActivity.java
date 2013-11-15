@@ -174,6 +174,14 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
                 if (buddieSearchResult != null) {
                     this.handleBuddieSearchResult(buddieSearchResult);
                 }
+
+                boolean buddieRemovedResult = intent.getBooleanExtra(BuddiesService.BUDDIE_REMOVED_RESULT_EXTRA, false);
+                if (buddieRemovedResult) {
+                    boolean isStatusOk = intent.getBooleanExtra(BuddiesService.BUDDIE_REMOVE_IS_STATUS_OK_EXTRA, false);
+                    int buddieId = intent.getIntExtra(BuddiesService.BUDDIE_ID_EXTRA, Integer.MIN_VALUE);
+                    String buddieNickname = intent.getStringExtra(BuddiesService.BUDDIE_NICKNAME_EXTRA);
+                    this.handleBuddieRemovedResult(isStatusOk, buddieId, buddieNickname);
+                }
             }
         }
 
@@ -193,13 +201,21 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             try {
                 BuddieFoundModel buddie = FindMyBuddiesActivity.this.mGson.fromJson(buddieSearchResult, BuddieFoundModel.class);
                 if (buddie != null) {
-                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
+//                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
                 } else {
                     // TODO validate before sending the buddie, if its not in buddie list already
-                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "no matches found");
+//                    ToastNotifier.makeToast(FindMyBuddiesActivity.this, "no matches found");
                 }
             } catch (Exception ex) {
                 LogHelper.logThreadId("handleBuddieSearchResult fromJson() parse error");
+            }
+        }
+
+        private void handleBuddieRemovedResult(boolean isStatusOk, int buddieId, String buddieNickname) {
+            if (isStatusOk) {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " is removed");
+            } else {
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " was not removed");
             }
         }
     }

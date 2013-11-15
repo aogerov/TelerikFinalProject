@@ -69,7 +69,8 @@ namespace FindMyBuddies.Api.Assists
                 throw new ArgumentOutOfRangeException(string.Format(
                     "User Id don't exists in the database : {0}", id));
             }
-            else if (friendFound.Nickname.ToLower() != nickname.Trim().ToLower())
+            
+            if (friendFound.Nickname.ToLower() != nickname.Trim().ToLower())
             {
                 throw new ArgumentException(string.Format(
                     "User Id {0} and Nickname {1} missmatch.", id, nickname.Trim()));
