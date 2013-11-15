@@ -156,10 +156,11 @@ namespace FindMyBuddies.Api.Assists
             return new ImageModel
             {
                 Url = image.Url,
-                Timestamp = image.Timestamp,
-                ImageTimestampDifference = CalculateImageTimestampDifference(image),
-                LatitudeAtCapturing = image.Coordinates.Latitude,
-                LongitudeAtCapturing = image.Coordinates.Longitude
+                ImageDateAsString = image.ImageDateAsString,
+                TimestampDifferenceWithCoordinates = image.TimestampDifferenceWithCoordinates,
+                CoordinatesAccuracy = image.CoordinatesAccuracy,
+                Latitude = image.Coordinates.Latitude,
+                Longitude = image.Coordinates.Longitude
             };
         }
 
@@ -168,29 +169,15 @@ namespace FindMyBuddies.Api.Assists
             return new Image
             {
                 Url = imageModel.Url,
+                ImageDateAsString = imageModel.ImageDateAsString,
+                TimestampDifferenceWithCoordinates = imageModel.TimestampDifferenceWithCoordinates,
+                CoordinatesAccuracy = imageModel.CoordinatesAccuracy,
                 Coordinates = new Coordinates
                 {
-                    Latitude = imageModel.LatitudeAtCapturing,
-                    Longitude = imageModel.LongitudeAtCapturing
+                    Latitude = imageModel.Latitude,
+                    Longitude = imageModel.Longitude
                 }
             };
-        }
-
-        private static string CalculateImageTimestampDifference(Image image)
-        {
-            var timeNow = DateTime.Now;
-
-            var timeDifference = timeNow.Subtract(image.Timestamp);
-            if (timeDifference.Days > DaysInYear)
-            {
-                return TimeDifferenceMoreThanYear;
-            }
-            else if (timeDifference.Days > DaysInMonth)
-            {
-                return String.Format("{0} days ago", timeDifference.Days);
-            }
-
-            return GetTimeDifferenceAsString(timeDifference);
         }
 
         private static void CalculateTimestampDifferences(List<FriendModel> friends)

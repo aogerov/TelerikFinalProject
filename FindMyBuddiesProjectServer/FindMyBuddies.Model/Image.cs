@@ -12,7 +12,13 @@ namespace FindMyBuddies.Model
         public string Url { get; set; }
 
         [Required]
-        public DateTime Timestamp { get; set; }
+        public String ImageDateAsString { get; set; }
+
+        [Required]
+        public string TimestampDifferenceWithCoordinates { get; set; }
+
+        [Required]
+        public string CoordinatesAccuracy { get; set; }
 
         public virtual Coordinates Coordinates { get; set; }
 

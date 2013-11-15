@@ -29,7 +29,6 @@ namespace FindMyBuddies.Api.Controllers
 
                     var user = Validator.ValidateSessionKey(context, sessionKey);
                     var image = Parser.ImageModelToImage(imageModel);
-                    image.Timestamp = DateTime.Now;
                     user.Images.Add(image);
 
                     var response = this.Request.CreateResponse(HttpStatusCode.OK, imageModel);
