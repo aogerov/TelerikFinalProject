@@ -11,6 +11,7 @@ import android.os.Looper;
 import com.gercho.findmybuddies.broadcasts.UserServiceBroadcast;
 import com.gercho.findmybuddies.cryptographs.AuthCodeGenerator;
 import com.gercho.findmybuddies.cryptographs.Encryptor;
+import com.gercho.findmybuddies.helpers.AppActions;
 import com.gercho.findmybuddies.http.HttpRequester;
 import com.gercho.findmybuddies.http.HttpResponse;
 import com.gercho.findmybuddies.models.UserModel;
@@ -21,13 +22,6 @@ import com.google.gson.Gson;
  * Created by Gercho on 11/7/13.
  */
 public class UserService extends Service {
-
-    public static final String START_USER_SERVICE = "com.gercho.action.START_USER_SERVICE";
-    public static final String STOP_USER_SERVICE = "com.gercho.action.STOP_USER_SERVICE";
-    public static final String LOGIN = "com.gercho.action.LOGIN";
-    public static final String REGISTER = "com.gercho.action.REGISTER";
-    public static final String LOGOUT = "com.gercho.action.LOGOUT";
-    public static final String START_ADDITIONAL_SERVICES = "com.gercho.action.START_ADDITIONAL_SERVICES";
 
     public static final String USER_SERVICE_BROADCAST = "UserServiceBroadcast";
     public static final String CONNECTING_EXTRA = "ConnectingExtra";
@@ -78,17 +72,17 @@ public class UserService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
-        if (START_USER_SERVICE.equalsIgnoreCase(action)) {
+        if (AppActions.START_USER_SERVICE.equalsIgnoreCase(action)) {
             this.startUserService();
-        } else if (STOP_USER_SERVICE.equalsIgnoreCase(action)) {
+        } else if (AppActions.STOP_USER_SERVICE.equalsIgnoreCase(action)) {
             this.stopUserService();
-        } else if (LOGIN.equalsIgnoreCase(action)) {
+        } else if (AppActions.LOGIN.equalsIgnoreCase(action)) {
             this.login(intent);
-        } else if (REGISTER.equalsIgnoreCase(action)) {
+        } else if (AppActions.REGISTER.equalsIgnoreCase(action)) {
             this.register(intent);
-        } else if (LOGOUT.equalsIgnoreCase(action)) {
+        } else if (AppActions.LOGOUT.equalsIgnoreCase(action)) {
             this.logout();
-        } else if (START_ADDITIONAL_SERVICES.equalsIgnoreCase(action)) {
+        } else if (AppActions.START_ADDITIONAL_SERVICES.equalsIgnoreCase(action)) {
             this.startAdditionalServices();
         }
 
@@ -110,7 +104,12 @@ public class UserService extends Service {
         if (!this.mIsServiceAlreadyStarted) {
             this.mIsServiceAlreadyStarted = true;
             this.mIsConnectingActive = false;
-            this.readUserStorage();
+
+            String sessionKeyEncrypted = this.readUserStorage();
+            if (sessionKeyEncrypted != null) {
+                String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
+                this.initSessionKeyHttpRequest(sessionKey);
+            }
         } else if (this.mNickname != null && this.mSessionKey != null && this.mSessionKeyEncrypted != null) {
             this.mBroadcast.sendIsConnected(this.mNickname);
         }
@@ -151,7 +150,7 @@ public class UserService extends Service {
 
     private void startAdditionalServices() {
         Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(BuddiesService.START_BUDDIES_SERVICE);
+        userServiceIntent.setAction(AppActions.START_BUDDIES_SERVICE);
         userServiceIntent.putExtra(SESSION_KEY_EXTRA, this.mSessionKey);
         this.startService(userServiceIntent);
     }
@@ -303,14 +302,9 @@ public class UserService extends Service {
         }
     }
 
-    private void readUserStorage() {
+    private String readUserStorage() {
         SharedPreferences userStorage = this.getSharedPreferences(USER_STORAGE, MODE_PRIVATE);
-
-        String sessionKeyEncrypted = userStorage.getString(USER_STORAGE_SESSION_KEY_ENCRYPTED, null);
-        if (sessionKeyEncrypted != null) {
-            String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
-            this.initSessionKeyHttpRequest(sessionKey);
-        }
+        return userStorage.getString(USER_STORAGE_SESSION_KEY_ENCRYPTED, null);
     }
 
     private void updateUserStorage(String sessionKeyEncrypted) {

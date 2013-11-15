@@ -16,6 +16,7 @@ import com.gercho.findmybuddies.devices.LocationInfo;
 import com.gercho.findmybuddies.devices.NetworkConnectionInfo;
 import com.gercho.findmybuddies.enums.MeasureUnits;
 import com.gercho.findmybuddies.enums.OrderByTypes;
+import com.gercho.findmybuddies.helpers.AppActions;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
@@ -33,28 +34,8 @@ import java.util.TimerTask;
  */
 public class BuddiesService extends Service {
 
-    public static final String START_BUDDIES_SERVICE = "com.gercho.action.START_BUDDIES_SERVICE";
-    public static final String PAUSE_BUDDIES_SERVICE = "com.gercho.action.PAUSE_BUDDIES_SERVICE";
-    public static final String RESUME_BUDDIES_SERVICE = "com.gercho.action.RESUME_BUDDIES_SERVICE";
-    public static final String STOP_BUDDIES_SERVICE = "com.gercho.action.STOP_BUDDIES_SERVICE";
-    public static final String FORCE_UPDATING_BUDDIES_SERVICE = "com.gercho.action.FORCE_UPDATING_BUDDIES_SERVICE";
-    public static final String SEARCH_FOR_NEW_BUDDIE = "com.gercho.action.SEARCH_FOR_NEW_BUDDIE";
-    public static final String REMOVE_EXISTING_BUDDIE = "com.gercho.action.REMOVE_EXISTING_BUDDIE";
-    public static final String GET_ALL_REQUESTS = "com.gercho.action.GET_ALL_REQUESTS";
-    public static final String GET_ALL_NEW_REQUESTS = "com.gercho.action.GET_ALL_NEW_REQUESTS";
-    public static final String SEND_BUDDIE_REQUEST = "com.gercho.action.SEND_BUDDIE_REQUEST";
-    public static final String RESPOND_TO_BUDDIE_REQUEST = "com.gercho.action.RESPOND_TO_BUDDIE_REQUEST";
-    public static final String SEND_NEW_IMAGE = "com.gercho.action.SEND_NEW_IMAGE";
-    public static final String GET_BUDDIE_IMAGES = "com.gercho.action.GET_BUDDIE_IMAGES";
-    public static final String ANDROID_CONNECTIVITY_CHANGE = "android.net.conn.CONNECTIVITY_CHANGE";
-    public static final String ANDROID_GPS_ENABLED_CHANGE = "android.location.GPS_ENABLED_CHANG";
-    public static final String GET_CURRENT_SETTINGS = "com.gercho.action.GET_CURRENT_SETTINGS";
-    public static final String SET_UPDATE_FREQUENCY = "com.gercho.action.SET_UPDATE_FREQUENCY";
-    public static final String SET_IMAGES_TO_SHOW_COUNT = "com.gercho.action.SET_IMAGES_TO_SHOW_COUNT";
-    public static final String SET_BUDDIES_ORDER_BY = "com.gercho.action.SET_BUDDIES_ORDER_BY";
-    public static final String SET_MEASURE_UNITS = "com.gercho.action.SET_MEASURE_UNITS";
-
     public static final String BUDDIES_SERVICE_BROADCAST = "BuddiesServiceBroadcast";
+    public static final String BUDDIE_NICKNAME_EXTRA = "BuddieNicknameExtra";
     public static final String UPDATE_FREQUENCY_EXTRA = "UpdateFrequencyExtra";
     public static final String IMAGES_TO_SHOW_COUNT_EXTRA = "ImagesToShowCountExtra";
     public static final String BUDDIES_ORDER_BY_TYPES_EXTRA = "BuddiesOrderByTypesExtra";
@@ -67,8 +48,8 @@ public class BuddiesService extends Service {
     private static final OrderByTypes BUDDIES_ORDER_BY_DEFAULT = OrderByTypes.DISTANCE;
     private static final MeasureUnits MEASURE_UNITS_DEFAULT = MeasureUnits.KILOMETERS;
 
-    private static final String ERROR_MESSAGE_NO_NETWORK = "Can't access buddies, no network available";
-    private static final String ERROR_MESSAGE_NO_GPS = "Please turn on your GPS";
+    private static final String ERROR_MESSAGE_NO_NETWORK = "Find My Buddies: Can't access buddies, no network available";
+    private static final String ERROR_MESSAGE_NO_GPS = "Find My Buddies: Please turn on your GPS";
 
     private static final String BUDDIES_STORAGE = "BuddiesStorage";
     private static final String BUDDIES_STORAGE_UPDATE_FREQUENCY = "BuddiesStorageUpdateFrequency";
@@ -102,41 +83,41 @@ public class BuddiesService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
-        if (START_BUDDIES_SERVICE.equals(action)) {
+        if (AppActions.START_BUDDIES_SERVICE.equals(action)) {
             this.startBuddiesService(intent);
-        } else if (RESUME_BUDDIES_SERVICE.equals(action)) {
+        } else if (AppActions.RESUME_BUDDIES_SERVICE.equals(action)) {
             this.resumeBuddiesService();
-        } else if (PAUSE_BUDDIES_SERVICE.equals(action)) {
+        } else if (AppActions.PAUSE_BUDDIES_SERVICE.equals(action)) {
             this.pauseBuddiesService();
-        } else if (STOP_BUDDIES_SERVICE.equals(action)) {
+        } else if (AppActions.STOP_BUDDIES_SERVICE.equals(action)) {
             this.stopBuddiesService();
-        } else if (FORCE_UPDATING_BUDDIES_SERVICE.equals(action)) {
+        } else if (AppActions.FORCE_UPDATING_BUDDIES_SERVICE.equals(action)) {
             this.forceUpdatingBuddiesService();
-        } else if (SEARCH_FOR_NEW_BUDDIE.equals(action)) {
+        } else if (AppActions.SEARCH_FOR_NEW_BUDDIE.equals(action)) {
             this.searchForNewBuddie(intent);
-        } else if (REMOVE_EXISTING_BUDDIE.equals(action)) {
+        } else if (AppActions.REMOVE_EXISTING_BUDDIE.equals(action)) {
             this.removeExistingBuddie(intent);
-        } else if (GET_ALL_REQUESTS.equals(action)) {
+        } else if (AppActions.GET_ALL_REQUESTS.equals(action)) {
             this.getAllRequests();
-        } else if (GET_ALL_NEW_REQUESTS.equals(action)) {
+        } else if (AppActions.GET_ALL_NEW_REQUESTS.equals(action)) {
             this.getAllNewRequests();
-        } else if (SEND_BUDDIE_REQUEST.equals(action)) {
+        } else if (AppActions.SEND_BUDDIE_REQUEST.equals(action)) {
             this.sendBuddieRequest(intent);
-        } else if (RESPOND_TO_BUDDIE_REQUEST.equals(action)) {
+        } else if (AppActions.RESPOND_TO_BUDDIE_REQUEST.equals(action)) {
             this.respondToBuddieRequest(intent);
-        } else if (SEND_NEW_IMAGE.equals(action)) {
+        } else if (AppActions.SEND_NEW_IMAGE.equals(action)) {
             this.sendNewImage(intent);
-        } else if (GET_BUDDIE_IMAGES.equals(action)) {
+        } else if (AppActions.GET_BUDDIE_IMAGES.equals(action)) {
             this.getBuddieImages();
-        } else if (GET_CURRENT_SETTINGS.equals(action)) {
+        } else if (AppActions.GET_CURRENT_SETTINGS.equals(action)) {
             this.getCurrentSettings();
-        } else if (SET_UPDATE_FREQUENCY.equals(action)) {
+        } else if (AppActions.SET_UPDATE_FREQUENCY.equals(action)) {
             this.setUpdateFrequency(intent);
-        } else if (SET_IMAGES_TO_SHOW_COUNT.equals(action)) {
+        } else if (AppActions.SET_IMAGES_TO_SHOW_COUNT.equals(action)) {
             this.setImagesToShowCount(intent);
-        } else if (SET_BUDDIES_ORDER_BY.equals(action)) {
+        } else if (AppActions.SET_BUDDIES_ORDER_BY.equals(action)) {
             this.setBuddiesOrderBy(intent);
-        } else if (SET_MEASURE_UNITS.equals(action)) {
+        } else if (AppActions.SET_MEASURE_UNITS.equals(action)) {
             this.setMeasureUnits(intent);
         }
 
@@ -161,8 +142,8 @@ public class BuddiesService extends Service {
 
             this.mStatusChangeReceiver = new StatusChangeReceiver();
             IntentFilter statusChangeIntentFilter = new IntentFilter();
-            statusChangeIntentFilter.addAction(ANDROID_CONNECTIVITY_CHANGE);
-            statusChangeIntentFilter.addAction(ANDROID_GPS_ENABLED_CHANGE);
+            statusChangeIntentFilter.addAction(AppActions.ANDROID_CONNECTIVITY_CHANGE);
+            statusChangeIntentFilter.addAction(AppActions.ANDROID_GPS_ENABLED_CHANGE);
             this.registerReceiver(this.mStatusChangeReceiver, statusChangeIntentFilter);
 
             this.mMainHandledThread = new HandlerThread("UserServiceMainThread");
@@ -233,7 +214,9 @@ public class BuddiesService extends Service {
     }
 
     private void searchForNewBuddie(Intent intent) {
-        // TODO fill
+        String buddieNickname = intent.getStringExtra(BUDDIE_NICKNAME_EXTRA);
+//        "friends/find?friendNickname={friendNickname}&sessionKey={sessionKey}"
+
     }
 
     private void removeExistingBuddie(Intent intent) {
@@ -432,9 +415,9 @@ public class BuddiesService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action != null && action.equals(BuddiesService.ANDROID_CONNECTIVITY_CHANGE)) {
+            if (action != null && action.equals(AppActions.ANDROID_CONNECTIVITY_CHANGE)) {
                 this.handleConnectivityChange();
-            } else if (action != null && action.equals(BuddiesService.ANDROID_GPS_ENABLED_CHANGE)) {
+            } else if (action != null && action.equals(AppActions.ANDROID_GPS_ENABLED_CHANGE)) {
                 this.handleGpsEnabledChange();
             }
         }
