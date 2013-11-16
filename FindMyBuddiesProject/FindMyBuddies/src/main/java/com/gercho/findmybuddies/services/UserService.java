@@ -12,9 +12,9 @@ import com.gercho.findmybuddies.broadcasts.UserServiceBroadcast;
 import com.gercho.findmybuddies.cryptographs.AuthCodeGenerator;
 import com.gercho.findmybuddies.cryptographs.Encryptor;
 import com.gercho.findmybuddies.data.DataPersister;
+import com.gercho.findmybuddies.data.HttpResponse;
 import com.gercho.findmybuddies.devices.NetworkConnectionInfo;
 import com.gercho.findmybuddies.helpers.ServiceActions;
-import com.gercho.findmybuddies.data.HttpResponse;
 import com.gercho.findmybuddies.models.UserModel;
 import com.gercho.findmybuddies.validators.UserServiceValidator;
 import com.google.gson.Gson;
@@ -65,8 +65,8 @@ public class UserService extends Service {
             this.mHandler = new Handler(looper);
         }
 
-        this.mGson = new Gson();
         this.mBroadcast = new UserServiceBroadcast(this);
+        this.mGson = new Gson();
     }
 
     @Override

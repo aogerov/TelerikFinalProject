@@ -8,7 +8,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/textView"
     android:textColor="#ffffff"
-    android:gravity="center|center_vertical">
+    android:gravity="center|center_vertical"
+    android:paddingTop="@dimen/abc_action_bar_icon_vertical_padding"
+    android:paddingBottom="@dimen/abc_action_bar_icon_vertical_padding">
     <!--this works on API 11 and above-->
     <!--android:background="?android:attr/activatedBackgroundIndicator"-->
 </TextView>

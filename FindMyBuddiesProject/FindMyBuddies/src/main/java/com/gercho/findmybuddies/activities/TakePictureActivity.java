@@ -42,10 +42,10 @@ public class TakePictureActivity extends Activity {
     }
 
     private void handleTakePictureResult(Intent resultIntent) {
-        Uri photoPath = resultIntent.getData();
+        Uri imageUri = resultIntent.getData();
         Intent intent = new Intent();
         intent.setAction(ServiceActions.SEND_NEW_IMAGE);
-        intent.putExtra(BuddiesService.NEW_IMAGE_URI_EXTRA, photoPath);
+        intent.putExtra(BuddiesService.NEW_IMAGE_URI_EXTRA, imageUri);
         this.startService(intent);
     }
 }
