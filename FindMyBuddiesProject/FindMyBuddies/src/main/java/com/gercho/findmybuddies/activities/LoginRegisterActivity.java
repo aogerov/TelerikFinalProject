@@ -7,14 +7,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.gercho.findmybuddies.R;
-import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.ProgressBarController;
+import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.services.UserService;
 
@@ -89,8 +90,19 @@ public class LoginRegisterActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        this.getMenuInflater().inflate(R.menu.main, menu);
+        this.getMenuInflater().inflate(R.menu.quit, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_quit:
+                this.handleQuit();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private void setupButtons() {
@@ -141,6 +153,13 @@ public class LoginRegisterActivity extends Activity {
     private void handleSwitchLoginRegister() {
         this.mIsRegisterWindowVisible = !this.mIsRegisterWindowVisible;
         this.showUi();
+    }
+
+    private void handleQuit() {
+        Intent intent = new Intent();
+        intent.setAction(ServiceActions.STOP_USER_SERVICE);
+        this.startService(intent);
+        this.finish();
     }
 
     private String getTextFromTextView(int id) {

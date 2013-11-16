@@ -32,7 +32,7 @@
         <activity android:name=".activities.MyBuddiesActivity" />
         <activity android:name=".activities.FindNewBuddiesActivity" />
         <activity android:name=".activities.MapActivity" />
-        <activity android:name=".activities.CameraActivity" />
+        <activity android:name=".activities.TakePictureActivity" />
         <activity android:name=".activities.SettingsActivity" />
 
         <service android:name=".services.UserService">

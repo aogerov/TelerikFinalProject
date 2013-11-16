@@ -4,6 +4,9 @@
     <string name="app_name">Find My Buddies</string>
     <string name="open_drawer_message">Open navigation drawer</string>
     <string name="close_drawer_message">Open navigation drawer</string>
+    <string name="action_forceUpdate">Force Update</string>
+    <string name="action_logout">Logout</string>
+    <string name="action_quit">Quit</string>
     <string name="button_login">Login</string>
     <string name="button_register">Register</string>
     <string name="editText_username">Username</string>
@@ -12,9 +15,7 @@
     <string name="navigationDrawer_myBuddies">My Buddies</string>
     <string name="navigationDrawer_findNewBuddie">Find New Buddie</string>
     <string name="navigationDrawer_map">Map</string>
-    <string name="navigationDrawer_camera">Camera</string>
+    <string name="navigationDrawer_takePicture">Take Picture</string>
     <string name="navigationDrawer_setting">Settings</string>
-    <string name="action_logout">Logout</string>
-    <string name="action_forceUpdate">Force Update</string>
 
 </resources>

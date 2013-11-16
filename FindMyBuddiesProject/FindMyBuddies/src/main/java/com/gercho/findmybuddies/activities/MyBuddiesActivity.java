@@ -16,6 +16,7 @@ import android.widget.ListView;
 import com.gercho.findmybuddies.R;
 import com.gercho.findmybuddies.enums.MeasureUnits;
 import com.gercho.findmybuddies.helpers.LogHelper;
+import com.gercho.findmybuddies.helpers.LogoutAssistant;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
 import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
@@ -75,7 +76,8 @@ public class MyBuddiesActivity extends Activity implements ListView.OnItemClickL
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        this.getMenuInflater().inflate(R.menu.main, menu);
+        this.getMenuInflater().inflate(R.menu.update, menu);
+        this.getMenuInflater().inflate(R.menu.logout, menu);
         return true;
     }
 
@@ -98,7 +100,7 @@ public class MyBuddiesActivity extends Activity implements ListView.OnItemClickL
                 this.forceUpdate();
                 return true;
             case R.id.action_logout:
-                this.logout();
+                LogoutAssistant.logout(this);
                 return true;
             default:
                 this.mNavigationDrawer.handleOnOptionsItemSelected(item);
@@ -123,22 +125,9 @@ public class MyBuddiesActivity extends Activity implements ListView.OnItemClickL
         this.startService(userServiceIntent);
     }
 
-    private void logout() {
-        Intent buddiesServiceIntent = new Intent();
-        buddiesServiceIntent.setAction(ServiceActions.STOP_BUDDIES_SERVICE);
-        this.startService(buddiesServiceIntent);
-
-        Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(ServiceActions.LOGOUT);
-        this.startService(userServiceIntent);
-
-        Intent mainActivityIntent = new Intent(this, LoginRegisterActivity.class);
-        this.startActivity(mainActivityIntent);
-    }
-
     private class BuddiesServiceUpdateReceiver extends BroadcastReceiver {
 
-        Gson mGson;
+        private Gson mGson;
 
         private BuddiesServiceUpdateReceiver() {
             this.mGson = new Gson();

@@ -13,7 +13,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.gercho.findmybuddies.R;
-import com.gercho.findmybuddies.activities.CameraActivity;
+import com.gercho.findmybuddies.activities.TakePictureActivity;
 import com.gercho.findmybuddies.activities.FindNewBuddiesActivity;
 import com.gercho.findmybuddies.activities.MapActivity;
 import com.gercho.findmybuddies.activities.MyBuddiesActivity;
@@ -27,13 +27,14 @@ public class NavigationDrawer {
     public static final int DRAWER_OPTION_MY_BUDDIES = 0;
     public static final int DRAWER_OPTION_FIND_NEW_BUDDIE = 1;
     public static final int DRAWER_OPTION_MAP = 2;
-    public static final int DRAWER_OPTION_CAMERA = 3;
+    public static final int DRAWER_OPTION_TAKE_PICTURE = 3;
     public static final int DRAWER_OPTION_SETTING = 4;
 
     private Activity mActivity;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerListView;
     private ActionBarDrawerToggle mDrawerToggle;
+    private int mCurrentSelection;
 
     public void init(Activity activity, ListView.OnItemClickListener listener) {
         this.mActivity = activity;
@@ -55,6 +56,7 @@ public class NavigationDrawer {
 
     public void setSelection(int option) {
         this.mDrawerListView.setItemChecked(option, true);
+        this.mCurrentSelection = option;
     }
 
     public void syncState() {
@@ -75,21 +77,31 @@ public class NavigationDrawer {
     }
 
     public void handleSelect(int option) {
+        boolean isSelectValid = true;
+        if (this.mCurrentSelection == option) {
+            isSelectValid = false;
+        }
+
         this.mDrawerListView.setItemChecked(option, true);
         this.mDrawerLayout.closeDrawer(this.mDrawerListView);
-        int position = this.mDrawerListView.getCheckedItemPosition();
-        if (option != this.mDrawerListView.getCheckedItemPosition()) {
+
+        if (isSelectValid) {
             switch (option) {
                 case DRAWER_OPTION_MY_BUDDIES:
                     this.switchToMyBuddies();
+                    break;
                 case DRAWER_OPTION_FIND_NEW_BUDDIE:
                     this.switchToFindNewBuddie();
+                    break;
                 case DRAWER_OPTION_MAP:
                     this.switchToMap();
-                case DRAWER_OPTION_CAMERA:
-                    this.switchToCamera();
+                    break;
+                case DRAWER_OPTION_TAKE_PICTURE:
+                    this.switchToTakePicture();
+                    break;
                 case DRAWER_OPTION_SETTING:
                     this.switchToSettings();
+                    break;
             }
         }
     }
@@ -109,8 +121,8 @@ public class NavigationDrawer {
         this.mActivity.startActivity(intent);
     }
 
-    private void switchToCamera() {
-        Intent intent = new Intent(this.mActivity, CameraActivity.class);
+    private void switchToTakePicture() {
+        Intent intent = new Intent(this.mActivity, TakePictureActivity.class);
         this.mActivity.startActivity(intent);
     }
 

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -47,6 +48,7 @@ public class BuddiesService extends Service {
     public static final String REQUESTS_IS_LEFT_FOR_LATER_EXTRA = "RequestIsLeftForLaterExtra";
     public static final String RESPONSE_TO_REQUEST_EXTRA = "ResponseToRequestExtra";
     public static final String BUDDIE_IMAGES_EXTRA = "BuddieImagesExtra";
+    public static final String NEW_IMAGE_URI_EXTRA = "NewImageUriExtra";
     public static final String IS_HTTP_STATUS_OK_EXTRA = "HttpIsStatusOkExtra";
     public static final String BUDDIE_ID_EXTRA = "BuddieIdExtra";
     public static final String BUDDIE_NICKNAME_EXTRA = "BuddieNicknameExtra";
@@ -412,7 +414,8 @@ public class BuddiesService extends Service {
     }
 
     private void sendNewImage(Intent intent) {
-        // TODO fill
+        Uri photoPath = intent.getParcelableExtra(NEW_IMAGE_URI_EXTRA);
+        String result = photoPath.toString();
     }
 
     private void getBuddieImages(Intent intent) {

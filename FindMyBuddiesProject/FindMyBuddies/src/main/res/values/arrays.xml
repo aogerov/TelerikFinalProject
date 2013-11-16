@@ -5,7 +5,7 @@
         <item>@string/navigationDrawer_myBuddies</item>
         <item>@string/navigationDrawer_findNewBuddie</item>
         <item>@string/navigationDrawer_map</item>
-        <item>@string/navigationDrawer_camera</item>
+        <item>@string/navigationDrawer_takePicture</item>
         <item>@string/navigationDrawer_setting</item>
     </string-array>
 
