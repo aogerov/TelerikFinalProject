@@ -123,6 +123,10 @@ namespace FindMyBuddies.Api.Assists
             {
                 throw new ArgumentException("Both user ID's are one and the same");
             }
+            else if (user.Friends.FirstOrDefault(f => f.Id == user.Id) != null)
+            {
+                throw new ArgumentException("Both users are already friends");
+            }
         }
 
         private static void ValidateUsername(string username)

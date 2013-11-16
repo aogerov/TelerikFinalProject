@@ -21,7 +21,6 @@ import com.gercho.findmybuddies.enums.OrderByTypes;
 import com.gercho.findmybuddies.helpers.AppActions;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
-import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.models.CoordinatesModel;
