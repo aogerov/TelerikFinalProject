@@ -242,8 +242,8 @@ public class BuddiesService extends Service {
             @Override
             public void run() {
                 while (BuddiesService.this.mIsAutomaticUpdatingActive) {
-                    BuddiesService.this.updateBuddiesInfo();
                     BuddiesService.this.updateCurrentPosition();
+                    BuddiesService.this.updateBuddiesInfo();
 
                     BuddiesService.this.setUpdatingTemporallyUnavailable(UPDATING_LOCK_TIME);
                     ThreadSleeper.sleep(BuddiesService.this.mUpdateFrequency);
@@ -256,12 +256,28 @@ public class BuddiesService extends Service {
         this.mOccasionalHandler.post(new Runnable() {
             @Override
             public void run() {
-                BuddiesService.this.updateBuddiesInfo();
                 BuddiesService.this.updateCurrentPosition();
+                BuddiesService.this.updateBuddiesInfo();
 
                 BuddiesService.this.setUpdatingTemporallyUnavailable(UPDATING_LOCK_TIME);
             }
         });
+    }
+
+    private void updateCurrentPosition() {
+        if (!this.mIsUpdatingAvailable || !this.mIsNetworkAvailable || !this.mIsGpsAvailable) {
+            return;
+        }
+
+        CoordinatesModel coordinatesModel = this.mLocationInfo.getLastKnownLocation();
+        if (coordinatesModel != null) {
+            String coordinatesModelAsJson = this.mGson.toJson(coordinatesModel);
+            HttpResponse response = DataPersister.updateCurrentPosition(this.mSessionKey, coordinatesModelAsJson);
+
+            if (response.isStatusOk()) {
+                LogHelper.logThreadId("updateCurrentPosition() error: " + response.getMessage());
+            }
+        }
     }
 
     private void updateBuddiesInfo() {
@@ -281,22 +297,6 @@ public class BuddiesService extends Service {
         if (allBuddies.isStatusOk()) {
             this.mCurrentBuddiesInfo = allBuddies.getMessage();
             this.sendBroadcastWithBuddiesInfoUpdate();
-        }
-    }
-
-    private void updateCurrentPosition() {
-        if (!this.mIsUpdatingAvailable || !this.mIsNetworkAvailable || !this.mIsGpsAvailable) {
-            return;
-        }
-
-        CoordinatesModel coordinatesModel = this.mLocationInfo.getLastKnownLocation();
-        if (coordinatesModel != null) {
-            String coordinatesModelAsJson = this.mGson.toJson(coordinatesModel);
-            HttpResponse response = DataPersister.updateCurrentPosition(this.mSessionKey, coordinatesModelAsJson);
-
-            if (response.isStatusOk()) {
-                LogHelper.logThreadId("updateCurrentPosition() error: " + response.getMessage());
-            }
         }
     }
 
