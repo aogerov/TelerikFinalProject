@@ -67,14 +67,12 @@ namespace FindMyBuddies.Api.Controllers
                     var userWhoMakesRequest = Validator.ValidateSessionKey(context, sessionKey);
                     var friendFound = Validator.ValidateFriendInDb(context, model.Id, model.Nickname);
                     Validator.ValidateIdConflicts(userWhoMakesRequest, friendFound);
+                    
                     var friendRequest = Parser.CreateFriendRequest(userWhoMakesRequest);
+                    Validator.ValidateRequestsRepeatingConflicts(friendFound, friendRequest);
 
-                    if (friendFound.FriendRequests.FirstOrDefault(
-                        r => r.FromUserId == friendRequest.FromUserId) == null)
-                    {
-                        friendFound.FriendRequests.Add(friendRequest);
-                        context.SaveChanges();
-                    }
+                    friendFound.FriendRequests.Add(friendRequest);
+                    context.SaveChanges();
 
                     var response = this.Request.CreateResponse(HttpStatusCode.OK);
                     return response;

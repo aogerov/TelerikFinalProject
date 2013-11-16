@@ -211,6 +211,11 @@ public class BuddiesService extends Service {
                 this.startAutomaticUpdating();
             }
         }
+
+        Intent intent = new Intent();
+        intent.putExtra(BUDDIE_ID_EXTRA, 21);
+        intent.putExtra(BUDDIE_NICKNAME_EXTRA, "mladenov");
+        sendBuddieRequest(intent);
     }
 
     private void pauseBuddiesService() {

@@ -129,6 +129,16 @@ namespace FindMyBuddies.Api.Assists
             }
         }
 
+        public static void ValidateRequestsRepeatingConflicts(User friendFound, FriendRequest friendRequest)
+        {
+
+            if (friendFound.FriendRequests.FirstOrDefault(
+                r => r.FromUserId == friendRequest.FromUserId) != null)
+            {
+                throw new ArgumentException("Can't send multiple requests to one and the same user");
+            }
+        }
+
         private static void ValidateUsername(string username)
         {
             if (username == null)
