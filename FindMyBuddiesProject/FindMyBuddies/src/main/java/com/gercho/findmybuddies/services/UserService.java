@@ -11,9 +11,10 @@ import android.os.Looper;
 import com.gercho.findmybuddies.broadcasts.UserServiceBroadcast;
 import com.gercho.findmybuddies.cryptographs.AuthCodeGenerator;
 import com.gercho.findmybuddies.cryptographs.Encryptor;
+import com.gercho.findmybuddies.data.DataPersister;
+import com.gercho.findmybuddies.devices.NetworkConnectionInfo;
 import com.gercho.findmybuddies.helpers.AppActions;
-import com.gercho.findmybuddies.http.HttpRequester;
-import com.gercho.findmybuddies.http.HttpResponse;
+import com.gercho.findmybuddies.data.HttpResponse;
 import com.gercho.findmybuddies.models.UserModel;
 import com.gercho.findmybuddies.validators.UserServiceValidator;
 import com.google.gson.Gson;
@@ -34,6 +35,7 @@ public class UserService extends Service {
     public static final String SESSION_KEY_EXTRA = "SessionKeyExtra";
 
     private static final String ERROR_MESSAGE_NOT_AVAILABLE = "Service is currently unavailable, please try again in few seconds";
+    private static final String ERROR_MESSAGE_NO_NETWORK = "No network available, please try again later";
     private static final String ERROR_MESSAGE_INIT_FAILED = "Please login or register";
     private static final String ERROR_MESSAGE_LOGIN_FAILED = "Invalid username or password";
     private static final String ERROR_MESSAGE_REGISTER_FAILED = "Registration failed, try with another username and/or nickname";
@@ -47,7 +49,6 @@ public class UserService extends Service {
     private UserServiceBroadcast mBroadcast;
     private HandlerThread mHandledThread;
     private Handler mHandler;
-    private HttpRequester mHttpRequester;
     private Gson mGson;
     private String mSessionKey;
     private String mSessionKeyEncrypted;
@@ -64,7 +65,6 @@ public class UserService extends Service {
             this.mHandler = new Handler(looper);
         }
 
-        this.mHttpRequester = new HttpRequester();
         this.mGson = new Gson();
         this.mBroadcast = new UserServiceBroadcast(this);
     }
@@ -108,7 +108,7 @@ public class UserService extends Service {
             String sessionKeyEncrypted = this.readUserStorage();
             if (sessionKeyEncrypted != null) {
                 String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
-                this.initSessionKeyHttpRequest(sessionKey);
+                this.validateSessionKey(sessionKey);
             }
         } else if (this.mNickname != null && this.mSessionKey != null && this.mSessionKeyEncrypted != null) {
             this.mBroadcast.sendIsConnected(this.mNickname);
@@ -119,14 +119,49 @@ public class UserService extends Service {
         this.stopSelf();
     }
 
+    private void validateSessionKey(String sessionKey) {
+        if (this.mIsConnectingActive) {
+            this.mBroadcast.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
+            return;
+        }
+
+        this.mIsConnectingActive = true;
+        this.mBroadcast.sendConnecting();
+        final String sessionKeyAsString = sessionKey;
+
+        this.mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                HttpResponse response = DataPersister.validateSessionKey(sessionKeyAsString);
+                UserService.this.processHttpResponse(response, ERROR_MESSAGE_INIT_FAILED);
+            }
+        });
+    }
+
     private void login(Intent intent) {
         String username = this.extractAndValidateUsername(intent);
         String password = this.extractAndValidatePassword(intent);
         String authCode = AuthCodeGenerator.getAuthCode(username, password);
 
-        if (username != null && password != null) {
-            this.loginHttpRequest(username, authCode);
+        if (username == null || password == null) {
+            return;
         }
+
+        boolean isReadyToProceed = this.tryToActivateConnecting();
+        if (!isReadyToProceed) {
+            return;
+        }
+
+        UserModel userModel = new UserModel(username, authCode);
+        final String userModelAsJson = this.mGson.toJson(userModel);
+
+        this.mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                HttpResponse response = DataPersister.login(userModelAsJson);
+                UserService.this.processHttpResponse(response, ERROR_MESSAGE_LOGIN_FAILED);
+            }
+        });
     }
 
     private void register(Intent intent) {
@@ -135,13 +170,34 @@ public class UserService extends Service {
         String password = this.extractAndValidatePassword(intent);
         String authCode = AuthCodeGenerator.getAuthCode(username, password);
 
-        if (username != null && nickname != null && password != null) {
-            this.registerHttpRequest(username, authCode, nickname);
+        if (username == null || nickname == null || password == null) {
+            return;
         }
+
+        boolean isReadyToProceed = this.tryToActivateConnecting();
+        if (!isReadyToProceed) {
+            return;
+        }
+
+        UserModel userModel = new UserModel(username, authCode, nickname);
+        final String userModelAsJson = this.mGson.toJson(userModel);
+
+        this.mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                HttpResponse response = DataPersister.register(userModelAsJson);
+                UserService.this.processHttpResponse(response, ERROR_MESSAGE_REGISTER_FAILED);
+            }
+        });
     }
 
     private void logout() {
-        this.logoutHttpRequest(this.mSessionKey);
+        this.mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                DataPersister.logout(UserService.this.mSessionKey);
+            }
+        });
 
         this.updateUserStorage(null);
         this.mSessionKey = null;
@@ -155,74 +211,20 @@ public class UserService extends Service {
         this.startService(userServiceIntent);
     }
 
-    private void initSessionKeyHttpRequest(String sessionKey) {
+    private boolean tryToActivateConnecting() {
         if (this.mIsConnectingActive) {
             this.mBroadcast.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
-            return;
+            return false;
+        }
+
+        boolean isNetworkAvailable = NetworkConnectionInfo.isOnline(this);
+        if (!isNetworkAvailable) {
+            this.mBroadcast.sendResponseMessage(ERROR_MESSAGE_NO_NETWORK);
         }
 
         this.mIsConnectingActive = true;
         this.mBroadcast.sendConnecting();
-        final String sessionKeyAsString = sessionKey;
-
-        this.mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                HttpResponse response = UserService.this.mHttpRequester.get("users/validate?sessionKey=" + sessionKeyAsString);
-                UserService.this.processHttpResponse(response, ERROR_MESSAGE_INIT_FAILED);
-            }
-        });
-    }
-
-    private void loginHttpRequest(String username, String authCode) {
-        if (this.mIsConnectingActive) {
-            this.mBroadcast.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
-            return;
-        }
-
-        this.mIsConnectingActive = true;
-        this.mBroadcast.sendConnecting();
-        UserModel userModel = new UserModel(username, authCode);
-        final String userModelAsJson = this.mGson.toJson(userModel);
-
-        this.mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                HttpResponse response = UserService.this.mHttpRequester.post("users/login", userModelAsJson);
-                UserService.this.processHttpResponse(response, ERROR_MESSAGE_LOGIN_FAILED);
-            }
-        });
-    }
-
-    private void registerHttpRequest(String username, String authCode, String nickname) {
-        if (this.mIsConnectingActive) {
-            this.mBroadcast.sendResponseMessage(ERROR_MESSAGE_NOT_AVAILABLE);
-            return;
-        }
-
-        this.mIsConnectingActive = true;
-        this.mBroadcast.sendConnecting();
-        UserModel userModel = new UserModel(username, authCode, nickname);
-        final String userModelAsJson = this.mGson.toJson(userModel);
-
-        this.mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                HttpResponse response = UserService.this.mHttpRequester.post("users/register", userModelAsJson);
-                UserService.this.processHttpResponse(response, ERROR_MESSAGE_REGISTER_FAILED);
-            }
-        });
-    }
-
-    private void logoutHttpRequest(String sessionKey) {
-        final String sessionKeyAsString = sessionKey;
-
-        this.mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                UserService.this.mHttpRequester.get("users/logout?sessionKey=" + sessionKeyAsString);
-            }
-        });
+        return true;
     }
 
     private void processHttpResponse(HttpResponse response, String errorMessage) {
@@ -263,7 +265,7 @@ public class UserService extends Service {
     private String extractAndValidateUsername(Intent intent) {
         String username = intent.getStringExtra(UserService.USERNAME_EXTRA);
         boolean isUsernameValid = UserServiceValidator.validateUsername(username);
-        if (isUsernameValid && username != null) {
+        if (isUsernameValid) {
             return username.trim();
         } else {
             this.mBroadcast.sendResponseMessage(
@@ -277,7 +279,7 @@ public class UserService extends Service {
     private String extractAndValidateNickname(Intent intent) {
         String nickname = intent.getStringExtra(UserService.NICKNAME_EXTRA);
         boolean isNicknameValid = UserServiceValidator.validateNickname(nickname);
-        if (isNicknameValid && nickname != null) {
+        if (isNicknameValid) {
             return nickname.trim();
         } else {
             this.mBroadcast.sendResponseMessage(
@@ -291,7 +293,7 @@ public class UserService extends Service {
     private String extractAndValidatePassword(Intent intent) {
         String password = intent.getStringExtra(UserService.PASSWORD_EXTRA);
         boolean isPasswordValid = UserServiceValidator.validatePassword(password);
-        if (isPasswordValid && password != null) {
+        if (isPasswordValid) {
             return password.trim();
         } else {
             this.mBroadcast.sendResponseMessage(

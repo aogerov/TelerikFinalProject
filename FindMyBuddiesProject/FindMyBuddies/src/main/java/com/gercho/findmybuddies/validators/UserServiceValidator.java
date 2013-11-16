@@ -1,6 +1,6 @@
 package com.gercho.findmybuddies.validators;
 
-import com.gercho.findmybuddies.http.HttpResponse;
+import com.gercho.findmybuddies.data.HttpResponse;
 import com.gercho.findmybuddies.models.UserModel;
 
 /**
@@ -30,6 +30,7 @@ public class UserServiceValidator {
                 return true;
             }
         }
+
         return false;
     }
 

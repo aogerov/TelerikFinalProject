@@ -12,6 +12,8 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import com.gercho.findmybuddies.broadcasts.BuddiesServiceBroadcast;
+import com.gercho.findmybuddies.data.DataPersister;
+import com.gercho.findmybuddies.data.HttpResponse;
 import com.gercho.findmybuddies.devices.LocationInfo;
 import com.gercho.findmybuddies.devices.NetworkConnectionInfo;
 import com.gercho.findmybuddies.enums.MeasureUnits;
@@ -20,8 +22,6 @@ import com.gercho.findmybuddies.helpers.AppActions;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
-import com.gercho.findmybuddies.http.HttpRequester;
-import com.gercho.findmybuddies.http.HttpResponse;
 import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.models.CoordinatesModel;
@@ -55,6 +55,7 @@ public class BuddiesService extends Service {
     public static final String IMAGES_TO_SHOW_COUNT_EXTRA = "ImagesToShowCountExtra";
     public static final String BUDDIES_ORDER_BY_TYPES_EXTRA = "BuddiesOrderByTypesExtra";
     public static final String BUDDIES_MEASURE_UNITS_EXTRA = "BuddiesMeasureUnitsExtra";
+    public static final String INFO_MESSAGE_EXTRA = "InfoMessageExtra";
 
     private static final int UPDATING_LOCK_TIME = 1000 * 50; // 50 seconds
     private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60 * 5; // 5 minutes
@@ -62,6 +63,7 @@ public class BuddiesService extends Service {
     private static final OrderByTypes BUDDIES_ORDER_BY_DEFAULT = OrderByTypes.DISTANCE;
     private static final MeasureUnits MEASURE_UNITS_DEFAULT = MeasureUnits.KILOMETERS;
 
+    private static final String MESSAGE_SYNCHRONIZING = "Synchronizing";
     private static final String ERROR_MESSAGE_NO_NETWORK = "Find My Buddies: Can't access buddies, no network available";
     private static final String ERROR_MESSAGE_NO_GPS = "Find My Buddies: Please turn on your GPS";
 
@@ -87,7 +89,6 @@ public class BuddiesService extends Service {
     private Handler mUserHandler;
     private Timer mUpdateTimer;
     private LocationInfo mLocationInfo;
-    private HttpRequester mHttpRequester;
     private Gson mGson;
     private String mSessionKey;
     private int mUpdateFrequency;
@@ -184,7 +185,6 @@ public class BuddiesService extends Service {
 
             this.mUpdateTimer = new Timer("UpdateTimer");
             this.mLocationInfo = new LocationInfo(this);
-            this.mHttpRequester = new HttpRequester();
             this.mGson = new Gson();
             this.mBroadcast = new BuddiesServiceBroadcast(this);
 
@@ -270,20 +270,17 @@ public class BuddiesService extends Service {
             return;
         }
 
-        HttpResponse newBuddieRequestsResponse = this.mHttpRequester.get(String.format(
-                "requests/newRequestsCount?sessionKey=%s", this.mSessionKey));
+        this.mBroadcast.sendInfoMessage(MESSAGE_SYNCHRONIZING);
 
-        HttpResponse allBuddiesResponse = this.mHttpRequester.get(String.format(
-                "friends/all?orderBy=%s&sessionKey=%s",
-                this.mOrderByTypes.toString().toLowerCase(), this.mSessionKey));
+        HttpResponse allBuddies = DataPersister.getAllBuddies(this.mOrderByTypes, this.mSessionKey);
+        HttpResponse newBuddieRequests = DataPersister.getNewRequests(this.mSessionKey);
 
-
-        if (newBuddieRequestsResponse.isStatusOk()) {
-            this.mNewBuddieRequestsCount = this.mGson.fromJson(newBuddieRequestsResponse.getMessage(), Integer.class);
+        if (newBuddieRequests.isStatusOk()) {
+            this.mNewBuddieRequestsCount = this.mGson.fromJson(newBuddieRequests.getMessage(), Integer.class);
         }
 
-        if (allBuddiesResponse.isStatusOk()) {
-            this.mCurrentBuddiesInfo = allBuddiesResponse.getMessage();
+        if (allBuddies.isStatusOk()) {
+            this.mCurrentBuddiesInfo = allBuddies.getMessage();
             this.sendBroadcastWithBuddiesInfoUpdate();
         }
     }
@@ -296,8 +293,7 @@ public class BuddiesService extends Service {
         CoordinatesModel coordinatesModel = this.mLocationInfo.getLastKnownLocation();
         if (coordinatesModel != null) {
             String coordinatesModelAsJson = this.mGson.toJson(coordinatesModel);
-            HttpResponse response = this.mHttpRequester.post(
-                    "coordinates/update?sessionKey=" + this.mSessionKey, coordinatesModelAsJson);
+            HttpResponse response = DataPersister.updateCurrentPosition(this.mSessionKey, coordinatesModelAsJson);
 
             if (response.isStatusOk()) {
                 LogHelper.logThreadId("updateCurrentPosition() error: " + response.getMessage());
@@ -332,18 +328,14 @@ public class BuddiesService extends Service {
             this.mUserHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    BuddiesService.this.removeExistingBuddieHttpRequest(buddieAsJson, buddieId, buddieNickname);
+                    HttpResponse response = DataPersister.removeExistingBuddie(
+                            BuddiesService.this.mSessionKey, buddieAsJson);
+
+                    BuddiesService.this.mBroadcast.sendBroadcastWithBuddieRemoveResult(
+                            buddieId, buddieNickname, response.isStatusOk());
                 }
             });
         }
-    }
-
-    private void removeExistingBuddieHttpRequest(String buddieAsJson, int buddieId, String buddieNickname) {
-        HttpResponse response = this.mHttpRequester.post(String.format(
-                "friends/remove?sessionKey=%s", this.mSessionKey),
-                buddieAsJson);
-
-        this.mBroadcast.sendBroadcastWithBuddieRemoveResult(buddieId, buddieNickname, response.isStatusOk());
     }
 
     private void searchForNewBuddie(Intent intent) {
@@ -352,34 +344,27 @@ public class BuddiesService extends Service {
             this.mUserHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    BuddiesService.this.searchForNewBuddieHttpRequest(buddieNickname);
+                    HttpResponse response = DataPersister.searchForNewBuddie(
+                            buddieNickname, BuddiesService.this.mSessionKey);
+
+                    BuddiesService.this.mBroadcast.sendBroadcastWithBuddieSearchResult(
+                            response.getMessage(), response.isStatusOk());
                 }
             });
         }
-    }
-
-    private void searchForNewBuddieHttpRequest(String buddieNickname) {
-        HttpResponse response = this.mHttpRequester.get(String.format(
-                "friends/find?friendNickname=%s&sessionKey=%s",
-                buddieNickname, this.mSessionKey));
-
-        this.mBroadcast.sendBroadcastWithBuddieSearchResult(response.getMessage(), response.isStatusOk());
     }
 
     private void getAllRequests() {
         this.mUserHandler.post(new Runnable() {
             @Override
             public void run() {
-                BuddiesService.this.getAllRequestsHttpRequest();
+                HttpResponse response = DataPersister.getAllRequests(
+                        BuddiesService.this.mSessionKey);
+
+                BuddiesService.this.mBroadcast.sendBroadcastWithAllRequests(
+                        response.getMessage(), response.isStatusOk());
             }
         });
-    }
-
-    private void getAllRequestsHttpRequest() {
-        HttpResponse response = this.mHttpRequester.get(String.format(
-                "requests/all?sessionKey=%s", this.mSessionKey));
-
-        this.mBroadcast.sendBroadcastWithAllRequests(response.getMessage(), response.isStatusOk());
     }
 
     private void sendBuddieRequest(Intent intent) {
@@ -392,18 +377,14 @@ public class BuddiesService extends Service {
             this.mUserHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    BuddiesService.this.sendBuddieRequestHttpRequest(buddieAsJson);
+                    HttpResponse response = DataPersister.sendBuddieRequest(
+                            BuddiesService.this.mSessionKey, buddieAsJson);
+
+                    BuddiesService.this.mBroadcast.sendBroadcastWithBuddieRequestSendResult(
+                            response.getMessage(), response.isStatusOk());
                 }
             });
         }
-    }
-
-    private void sendBuddieRequestHttpRequest(String buddieAsJson) {
-        HttpResponse response = this.mHttpRequester.post(String.format(
-                "requests/add?sessionKey=%s", this.mSessionKey),
-                buddieAsJson);
-
-        this.mBroadcast.sendBroadcastWithBuddieRequestSendResult(response.getMessage(), response.isStatusOk());
     }
 
     private void respondToBuddieRequest(Intent intent) {
@@ -418,18 +399,14 @@ public class BuddiesService extends Service {
             this.mUserHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    BuddiesService.this.respondToBuddieRequestHttpRequest(responseAsJson);
+                    HttpResponse response = DataPersister.respondToBuddieRequest(
+                            BuddiesService.this.mSessionKey, responseAsJson);
+
+                    BuddiesService.this.mBroadcast.sendBroadcastWithResponseToBuddieRequest(
+                            response.getMessage(), response.isStatusOk());
                 }
             });
         }
-    }
-
-    private void respondToBuddieRequestHttpRequest(String responseAsJson) {
-        HttpResponse response = this.mHttpRequester.post(String.format(
-                "requests/response?sessionKey=%s", this.mSessionKey),
-                responseAsJson);
-
-        this.mBroadcast.sendBroadcastWithResponseToBuddieRequest(response.getMessage(), response.isStatusOk());
     }
 
     private void sendNewImage(Intent intent) {
@@ -446,19 +423,14 @@ public class BuddiesService extends Service {
             this.mUserHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    BuddiesService.this.getBuddieImagesHttpRequest(buddieAsJson);
+                    HttpResponse response = DataPersister.getBuddieImages(
+                            BuddiesService.this.mImagesToShowCount, BuddiesService.this.mSessionKey, buddieAsJson);
+
+                    BuddiesService.this.mBroadcast.sendBroadcastWithBuddieImages(
+                            response.getMessage(), response.isStatusOk());
                 }
             });
         }
-    }
-
-    private void getBuddieImagesHttpRequest(String buddieAsJson) {
-        HttpResponse response = this.mHttpRequester.post(String.format(
-                "images/get?imagesCount=%s&sessionKey=%s",
-                this.mImagesToShowCount, this.mSessionKey),
-                buddieAsJson);
-
-        this.mBroadcast.sendBroadcastWithBuddieImages(response.getMessage(), response.isStatusOk());
     }
 
     private void getCurrentSettings() {
@@ -566,14 +538,14 @@ public class BuddiesService extends Service {
             if (BuddiesService.this.mIsNetworkAvailable) {
                 BuddiesService.this.forceUpdatingBuddiesService();
             } else {
-                ToastNotifier.makeToast(BuddiesService.this, ERROR_MESSAGE_NO_NETWORK);
+                BuddiesService.this.mBroadcast.sendInfoMessage(ERROR_MESSAGE_NO_NETWORK);
             }
         }
 
         private void handleGpsEnabledChange() {
             BuddiesService.this.mIsGpsAvailable = BuddiesService.this.mLocationInfo.isProviderEnabled();
             if (!BuddiesService.this.mIsGpsAvailable) {
-                ToastNotifier.makeToast(BuddiesService.this, ERROR_MESSAGE_NO_GPS);
+                BuddiesService.this.mBroadcast.sendInfoMessage(ERROR_MESSAGE_NO_GPS);
             }
         }
     }

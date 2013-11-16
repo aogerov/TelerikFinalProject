@@ -16,7 +16,6 @@ import android.widget.ListView;
 
 import com.gercho.findmybuddies.enums.MeasureUnits;
 import com.gercho.findmybuddies.helpers.AppActions;
-import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.models.BuddieFoundModel;
@@ -215,6 +214,11 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
                     this.handleBuddieImagesResult(buddieImagesAsJson, isStatusOk);
                     return;
                 }
+
+                String infoMessage = intent.getStringExtra(BuddiesService.INFO_MESSAGE_EXTRA);
+                if (infoMessage != null) {
+                    this.handleInfoMessage(infoMessage);
+                }
             }
         }
 
@@ -222,7 +226,9 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             BuddieModel[] buddies = this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
             MeasureUnits measureUnits = MeasureUnits.values()[measureUnitsAsInt];
             if (buddies != null && buddies.length > 0) {
-                LogHelper.logThreadId("buddies count: " + buddies.length + ", measure units: " + measureUnits + ", new requests: " + newBuddieRequestsCount);
+//                LogHelper.logThreadId("buddies count: " + buddies.length + ", measure units: " + measureUnits + ", new requests: " + newBuddieRequestsCount);
+                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddies count: " + buddies.length + ", measure units: " + measureUnits + ", new requests: " + newBuddieRequestsCount);
+
             }
         }
 
@@ -287,6 +293,10 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
             if (images != null && images.length > 0) {
                 ToastNotifier.makeToast(FindMyBuddiesActivity.this, "images count: " + images.length);
             }
+        }
+
+        private void handleInfoMessage(String infoMessage) {
+            ToastNotifier.makeToast(FindMyBuddiesActivity.this, infoMessage);
         }
     }
 }

@@ -79,4 +79,10 @@ public class BuddiesServiceBroadcast {
         intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
         this.mService.sendBroadcast(intent);
     }
+
+    public void sendInfoMessage(String infoMessage) {
+        Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
+        intent.putExtra(BuddiesService.INFO_MESSAGE_EXTRA, infoMessage);
+        this.mService.sendBroadcast(intent);
+    }
 }

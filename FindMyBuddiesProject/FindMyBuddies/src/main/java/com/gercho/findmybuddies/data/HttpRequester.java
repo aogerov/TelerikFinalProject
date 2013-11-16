@@ -1,4 +1,4 @@
-package com.gercho.findmybuddies.http;
+package com.gercho.findmybuddies.data;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
@@ -22,22 +22,22 @@ public class HttpRequester {
     private static final int CONNECTION_TIMEOUT = 3000;
     private static final int SOCKET_TIMEOUT = 30000;
 
-    HttpParams mHttpParameters;
+    private static HttpParams mHttpParameters;
 
     public HttpRequester(){
-        this.mHttpParameters = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(this.mHttpParameters, CONNECTION_TIMEOUT);
-        HttpConnectionParams.setSoTimeout(this.mHttpParameters, SOCKET_TIMEOUT);
+        mHttpParameters = new BasicHttpParams();
+        HttpConnectionParams.setConnectionTimeout(mHttpParameters, CONNECTION_TIMEOUT);
+        HttpConnectionParams.setSoTimeout(mHttpParameters, SOCKET_TIMEOUT);
     }
 
-    public HttpResponse get(String uriEnd) {
+    public static HttpResponse get(String uriEnd) {
         String uri = BASE_URI + uriEnd;
 
         String content = null;
         String error = null;
 
         try {
-            HttpClient client = new DefaultHttpClient(this.mHttpParameters);
+            HttpClient client = new DefaultHttpClient(mHttpParameters);
             HttpGet httpGet = new HttpGet(uri);
             httpGet.setHeader("Content-type", "application/json");
             ResponseHandler<String> responseHandler = new BasicResponseHandler();
@@ -53,14 +53,14 @@ public class HttpRequester {
         }
     }
 
-    public HttpResponse post(String uriEnd, String data) {
+    public static HttpResponse post(String uriEnd, String data) {
         String uri = BASE_URI + uriEnd;
 
         String content = null;
         String error = null;
 
         try {
-            HttpClient client = new DefaultHttpClient(this.mHttpParameters);
+            HttpClient client = new DefaultHttpClient(mHttpParameters);
             HttpPost httpPost = new HttpPost(uri);
             httpPost.setEntity(new StringEntity(data));
             httpPost.setHeader("Content-type", "application/json");

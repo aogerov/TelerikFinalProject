@@ -1,4 +1,4 @@
-package com.gercho.findmybuddies.http;
+package com.gercho.findmybuddies.data;
 
 /**
  * Created by Gercho on 11/10/13.
