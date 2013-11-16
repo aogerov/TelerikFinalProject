@@ -1,4 +1,4 @@
-package com.gercho.findmybuddies;
+package com.gercho.findmybuddies.activities;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.gercho.findmybuddies.R;
 import com.gercho.findmybuddies.enums.MeasureUnits;
 import com.gercho.findmybuddies.helpers.AppActions;
 import com.gercho.findmybuddies.helpers.LogHelper;

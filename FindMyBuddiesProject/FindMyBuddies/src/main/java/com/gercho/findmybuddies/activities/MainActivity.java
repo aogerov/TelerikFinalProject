@@ -1,4 +1,4 @@
-package com.gercho.findmybuddies;
+package com.gercho.findmybuddies.activities;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.gercho.findmybuddies.R;
 import com.gercho.findmybuddies.helpers.AppActions;
 import com.gercho.findmybuddies.helpers.ProgressBarController;
 import com.gercho.findmybuddies.helpers.ToastNotifier;

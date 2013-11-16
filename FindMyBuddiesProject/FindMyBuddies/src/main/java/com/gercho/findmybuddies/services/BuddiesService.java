@@ -211,11 +211,6 @@ public class BuddiesService extends Service {
                 this.startAutomaticUpdating();
             }
         }
-
-        Intent intent = new Intent();
-        intent.putExtra(BUDDIE_ID_EXTRA, 21);
-        intent.putExtra(BUDDIE_NICKNAME_EXTRA, "mladenov");
-        sendBuddieRequest(intent);
     }
 
     private void pauseBuddiesService() {
@@ -335,7 +330,7 @@ public class BuddiesService extends Service {
                     HttpResponse response = DataPersister.removeExistingBuddie(
                             BuddiesService.this.mSessionKey, buddieAsJson);
 
-                    BuddiesService.this.mBroadcast.sendBroadcastWithBuddieRemoveResult(
+                    BuddiesService.this.mBroadcast.sendBuddieRemoveResult(
                             buddieId, buddieNickname, response.isStatusOk());
                 }
             });
@@ -351,7 +346,7 @@ public class BuddiesService extends Service {
                     HttpResponse response = DataPersister.searchForNewBuddie(
                             buddieNickname, BuddiesService.this.mSessionKey);
 
-                    BuddiesService.this.mBroadcast.sendBroadcastWithBuddieSearchResult(
+                    BuddiesService.this.mBroadcast.sendBuddieSearchResult(
                             response.getMessage(), response.isStatusOk());
                 }
             });
@@ -365,7 +360,7 @@ public class BuddiesService extends Service {
                 HttpResponse response = DataPersister.getAllRequests(
                         BuddiesService.this.mSessionKey);
 
-                BuddiesService.this.mBroadcast.sendBroadcastWithAllRequests(
+                BuddiesService.this.mBroadcast.sendAllRequests(
                         response.getMessage(), response.isStatusOk());
             }
         });
@@ -384,7 +379,7 @@ public class BuddiesService extends Service {
                     HttpResponse response = DataPersister.sendBuddieRequest(
                             BuddiesService.this.mSessionKey, buddieAsJson);
 
-                    BuddiesService.this.mBroadcast.sendBroadcastWithBuddieRequestSendResult(
+                    BuddiesService.this.mBroadcast.sendBuddieRequestSendResult(
                             response.getMessage(), response.isStatusOk());
                 }
             });
@@ -406,7 +401,7 @@ public class BuddiesService extends Service {
                     HttpResponse response = DataPersister.respondToBuddieRequest(
                             BuddiesService.this.mSessionKey, responseAsJson);
 
-                    BuddiesService.this.mBroadcast.sendBroadcastWithResponseToBuddieRequest(
+                    BuddiesService.this.mBroadcast.sendResponseToBuddieRequest(
                             response.getMessage(), response.isStatusOk());
                 }
             });
@@ -430,7 +425,7 @@ public class BuddiesService extends Service {
                     HttpResponse response = DataPersister.getBuddieImages(
                             BuddiesService.this.mImagesToShowCount, BuddiesService.this.mSessionKey, buddieAsJson);
 
-                    BuddiesService.this.mBroadcast.sendBroadcastWithBuddieImages(
+                    BuddiesService.this.mBroadcast.sendBuddieImages(
                             response.getMessage(), response.isStatusOk());
                 }
             });

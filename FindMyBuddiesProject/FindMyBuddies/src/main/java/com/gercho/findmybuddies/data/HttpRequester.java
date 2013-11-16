@@ -17,7 +17,7 @@ import org.apache.http.params.HttpParams;
 public class HttpRequester {
 
     private static final String BASE_URI = "http://wherearemybuddiesapi.apphb.com/api/";
-    private static final String BASE_URI_LOCAL = "http://localhost:34585/api/";
+//    private static final String BASE_URI_LOCAL = "http://localhost:34585/api/";
 
     private static final int CONNECTION_TIMEOUT = 3000;
     private static final int SOCKET_TIMEOUT = 30000;
