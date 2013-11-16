@@ -18,7 +18,7 @@ import com.gercho.findmybuddies.devices.LocationInfo;
 import com.gercho.findmybuddies.devices.NetworkConnectionInfo;
 import com.gercho.findmybuddies.enums.MeasureUnits;
 import com.gercho.findmybuddies.enums.OrderByTypes;
-import com.gercho.findmybuddies.helpers.AppActions;
+import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.models.BuddieFoundModel;
@@ -55,6 +55,9 @@ public class BuddiesService extends Service {
     public static final String BUDDIES_ORDER_BY_TYPES_EXTRA = "BuddiesOrderByTypesExtra";
     public static final String BUDDIES_MEASURE_UNITS_EXTRA = "BuddiesMeasureUnitsExtra";
     public static final String INFO_MESSAGE_EXTRA = "InfoMessageExtra";
+
+    private static final String ANDROID_CONNECTIVITY_CHANGE = "android.net.conn.CONNECTIVITY_CHANGE";
+    private static final String ANDROID_GPS_ENABLED_CHANGE = "android.location.GPS_ENABLED_CHANGE";
 
     private static final int UPDATING_LOCK_TIME = 1000 * 50; // 50 seconds
     private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60 * 5; // 5 minutes
@@ -100,39 +103,39 @@ public class BuddiesService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
-        if (AppActions.START_BUDDIES_SERVICE.equals(action)) {
+        if (ServiceActions.START_BUDDIES_SERVICE.equals(action)) {
             this.startBuddiesService(intent);
-        } else if (AppActions.RESUME_BUDDIES_SERVICE.equals(action)) {
+        } else if (ServiceActions.RESUME_BUDDIES_SERVICE.equals(action)) {
             this.resumeBuddiesService();
-        } else if (AppActions.FORCE_UPDATING_BUDDIES_SERVICE.equals(action)) {
+        } else if (ServiceActions.FORCE_UPDATING_BUDDIES_SERVICE.equals(action)) {
             this.forceUpdatingBuddiesService();
-        } else if (AppActions.PAUSE_BUDDIES_SERVICE.equals(action)) {
+        } else if (ServiceActions.PAUSE_BUDDIES_SERVICE.equals(action)) {
             this.pauseBuddiesService();
-        } else if (AppActions.STOP_BUDDIES_SERVICE.equals(action)) {
+        } else if (ServiceActions.STOP_BUDDIES_SERVICE.equals(action)) {
             this.stopBuddiesService();
-        } else if (AppActions.SEARCH_FOR_NEW_BUDDIE.equals(action)) {
+        } else if (ServiceActions.SEARCH_FOR_NEW_BUDDIE.equals(action)) {
             this.searchForNewBuddie(intent);
-        } else if (AppActions.REMOVE_EXISTING_BUDDIE.equals(action)) {
+        } else if (ServiceActions.REMOVE_EXISTING_BUDDIE.equals(action)) {
             this.removeExistingBuddie(intent);
-        } else if (AppActions.GET_ALL_REQUESTS.equals(action)) {
+        } else if (ServiceActions.GET_ALL_REQUESTS.equals(action)) {
             this.getAllRequests();
-        } else if (AppActions.SEND_BUDDIE_REQUEST.equals(action)) {
+        } else if (ServiceActions.SEND_BUDDIE_REQUEST.equals(action)) {
             this.sendBuddieRequest(intent);
-        } else if (AppActions.RESPOND_TO_BUDDIE_REQUEST.equals(action)) {
+        } else if (ServiceActions.RESPOND_TO_BUDDIE_REQUEST.equals(action)) {
             this.respondToBuddieRequest(intent);
-        } else if (AppActions.SEND_NEW_IMAGE.equals(action)) {
+        } else if (ServiceActions.SEND_NEW_IMAGE.equals(action)) {
             this.sendNewImage(intent);
-        } else if (AppActions.GET_BUDDIE_IMAGES.equals(action)) {
+        } else if (ServiceActions.GET_BUDDIE_IMAGES.equals(action)) {
             this.getBuddieImages(intent);
-        } else if (AppActions.GET_CURRENT_SETTINGS.equals(action)) {
+        } else if (ServiceActions.GET_CURRENT_SETTINGS.equals(action)) {
             this.getCurrentSettings();
-        } else if (AppActions.SET_UPDATE_FREQUENCY.equals(action)) {
+        } else if (ServiceActions.SET_UPDATE_FREQUENCY.equals(action)) {
             this.setUpdateFrequency(intent);
-        } else if (AppActions.SET_IMAGES_TO_SHOW_COUNT.equals(action)) {
+        } else if (ServiceActions.SET_IMAGES_TO_SHOW_COUNT.equals(action)) {
             this.setImagesToShowCount(intent);
-        } else if (AppActions.SET_BUDDIES_ORDER_BY.equals(action)) {
+        } else if (ServiceActions.SET_BUDDIES_ORDER_BY.equals(action)) {
             this.setBuddiesOrderBy(intent);
-        } else if (AppActions.SET_MEASURE_UNITS.equals(action)) {
+        } else if (ServiceActions.SET_MEASURE_UNITS.equals(action)) {
             this.setMeasureUnits(intent);
         }
 
@@ -157,8 +160,8 @@ public class BuddiesService extends Service {
 
             this.mStatusChangeReceiver = new StatusChangeReceiver();
             IntentFilter statusChangeIntentFilter = new IntentFilter();
-            statusChangeIntentFilter.addAction(AppActions.ANDROID_CONNECTIVITY_CHANGE);
-            statusChangeIntentFilter.addAction(AppActions.ANDROID_GPS_ENABLED_CHANGE);
+            statusChangeIntentFilter.addAction(ANDROID_CONNECTIVITY_CHANGE);
+            statusChangeIntentFilter.addAction(ANDROID_GPS_ENABLED_CHANGE);
             this.registerReceiver(this.mStatusChangeReceiver, statusChangeIntentFilter);
 
             this.mMainHandledThread = new HandlerThread("BuddiesServiceMainThread");
@@ -525,9 +528,9 @@ public class BuddiesService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action != null && action.equals(AppActions.ANDROID_CONNECTIVITY_CHANGE)) {
+            if (action != null && action.equals(ANDROID_CONNECTIVITY_CHANGE)) {
                 this.handleConnectivityChange();
-            } else if (action != null && action.equals(AppActions.ANDROID_GPS_ENABLED_CHANGE)) {
+            } else if (action != null && action.equals(ANDROID_GPS_ENABLED_CHANGE)) {
                 this.handleGpsEnabledChange();
             }
         }

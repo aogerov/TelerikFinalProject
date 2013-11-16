@@ -19,7 +19,7 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".activities.LoginRegisterActivity"
             android:label="@string/app_name"
             android:uiOptions="splitActionBarWhenNarrow"
             android:noHistory="true">
@@ -29,7 +29,11 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".activities.FindMyBuddiesActivity" />
+        <activity android:name=".activities.MyBuddiesActivity" />
+        <activity android:name=".activities.FindNewBuddiesActivity" />
+        <activity android:name=".activities.MapActivity" />
+        <activity android:name=".activities.CameraActivity" />
+        <activity android:name=".activities.SettingsActivity" />
 
         <service android:name=".services.UserService">
             <intent-filter>

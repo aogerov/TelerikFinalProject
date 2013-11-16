@@ -1,13 +1,12 @@
 package com.gercho.findmybuddies.activities;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,9 +15,9 @@ import android.widget.ListView;
 
 import com.gercho.findmybuddies.R;
 import com.gercho.findmybuddies.enums.MeasureUnits;
-import com.gercho.findmybuddies.helpers.AppActions;
 import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
+import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
@@ -30,38 +29,19 @@ import com.google.gson.Gson;
 /**
  * Created by Gercho on 11/8/13.
  */
-public class FindMyBuddiesActivity extends FragmentActivity implements ListView.OnItemClickListener {
+public class MyBuddiesActivity extends Activity implements ListView.OnItemClickListener {
 
-    public static final String EXTRA_COURSE_LIB = "course lib";
-    private static final int COURSE_LIB_NOT_SET = -1;
-
-    //    private CoursePagerAdapter mCoursePagerAdapter;
-    private ViewPager mViewPager;
     private NavigationDrawer mNavigationDrawer;
-    private boolean mIsLoggingInProgress;
-
     private BuddiesServiceUpdateReceiver mBuddiesServiceUpdateReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setContentView(R.layout.activity_find_my_buddies);
-
-//        this.mCoursePagerAdapter = new CoursePagerAdapter(
-//                this.getSupportFragmentManager(), this);
-
-//        this.mViewPager = (ViewPager) findViewById(R.id.pager);
-//        this.mViewPager.setAdapter(this.mCoursePagerAdapter);
+        this.setContentView(R.layout.activity_my_buddies);
 
         this.mNavigationDrawer = new NavigationDrawer();
         this.mNavigationDrawer.init(this, this);
-
-        Intent startupIntent = this.getIntent();
-        int courseLib = startupIntent.getIntExtra(EXTRA_COURSE_LIB, COURSE_LIB_NOT_SET);
-        if (courseLib != COURSE_LIB_NOT_SET) {
-//            this.mCoursePagerAdapter.setCourseLib(courseLib);
-            this.mNavigationDrawer.setSelection(courseLib);
-        }
+        this.mNavigationDrawer.setSelection(NavigationDrawer.DRAWER_OPTION_MY_BUDDIES);
     }
 
     @Override
@@ -75,7 +55,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
         }
 
         Intent buddiesServiceIntent = new Intent();
-        buddiesServiceIntent.setAction(AppActions.RESUME_BUDDIES_SERVICE);
+        buddiesServiceIntent.setAction(ServiceActions.RESUME_BUDDIES_SERVICE);
         this.startService(buddiesServiceIntent);
     }
 
@@ -89,7 +69,7 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
         }
 
         Intent buddiesServiceIntent = new Intent();
-        buddiesServiceIntent.setAction(AppActions.PAUSE_BUDDIES_SERVICE);
+        buddiesServiceIntent.setAction(ServiceActions.PAUSE_BUDDIES_SERVICE);
         this.startService(buddiesServiceIntent);
     }
 
@@ -128,7 +108,6 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int optionsLib, long l) {
-//        this.mCoursePagerAdapter.setCourseLib(optionsLib);
         this.mNavigationDrawer.handleSelect(optionsLib);
     }
 
@@ -140,20 +119,20 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
     private void forceUpdate() {
         Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(AppActions.FORCE_UPDATING_BUDDIES_SERVICE);
+        userServiceIntent.setAction(ServiceActions.FORCE_UPDATING_BUDDIES_SERVICE);
         this.startService(userServiceIntent);
     }
 
     private void logout() {
         Intent buddiesServiceIntent = new Intent();
-        buddiesServiceIntent.setAction(AppActions.STOP_BUDDIES_SERVICE);
+        buddiesServiceIntent.setAction(ServiceActions.STOP_BUDDIES_SERVICE);
         this.startService(buddiesServiceIntent);
 
         Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(AppActions.LOGOUT);
+        userServiceIntent.setAction(ServiceActions.LOGOUT);
         this.startService(userServiceIntent);
 
-        Intent mainActivityIntent = new Intent(this, MainActivity.class);
+        Intent mainActivityIntent = new Intent(this, LoginRegisterActivity.class);
         this.startActivity(mainActivityIntent);
     }
 
@@ -235,69 +214,69 @@ public class FindMyBuddiesActivity extends FragmentActivity implements ListView.
 
         private void handleBuddieRemovedResult(int buddieId, String buddieNickname, boolean isStatusOk) {
             if (isStatusOk) {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " successfully removed");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " successfully removed");
             } else {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " was not removed");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " was not removed");
             }
         }
 
         private void handleBuddieSearchResult(String buddieSearchResultAsJson, boolean isStatusOk) {
             if (!isStatusOk) {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "Occurred error in connecting the database");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "Occurred error in connecting the database");
                 return;
             }
 
             BuddieFoundModel buddie = this.mGson.fromJson(buddieSearchResultAsJson, BuddieFoundModel.class);
             if (buddie != null) {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "buddie nickname - " + buddie.getNickname());
             } else {
                 // TODO validate before sending the buddie, if its not in buddie list already
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "no matches found");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "no matches found");
             }
         }
 
         private void handleAllRequestsResult(String allRequestsAsJson, boolean isStatusOk) {
             if (!isStatusOk) {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "Occurred error in connecting the database");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "Occurred error in connecting the database");
                 return;
             }
 
             RequestModel[] allRequests = this.mGson.fromJson(allRequestsAsJson, RequestModel[].class);
             if (allRequests != null) { // && allRequests.length > 0
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "there are " + allRequests.length + " current requests");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "there are " + allRequests.length + " current requests");
             }
         }
 
         private void handleRequestSendResult(boolean isStatusOk) {
             if (isStatusOk) {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "request successfully send");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "request successfully send");
             } else {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "request was unable to be send");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "request was unable to be send");
             }
         }
 
         private void handleResponseToRequestResult(boolean isStatusOk) {
             if (isStatusOk) {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "response successfully send");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "response successfully send");
             } else {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "response failed, please try again");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "response failed, please try again");
             }
         }
 
         private void handleBuddieImagesResult(String buddieImagesAsJson, boolean isStatusOk) {
             if (!isStatusOk) {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "Occurred error in connecting the database");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "Occurred error in connecting the database");
                 return;
             }
 
             ImageModel[] images = this.mGson.fromJson(buddieImagesAsJson, ImageModel[].class);
             if (images != null && images.length > 0) {
-                ToastNotifier.makeToast(FindMyBuddiesActivity.this, "images count: " + images.length);
+                ToastNotifier.makeToast(MyBuddiesActivity.this, "images count: " + images.length);
             }
         }
 
         private void handleInfoMessage(String infoMessage) {
-            ToastNotifier.makeToast(FindMyBuddiesActivity.this, infoMessage);
+            ToastNotifier.makeToast(MyBuddiesActivity.this, infoMessage);
         }
     }
 }

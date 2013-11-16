@@ -13,12 +13,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.gercho.findmybuddies.R;
-import com.gercho.findmybuddies.helpers.AppActions;
+import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.ProgressBarController;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.gercho.findmybuddies.services.UserService;
 
-public class MainActivity extends Activity {
+public class LoginRegisterActivity extends Activity {
 
     private static final String CONNECTING_STATUS = "ConnectingStatus";
     private static final String REGISTER_WINDOW_VISIBILITY = "RegisterWindowVisibility";
@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
             this.registerReceiver(this.mUserServiceUpdateReceiver, intentFilter);
 
             Intent userServiceIntent = new Intent();
-            userServiceIntent.setAction(AppActions.START_USER_SERVICE);
+            userServiceIntent.setAction(ServiceActions.START_USER_SERVICE);
             this.startService(userServiceIntent);
         }
     }
@@ -97,28 +97,28 @@ public class MainActivity extends Activity {
         this.findViewById(R.id.button_login).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MainActivity.this.handleLogin();
+                LoginRegisterActivity.this.handleLogin();
             }
         });
 
         this.findViewById(R.id.button_register).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MainActivity.this.handleRegister();
+                LoginRegisterActivity.this.handleRegister();
             }
         });
 
         this.findViewById(R.id.button_switch).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MainActivity.this.handleSwitchLoginRegister();
+                LoginRegisterActivity.this.handleSwitchLoginRegister();
             }
         });
     }
 
     private void handleLogin() {
         Intent loginServiceIntent = new Intent();
-        loginServiceIntent.setAction(AppActions.LOGIN);
+        loginServiceIntent.setAction(ServiceActions.LOGIN);
         String username = this.getTextFromTextView(R.id.editText_username);
         loginServiceIntent.putExtra(UserService.USERNAME_EXTRA, username);
         String password = this.getTextFromTextView(R.id.editText_password);
@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
 
     private void handleRegister() {
         Intent registerServiceIntent = new Intent();
-        registerServiceIntent.setAction(AppActions.REGISTER);
+        registerServiceIntent.setAction(ServiceActions.REGISTER);
         String username = this.getTextFromTextView(R.id.editText_username);
         registerServiceIntent.putExtra(UserService.USERNAME_EXTRA, username);
         String password = this.getTextFromTextView(R.id.editText_password);
@@ -223,38 +223,38 @@ public class MainActivity extends Activity {
         }
 
         private void handleConnecting() {
-            MainActivity.this.setConnectingActive();
-            MainActivity.this.startProgressBar();
-            MainActivity.this.hideUi();
+            LoginRegisterActivity.this.setConnectingActive();
+            LoginRegisterActivity.this.startProgressBar();
+            LoginRegisterActivity.this.hideUi();
         }
 
         private void handleResponseMessage(Intent intent) {
-            MainActivity.this.setConnectingInactive();
-            MainActivity.this.stopProgressBar();
-            MainActivity.this.showUi();
+            LoginRegisterActivity.this.setConnectingInactive();
+            LoginRegisterActivity.this.stopProgressBar();
+            LoginRegisterActivity.this.showUi();
 
             String message = intent.getStringExtra(UserService.MESSAGE_TEXT_EXTRA);
-            MainActivity.this.changeActiveToastMessage(message);
+            LoginRegisterActivity.this.changeActiveToastMessage(message);
         }
 
         private void handleConnected(Intent intent) {
-            MainActivity.this.setConnectingInactive();
-            MainActivity.this.stopProgressBar();
+            LoginRegisterActivity.this.setConnectingInactive();
+            LoginRegisterActivity.this.stopProgressBar();
 
             String nickname = intent.getStringExtra(UserService.NICKNAME_EXTRA);
-            MainActivity.this.changeActiveToastMessage("Welcome " + nickname);
+            LoginRegisterActivity.this.changeActiveToastMessage("Welcome " + nickname);
 
             this.startAdditionalServices();
 
-            Intent buddiesIntent = new Intent(MainActivity.this, FindMyBuddiesActivity.class);
-            buddiesIntent.putExtra(UserService.NICKNAME_EXTRA, nickname);
-            MainActivity.this.startActivity(buddiesIntent);
+            Intent myBuddiesIntent = new Intent(LoginRegisterActivity.this, MyBuddiesActivity.class);
+            myBuddiesIntent.putExtra(UserService.NICKNAME_EXTRA, nickname);
+            LoginRegisterActivity.this.startActivity(myBuddiesIntent);
         }
 
         private void startAdditionalServices() {
             Intent additionalServicesIntent = new Intent();
-            additionalServicesIntent.setAction(AppActions.START_ADDITIONAL_SERVICES);
-            MainActivity.this.startService(additionalServicesIntent);
+            additionalServicesIntent.setAction(ServiceActions.START_ADDITIONAL_SERVICES);
+            LoginRegisterActivity.this.startService(additionalServicesIntent);
         }
     }
 }

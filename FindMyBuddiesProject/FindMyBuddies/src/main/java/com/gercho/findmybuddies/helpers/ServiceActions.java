@@ -3,7 +3,7 @@ package com.gercho.findmybuddies.helpers;
 /**
  * Created by Gercho on 11/15/13.
  */
-public class AppActions {
+public class ServiceActions {
 
     // UserService actions
     public static final String START_USER_SERVICE = "com.gercho.action.START_USER_SERVICE";
@@ -31,8 +31,4 @@ public class AppActions {
     public static final String SET_IMAGES_TO_SHOW_COUNT = "com.gercho.action.SET_IMAGES_TO_SHOW_COUNT";
     public static final String SET_BUDDIES_ORDER_BY = "com.gercho.action.SET_BUDDIES_ORDER_BY";
     public static final String SET_MEASURE_UNITS = "com.gercho.action.SET_MEASURE_UNITS";
-
-    // Android broadcasts
-    public static final String ANDROID_CONNECTIVITY_CHANGE = "android.net.conn.CONNECTIVITY_CHANGE";
-    public static final String ANDROID_GPS_ENABLED_CHANGE = "android.location.GPS_ENABLED_CHANGE";
 }

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string-array name="navigation_drawer_options">
-        <item>My Buddies</item>
-        <item>Find New Buddie</item>
-        <item>Map</item>
-        <item>Camera</item>
-        <item>Settings</item>
+        <item>@string/navigationDrawer_myBuddies</item>
+        <item>@string/navigationDrawer_findNewBuddie</item>
+        <item>@string/navigationDrawer_map</item>
+        <item>@string/navigationDrawer_camera</item>
+        <item>@string/navigationDrawer_setting</item>
     </string-array>
+
 </resources>

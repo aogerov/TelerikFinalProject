@@ -13,7 +13,7 @@ import com.gercho.findmybuddies.cryptographs.AuthCodeGenerator;
 import com.gercho.findmybuddies.cryptographs.Encryptor;
 import com.gercho.findmybuddies.data.DataPersister;
 import com.gercho.findmybuddies.devices.NetworkConnectionInfo;
-import com.gercho.findmybuddies.helpers.AppActions;
+import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.data.HttpResponse;
 import com.gercho.findmybuddies.models.UserModel;
 import com.gercho.findmybuddies.validators.UserServiceValidator;
@@ -72,17 +72,17 @@ public class UserService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
-        if (AppActions.START_USER_SERVICE.equalsIgnoreCase(action)) {
+        if (ServiceActions.START_USER_SERVICE.equalsIgnoreCase(action)) {
             this.startUserService();
-        } else if (AppActions.STOP_USER_SERVICE.equalsIgnoreCase(action)) {
+        } else if (ServiceActions.STOP_USER_SERVICE.equalsIgnoreCase(action)) {
             this.stopUserService();
-        } else if (AppActions.LOGIN.equalsIgnoreCase(action)) {
+        } else if (ServiceActions.LOGIN.equalsIgnoreCase(action)) {
             this.login(intent);
-        } else if (AppActions.REGISTER.equalsIgnoreCase(action)) {
+        } else if (ServiceActions.REGISTER.equalsIgnoreCase(action)) {
             this.register(intent);
-        } else if (AppActions.LOGOUT.equalsIgnoreCase(action)) {
+        } else if (ServiceActions.LOGOUT.equalsIgnoreCase(action)) {
             this.logout();
-        } else if (AppActions.START_ADDITIONAL_SERVICES.equalsIgnoreCase(action)) {
+        } else if (ServiceActions.START_ADDITIONAL_SERVICES.equalsIgnoreCase(action)) {
             this.startAdditionalServices();
         }
 
@@ -206,7 +206,7 @@ public class UserService extends Service {
 
     private void startAdditionalServices() {
         Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(AppActions.START_BUDDIES_SERVICE);
+        userServiceIntent.setAction(ServiceActions.START_BUDDIES_SERVICE);
         userServiceIntent.putExtra(SESSION_KEY_EXTRA, this.mSessionKey);
         this.startService(userServiceIntent);
     }
