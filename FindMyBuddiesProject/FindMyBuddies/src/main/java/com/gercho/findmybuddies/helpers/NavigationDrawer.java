@@ -77,7 +77,7 @@ public class NavigationDrawer {
     public void handleSelect(int option) {
         this.mDrawerListView.setItemChecked(option, true);
         this.mDrawerLayout.closeDrawer(this.mDrawerListView);
-
+        int position = this.mDrawerListView.getCheckedItemPosition();
         if (option != this.mDrawerListView.getCheckedItemPosition()) {
             switch (option) {
                 case DRAWER_OPTION_MY_BUDDIES:
