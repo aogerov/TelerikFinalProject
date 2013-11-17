@@ -28,8 +28,16 @@ namespace FindMyBuddies.Api.Controllers
                     }
 
                     var user = Validator.ValidateSessionKey(context, sessionKey);
+
+                    var coordinates = Parser.ExtractCoordinatesFromImageModel(imageModel);
+                    context.Coordinates.Add(coordinates);
+
                     var image = Parser.ImageModelToImage(imageModel);
+                    image.Coordinates = coordinates;
+                    context.Images.Add(image);
+
                     user.Images.Add(image);
+                    context.SaveChanges();
 
                     var response = this.Request.CreateResponse(HttpStatusCode.OK, imageModel);
                     return response;
@@ -61,7 +69,7 @@ namespace FindMyBuddies.Api.Controllers
                     if (friend.Images.Count > 0 && imagesCount > 0)
                     {
                         var images = new List<Image>(friend.Images);
-                        for (int i = friend.Images.Count - 1; i >= 0 || imagesCount > 0; i--, imagesCount--)
+                        for (int i = friend.Images.Count - 1; i >= 0 && imagesCount > 0; i--, imagesCount--)
                         {
                             var imageModel = Parser.ImageToImageModel(images[i]);
                             imageModels.Add(imageModel);

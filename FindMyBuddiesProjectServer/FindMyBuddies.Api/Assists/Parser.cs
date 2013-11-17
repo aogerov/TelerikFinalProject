@@ -190,6 +190,16 @@ namespace FindMyBuddies.Api.Assists
             };
         }
 
+        public static Coordinates ExtractCoordinatesFromImageModel(ImageModel imageModel)
+        {
+            return new Coordinates
+            {
+                Latitude = imageModel.Latitude,
+                Longitude = imageModel.Longitude,
+                Timestamp = DateTime.Now
+            };
+        }
+
         private static void CalculateTimestampDifferences(List<FriendModel> friends)
         {
             var timeNow = DateTime.Now;
