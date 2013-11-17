@@ -14,7 +14,7 @@ import android.widget.ListView;
 
 import com.gercho.findmybuddies.R;
 import com.gercho.findmybuddies.activities.FindNewBuddiesActivity;
-import com.gercho.findmybuddies.activities.MapActivity;
+import com.gercho.findmybuddies.MapActivity;
 import com.gercho.findmybuddies.activities.MyBuddiesActivity;
 import com.gercho.findmybuddies.activities.SettingsActivity;
 import com.gercho.findmybuddies.activities.TakePictureActivity;
