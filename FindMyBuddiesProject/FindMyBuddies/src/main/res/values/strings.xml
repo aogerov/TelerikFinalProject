@@ -14,6 +14,7 @@
     <string name="editText_nickname">Nickname</string>
     <string name="navigationDrawer_myBuddies">My Buddies</string>
     <string name="navigationDrawer_findNewBuddie">Find New Buddie</string>
+    <string name="navigationDrawer_respondRequests">Respond Requests</string>
     <string name="navigationDrawer_map">Map</string>
     <string name="navigationDrawer_takePicture">Take Picture</string>
     <string name="navigationDrawer_setting">Settings</string>

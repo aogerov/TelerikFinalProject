@@ -8,7 +8,7 @@
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MyBuddiesActivity">
+        tools:context=".RespondRequestsActivity">
 
         <!--
         This title strip will display the currently visible page title, as well as the page
@@ -42,21 +42,13 @@
             android:id="@+id/homeActivity_pageName"
             android:gravity="center_horizontal"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/textView_newRequests"
-            android:layout_below="@+id/homeActivity_pageName"
-            android:layout_centerHorizontal="true" />
-
         <ListView
-            android:id="@+id/list_buddies"
+            android:id="@+id/list_requests"
             android:fadingEdge="vertical"
             android:fadingEdgeLength="10dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/textView_newRequests"
+            android:layout_below="@+id/homeActivity_pageName"
             android:clickable="true"
             android:choiceMode="singleChoice" />
 

@@ -47,6 +47,7 @@
         <activity android:name=".activities.MapActivity" />
         <activity android:name=".activities.TakePictureActivity" />
         <activity android:name=".activities.SettingsActivity" />
+        <activity android:name=".activities.RespondRequestsActivity" />
 
         <service android:name=".services.UserService">
             <intent-filter>

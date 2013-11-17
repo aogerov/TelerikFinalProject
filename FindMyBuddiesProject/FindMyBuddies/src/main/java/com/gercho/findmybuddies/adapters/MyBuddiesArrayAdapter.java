@@ -17,7 +17,7 @@ public class MyBuddiesArrayAdapter extends ArrayAdapter<BuddieModel> {
     private Context mContext;
     private int mTextViewResourceId;
     private BuddieModel[] mBuddies;
-    MeasureUnits mMeasureUnits;
+    private MeasureUnits mMeasureUnits;
 
     public MyBuddiesArrayAdapter(Context context, int textViewResourceId,
                                  BuddieModel[] buddies, MeasureUnits measureUnits) {

@@ -4,9 +4,16 @@
     <string-array name="navigation_drawer_options">
         <item>@string/navigationDrawer_myBuddies</item>
         <item>@string/navigationDrawer_findNewBuddie</item>
+        <item>@string/navigationDrawer_respondRequests</item>
         <item>@string/navigationDrawer_map</item>
         <item>@string/navigationDrawer_takePicture</item>
         <item>@string/navigationDrawer_setting</item>
+    </string-array>
+
+    <string-array name="respond_requests_array">
+        <item>Accept</item>
+        <item>Decline</item>
+        <item>Later</item>
     </string-array>
 
     <string-array name="measure_units_array">
