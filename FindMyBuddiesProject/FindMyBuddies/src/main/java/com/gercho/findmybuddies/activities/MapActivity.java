@@ -1,9 +1,10 @@
-package com.gercho.findmybuddies;
+package com.gercho.findmybuddies.activities;
 
+import android.app.Activity;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 
+import com.gercho.findmybuddies.R;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -18,7 +19,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 /**
  * Created by Gercho on 11/16/13.
  */
-public class MapActivity extends FragmentActivity {
+public class MapActivity extends Activity {
 
     static final LatLng HAMBURG = new LatLng(53.558, 9.927);
     static final LatLng KIEL = new LatLng(53.551, 9.993);
@@ -46,12 +47,8 @@ public class MapActivity extends FragmentActivity {
     }
 
     private void activateMap() {
-        MapFragment mapFragment = (MapFragment) this.getFragmentManager().findFragmentById(R.id.map);
-        if (mapFragment == null) {
-            return;
-        }
-
-        map = mapFragment.getMap();
+        map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
+                .getMap();
         Marker hamburg = map.addMarker(new MarkerOptions().position(HAMBURG)
                 .title("Hamburg"));
         Marker kiel = map.addMarker(new MarkerOptions()

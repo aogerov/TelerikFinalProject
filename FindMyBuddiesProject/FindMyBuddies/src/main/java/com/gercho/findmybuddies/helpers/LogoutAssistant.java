@@ -3,7 +3,7 @@ package com.gercho.findmybuddies.helpers;
 import android.content.Context;
 import android.content.Intent;
 
-import com.gercho.findmybuddies.LoginRegisterActivity;
+import com.gercho.findmybuddies.activities.LoginRegisterActivity;
 
 /**
  * Created by Gercho on 11/16/13.
