@@ -8,7 +8,7 @@
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".MyBuddiesActivity">
 
         <!--
         This title strip will display the currently visible page title, as well as the page
@@ -26,6 +26,32 @@
             android:textColor="#fff" />
 
     </android.support.v4.view.ViewPager>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusableInTouchMode="false"
+        android:clickable="false">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="@string/header_myBuddies"
+            android:id="@+id/homeActivity_pageName"
+            android:gravity="center_horizontal"/>
+
+        <ListView
+            android:id="@+id/list_buddies"
+            android:fadingEdge="vertical"
+            android:fadingEdgeLength="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:choiceMode="singleChoice" />
+
+    </LinearLayout>
 
     <ListView
         android:id="@+id/left_drawer"

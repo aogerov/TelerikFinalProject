@@ -17,5 +17,17 @@
     <string name="navigationDrawer_map">Map</string>
     <string name="navigationDrawer_takePicture">Take Picture</string>
     <string name="navigationDrawer_setting">Settings</string>
+    <string name="header_myBuddies">My Buddies</string>
+    <string name="textView_coordinatesAccuracyLabel">Time stamp</string>
+    <string name="textView_LatitudeLabel">Latitude</string>
+    <string name="textView_longitudeLabel">Longitude</string>
+    <string name="textView_distanceLabel">Distance</string>
+    <string name="textView_updateFrequency">Update frequency</string>
+    <string name="textView_imagesShowCount">Images count</string>
+    <string name="textView_orderBy">Order by</string>
+    <string name="textView_measureUnits">Measure units</string>
+    <string name="hint_updateFrequency">1 to 100 mins</string>
+    <string name="hint_measureUnits">Kilometers or Miles</string>
+    <string name="header_settings">Settings</string>
 
 </resources>

@@ -1,12 +1,12 @@
 package com.gercho.findmybuddies.activities;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,8 +14,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.gercho.findmybuddies.R;
+import com.gercho.findmybuddies.adapters.MyBuddiesArrayAdapter;
 import com.gercho.findmybuddies.enums.MeasureUnits;
-import com.gercho.findmybuddies.helpers.LogHelper;
 import com.gercho.findmybuddies.helpers.LogoutAssistant;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
 import com.gercho.findmybuddies.helpers.ServiceActions;
@@ -30,9 +30,11 @@ import com.google.gson.Gson;
 /**
  * Created by Gercho on 11/8/13.
  */
-public class MyBuddiesActivity extends Activity implements ListView.OnItemClickListener {
+public class MyBuddiesActivity extends FragmentActivity implements ListView.OnItemClickListener {
 
     private NavigationDrawer mNavigationDrawer;
+    private BuddieModel[] mBuddies;
+    private MyBuddiesArrayAdapter mMyBuddiesArrayAdapter;
     private BuddiesServiceUpdateReceiver mBuddiesServiceUpdateReceiver;
 
     @Override
@@ -72,6 +74,8 @@ public class MyBuddiesActivity extends Activity implements ListView.OnItemClickL
         Intent buddiesServiceIntent = new Intent();
         buddiesServiceIntent.setAction(ServiceActions.PAUSE_BUDDIES_SERVICE);
         this.startService(buddiesServiceIntent);
+
+        this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     @Override
@@ -123,6 +127,15 @@ public class MyBuddiesActivity extends Activity implements ListView.OnItemClickL
         Intent userServiceIntent = new Intent();
         userServiceIntent.setAction(ServiceActions.FORCE_UPDATING_BUDDIES_SERVICE);
         this.startService(userServiceIntent);
+    }
+
+    private void handleBuddiesUpdated(BuddieModel[] buddies, MeasureUnits measureUnits, int newBuddieRequestsCount) {
+        this.mBuddies = buddies;
+        this.mMyBuddiesArrayAdapter = new MyBuddiesArrayAdapter(
+                this, R.layout.subject_list_item_row, this.mBuddies, measureUnits);
+
+        ListView buddiesList = (ListView) this.findViewById(R.id.list_buddies);
+        buddiesList.setAdapter(this.mMyBuddiesArrayAdapter);
     }
 
     private class BuddiesServiceUpdateReceiver extends BroadcastReceiver {
@@ -196,8 +209,7 @@ public class MyBuddiesActivity extends Activity implements ListView.OnItemClickL
             BuddieModel[] buddies = this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
             MeasureUnits measureUnits = MeasureUnits.values()[measureUnitsAsInt];
             if (buddies != null && buddies.length > 0) {
-                LogHelper.logThreadId("buddies count: " + buddies.length + ", measure units: " + measureUnits + ", new requests: " + newBuddieRequestsCount);
-
+                MyBuddiesActivity.this.handleBuddiesUpdated(buddies, measureUnits, newBuddieRequestsCount);
             }
         }
 

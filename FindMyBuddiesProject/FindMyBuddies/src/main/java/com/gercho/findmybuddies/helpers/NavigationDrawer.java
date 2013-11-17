@@ -13,11 +13,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.gercho.findmybuddies.R;
-import com.gercho.findmybuddies.activities.TakePictureActivity;
 import com.gercho.findmybuddies.activities.FindNewBuddiesActivity;
 import com.gercho.findmybuddies.activities.MapActivity;
 import com.gercho.findmybuddies.activities.MyBuddiesActivity;
 import com.gercho.findmybuddies.activities.SettingsActivity;
+import com.gercho.findmybuddies.activities.TakePictureActivity;
 
 /**
  * Created by Gercho on 11/7/13.

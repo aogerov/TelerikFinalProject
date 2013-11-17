@@ -24,7 +24,7 @@ import java.io.FileInputStream;
 public class ImageUploader {
 
     public void sendImage(Context context, Uri imageUri) {
-        String url = "https://api.imgur.com/3/image";
+        String url = "http://uploads.im/api?upload";
         String filePath = getRealPathFromURI(context, imageUri);
 
         File file = new File(filePath);
@@ -41,6 +41,7 @@ public class ImageUploader {
 
             HttpResponse response = httpclient.execute(httppost);
 
+            String data = response.getClass().getName();
         } catch (Exception ex) {
             LogHelper.logThreadId(ex.getMessage());
         }

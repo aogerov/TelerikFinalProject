@@ -62,7 +62,7 @@ public class BuddiesService extends Service {
     private static final String ANDROID_CONNECTIVITY_CHANGE = "android.net.conn.CONNECTIVITY_CHANGE";
     private static final String ANDROID_GPS_ENABLED_CHANGE = "android.location.GPS_ENABLED_CHANGE";
 
-    private static final int UPDATING_LOCK_TIME = 1000 * 50; // 50 seconds
+    private static final int UPDATING_LOCK_TIME = 1000 * 30; // 30 seconds
     private static final int UPDATE_FREQUENCY_DEFAULT = 1000 * 60 * 5; // 5 minutes
     private static final int IMAGES_TO_SHOW_COUNT_DEFAULT = 3;
     private static final OrderByTypes BUDDIES_ORDER_BY_DEFAULT = OrderByTypes.DISTANCE;

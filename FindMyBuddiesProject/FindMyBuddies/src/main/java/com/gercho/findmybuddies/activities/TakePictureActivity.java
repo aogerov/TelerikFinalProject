@@ -1,10 +1,10 @@
 package com.gercho.findmybuddies.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.app.FragmentActivity;
 
 import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.services.BuddiesService;
@@ -12,7 +12,7 @@ import com.gercho.findmybuddies.services.BuddiesService;
 /**
  * Created by Gercho on 11/16/13.
  */
-public class TakePictureActivity extends Activity {
+public class TakePictureActivity extends FragmentActivity {
 
     private static final int TAKE_PICTURE_REQUEST_CODE = 1000;
 

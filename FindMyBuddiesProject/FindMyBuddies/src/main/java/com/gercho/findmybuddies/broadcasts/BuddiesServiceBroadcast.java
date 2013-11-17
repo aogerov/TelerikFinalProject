@@ -18,16 +18,6 @@ public class BuddiesServiceBroadcast {
         this.mService = service;
     }
 
-    public void sendCurrentSettings(int updateFrequency, int imagesToShowCount,
-                                    OrderByTypes buddiesOrderBy, MeasureUnits measureUnits) {
-        Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
-        intent.putExtra(BuddiesService.UPDATE_FREQUENCY_EXTRA, updateFrequency);
-        intent.putExtra(BuddiesService.IMAGES_TO_SHOW_COUNT_EXTRA, imagesToShowCount);
-        intent.putExtra(BuddiesService.BUDDIES_ORDER_BY_TYPES_EXTRA, buddiesOrderBy.ordinal());
-        intent.putExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, measureUnits.ordinal());
-        this.mService.sendBroadcast(intent);
-    }
-
     public void sendBuddiesInfoUpdate(String buddieModelsAsJson, MeasureUnits measureUnits, int newBuddieRequestsCount) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, buddieModelsAsJson);
@@ -83,6 +73,16 @@ public class BuddiesServiceBroadcast {
     public void sendInfoMessage(String infoMessage) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.INFO_MESSAGE_EXTRA, infoMessage);
+        this.mService.sendBroadcast(intent);
+    }
+
+    public void sendCurrentSettings(int updateFrequency, int imagesToShowCount,
+                                    OrderByTypes buddiesOrderBy, MeasureUnits measureUnits) {
+        Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
+        intent.putExtra(BuddiesService.UPDATE_FREQUENCY_EXTRA, updateFrequency);
+        intent.putExtra(BuddiesService.IMAGES_TO_SHOW_COUNT_EXTRA, imagesToShowCount);
+        intent.putExtra(BuddiesService.BUDDIES_ORDER_BY_TYPES_EXTRA, buddiesOrderBy.ordinal());
+        intent.putExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, measureUnits.ordinal());
         this.mService.sendBroadcast(intent);
     }
 }
