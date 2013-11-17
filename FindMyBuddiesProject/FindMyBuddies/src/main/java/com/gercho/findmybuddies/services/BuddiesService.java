@@ -21,11 +21,13 @@ import com.gercho.findmybuddies.devices.NetworkConnectionInfo;
 import com.gercho.findmybuddies.enums.MeasureUnits;
 import com.gercho.findmybuddies.enums.OrderByTypes;
 import com.gercho.findmybuddies.helpers.LogHelper;
+import com.gercho.findmybuddies.helpers.Parser;
 import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.ThreadSleeper;
 import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.models.CoordinatesModel;
+import com.gercho.findmybuddies.models.ImageModel;
 import com.gercho.findmybuddies.models.ResponseModel;
 import com.gercho.findmybuddies.models.UploadsImResponseModel;
 import com.gercho.findmybuddies.validators.BuddiesValidator;
@@ -423,25 +425,33 @@ public class BuddiesService extends Service {
             this.mUserHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    HttpResponse response = ImageUploader.sendImage(
+                    HttpResponse uploadsImResponse = ImageUploader.sendImage(
                             BuddiesService.this, imageUri);
 
-                    if (response.isStatusOk()) {
-                        BuddiesService.this.saveImageInfoOnServer(response);
-                    } else {
-                        BuddiesService.this.mBroadcast.sendInfoMessage(IMAGE_UPLOADING_FAILED);
-                    }
+                    BuddiesService.this.saveImageInfoOnServer(uploadsImResponse);
                 }
             });
         }
     }
 
-    private void saveImageInfoOnServer(HttpResponse response) {
-        UploadsImResponseModel uploadsImResponse =
-                this.mGson.fromJson(response.getMessage(), UploadsImResponseModel.class);
+    private void saveImageInfoOnServer(HttpResponse uploadsImResponse) {
+        if (!uploadsImResponse.isStatusOk()) {
+            this.mBroadcast.sendInfoMessage(IMAGE_UPLOADING_FAILED);
+            return;
+        }
 
-        String str = uploadsImResponse.getStatus_txt();
-        DataPersister.sendNewImage();
+        UploadsImResponseModel uploadsImResponseModel =
+                this.mGson.fromJson(uploadsImResponse.getMessage(), UploadsImResponseModel.class);
+
+        ImageModel imageModel = Parser.parseImResponseModelToImageModel(this, uploadsImResponseModel);
+        String imageModelAsJson = this.mGson.toJson(imageModel);
+        HttpResponse response = DataPersister.sendNewImage(this.mSessionKey, imageModelAsJson);
+
+        if (response.isStatusOk()) {
+            this.mBroadcast.sendInfoMessage(IMAGE_SUCCESSFULLY_SEND);
+        } else {
+            this.mBroadcast.sendInfoMessage(IMAGE_UPLOADING_FAILED);
+        }
     }
 
     private void getBuddieImages(Intent intent) {

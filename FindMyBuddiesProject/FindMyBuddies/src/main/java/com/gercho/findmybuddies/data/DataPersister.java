@@ -85,9 +85,11 @@ public class DataPersister {
                 responseAsJson);
     }
 
-    public static HttpResponse sendNewImage() {
-        // TODO fill
-        return null;
+    public static HttpResponse sendNewImage(String sessionKey, String imageModelAsJson) {
+        return HttpRequester.post(String.format(
+                "images/set?sessionKey=%s",
+                sessionKey),
+                imageModelAsJson);
     }
 
     public static HttpResponse getBuddieImages(int imagesToShowCount, String sessionKey, String buddieAsJson) {
