@@ -22,7 +22,7 @@ import com.gercho.findmybuddies.helpers.LogoutAssistant;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
 import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
-import com.gercho.findmybuddies.models.BuddieModel;
+import com.gercho.findmybuddies.models.BuddyModel;
 import com.gercho.findmybuddies.models.CoordinatesModel;
 import com.gercho.findmybuddies.services.BuddiesService;
 import com.google.android.gms.common.ConnectionResult;
@@ -40,14 +40,14 @@ import com.google.gson.Gson;
  */
 public class MapActivity extends Activity implements ListView.OnItemClickListener {
 
-    public static final String BUDDIE_NOT_FOUND = "No buddie with that name found in your list";
+    public static final String BUDDY_NOT_FOUND = "No buddy with that name found in your list";
 
     private NavigationDrawer mNavigationDrawer;
     private BuddiesServiceUpdateReceiver mBuddiesServiceUpdateReceiver;
     private GoogleMap mMap;
     private LocationInfo mLocationInfo;
-    private BuddieModel[] mBuddies;
-    private boolean mIsCameraAtMyLocation;
+    private BuddyModel[] mBuddies;
+    private boolean mIsCameraPositioned;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,34 +160,49 @@ public class MapActivity extends Activity implements ListView.OnItemClickListene
         findButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MapActivity.this.handleFindBuddie();
+                MapActivity.this.handleFindBuddy();
             }
         });
     }
 
-    private void handleFindBuddie() {
-        EditText findBuddieEditText = (EditText) this.findViewById(R.id.editText_nicknameMap);
-        Editable nicknameEditable = findBuddieEditText.getText();
+    private void handleFindBuddy() {
+        EditText findBuddyEditText = (EditText) this.findViewById(R.id.editText_nicknameMap);
+        Editable nicknameEditable = findBuddyEditText.getText();
         if (nicknameEditable != null) {
             String nickname = nicknameEditable.toString().trim();
-            for(BuddieModel buddie : this.mBuddies) {
-                if (buddie.getNickname().equalsIgnoreCase(nickname)) {
-                    LatLng buddiePosition = new LatLng(buddie.getLatitude(), buddie.getLongitude());
-                    this.moveCamera(buddiePosition);
-                    this.mIsCameraAtMyLocation = false;
+            for(BuddyModel buddy : this.mBuddies) {
+                if (buddy.getNickname().equalsIgnoreCase(nickname)) {
+                    LatLng buddyPosition = new LatLng(buddy.getLatitude(), buddy.getLongitude());
+                    this.moveCamera(buddyPosition);
+                    this.mIsCameraPositioned = false;
                     return;
                 }
             }
         }
 
-        ToastNotifier.makeToast(this, BUDDIE_NOT_FOUND);
+        ToastNotifier.makeToast(this, BUDDY_NOT_FOUND);
     }
 
-    private void handleBuddiesUpdated(BuddieModel[] buddies) {
+    private void handleBuddiesUpdated(BuddyModel[] buddies) {
         this.mMap.clear();
         this.mBuddies = buddies;
+        this.checkForExtraBuddy();
         this.setMyLocation();
         this.setBuddiesLocation();
+    }
+
+    private void checkForExtraBuddy() {
+        int buddyId = this.getIntent().getIntExtra(BuddiesService.BUDDY_ID_EXTRA, Integer.MIN_VALUE);
+        if (buddyId != Integer.MIN_VALUE) {
+            for (BuddyModel buddy : this.mBuddies) {
+                if (buddy.getId() == buddyId) {
+                    LatLng buddyPosition = new LatLng(buddy.getLatitude(), buddy.getLongitude());
+                    this.moveCamera(buddyPosition);
+                    this.mIsCameraPositioned = true;
+                    break;
+                }
+            }
+        }
     }
 
     private void setMyLocation() {
@@ -198,19 +213,19 @@ public class MapActivity extends Activity implements ListView.OnItemClickListene
                 .title("It's Me")
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_launcher)));
 
-        if (!this.mIsCameraAtMyLocation) {
-            this.mIsCameraAtMyLocation = true;
+        if (!this.mIsCameraPositioned) {
+            this.mIsCameraPositioned = true;
             this.moveCamera(myPosition);
         }
     }
 
     private void setBuddiesLocation() {
-        for(BuddieModel buddie : this.mBuddies) {
-            LatLng buddiePosition = new LatLng(buddie.getLatitude(), buddie.getLongitude());
+        for(BuddyModel buddy : this.mBuddies) {
+            LatLng buddyPosition = new LatLng(buddy.getLatitude(), buddy.getLongitude());
             this.mMap.addMarker(new MarkerOptions()
-                    .position(buddiePosition)
-                    .title(buddie.getNickname())
-                    .snippet(buddie.getCoordinatesTimestampDifference()));
+                    .position(buddyPosition)
+                    .title(buddy.getNickname())
+                    .snippet(buddy.getCoordinatesTimestampDifference()));
         }
     }
 
@@ -248,9 +263,9 @@ public class MapActivity extends Activity implements ListView.OnItemClickListene
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action != null && action.equals(BuddiesService.BUDDIES_SERVICE_BROADCAST)) {
-                String buddieModelsAsJson = intent.getStringExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA);
-                if (buddieModelsAsJson != null) {
-                    BuddieModel[] buddies = this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
+                String buddyModelsAsJson = intent.getStringExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA);
+                if (buddyModelsAsJson != null) {
+                    BuddyModel[] buddies = this.mGson.fromJson(buddyModelsAsJson, BuddyModel[].class);
                     if (buddies != null && buddies.length > 0) {
                         MapActivity.this.handleBuddiesUpdated(buddies);
                     }

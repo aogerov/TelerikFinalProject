@@ -26,7 +26,7 @@ import com.gercho.findmybuddies.activities.TakePictureActivity;
 public class NavigationDrawer {
 
     public static final int DRAWER_OPTION_MY_BUDDIES = 0;
-    public static final int DRAWER_OPTION_FIND_NEW_BUDDIE = 1;
+    public static final int DRAWER_OPTION_FIND_NEW_BUDDY = 1;
     public static final int DRAWER_OPTION_RESPOND_REQUESTS = 2;
     public static final int DRAWER_OPTION_MAP = 3;
     public static final int DRAWER_OPTION_TAKE_PICTURE = 4;
@@ -92,8 +92,8 @@ public class NavigationDrawer {
                 case DRAWER_OPTION_MY_BUDDIES:
                     this.switchToMyBuddies();
                     break;
-                case DRAWER_OPTION_FIND_NEW_BUDDIE:
-                    this.switchToFindNewBuddie();
+                case DRAWER_OPTION_FIND_NEW_BUDDY:
+                    this.switchToFindNewBuddy();
                     break;
                 case DRAWER_OPTION_RESPOND_REQUESTS:
                     this.switchToRespondRequests();
@@ -116,7 +116,7 @@ public class NavigationDrawer {
         this.mActivity.startActivity(intent);
     }
 
-    private void switchToFindNewBuddie() {
+    private void switchToFindNewBuddy() {
         Intent intent = new Intent(this.mActivity, FindNewBuddiesActivity.class);
         this.mActivity.startActivity(intent);
     }

@@ -54,8 +54,6 @@ public class UserService extends Service {
     private String mSessionKeyEncrypted;
     private String mNickname;
 
-    // TODO add no network handling and close this service from MailActivity on login/register
-
     @Override
     public void onCreate() {
         this.mHandledThread = new HandlerThread("UserServiceThread");
@@ -105,9 +103,8 @@ public class UserService extends Service {
             this.mIsServiceAlreadyStarted = true;
             this.mIsConnectingActive = false;
 
-            String sessionKeyEncrypted = this.readUserStorage();
-            if (sessionKeyEncrypted != null) {
-                String sessionKey = Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
+            String sessionKey = this.getSessionKey();
+            if (sessionKey != null) {
                 this.validateSessionKey(sessionKey);
             }
         } else if (this.mNickname != null && this.mSessionKey != null && this.mSessionKeyEncrypted != null) {
@@ -195,20 +192,37 @@ public class UserService extends Service {
         this.mHandler.post(new Runnable() {
             @Override
             public void run() {
-                DataPersister.logout(UserService.this.mSessionKey);
+                DataPersister.logout(UserService.this.getSessionKey());
             }
         });
 
+        this.stopAdditionalServices();
         this.updateUserStorage(null);
         this.mSessionKey = null;
         this.mNickname = null;
     }
 
+    private String getSessionKey(){
+        String sessionKeyEncrypted = this.readUserStorage();
+        if (sessionKeyEncrypted != null) {
+            return Encryptor.decrypt(sessionKeyEncrypted, SESSION_KEY_ENCRYPTION);
+        }
+
+        return null;
+    }
+
     private void startAdditionalServices() {
-        Intent userServiceIntent = new Intent();
-        userServiceIntent.setAction(ServiceActions.START_BUDDIES_SERVICE);
-        userServiceIntent.putExtra(SESSION_KEY_EXTRA, this.mSessionKey);
-        this.startService(userServiceIntent);
+        Intent intent = new Intent();
+        intent.setAction(ServiceActions.START_BUDDIES_SERVICE);
+        intent.putExtra(SESSION_KEY_EXTRA, this.mSessionKey);
+        this.startService(intent);
+        this.stopUserService();
+    }
+
+    private void stopAdditionalServices() {
+        Intent intent = new Intent();
+        intent.setAction(ServiceActions.STOP_BUDDIES_SERVICE);
+        this.startService(intent);
     }
 
     private boolean tryToActivateConnecting() {

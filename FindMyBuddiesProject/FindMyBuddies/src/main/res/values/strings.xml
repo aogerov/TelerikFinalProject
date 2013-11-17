@@ -13,7 +13,7 @@
     <string name="editText_password">Password</string>
     <string name="editText_nickname">Nickname</string>
     <string name="navigationDrawer_myBuddies">My Buddies</string>
-    <string name="navigationDrawer_findNewBuddie">Find New Buddie</string>
+    <string name="navigationDrawer_findNewBuddy">Find New Buddy</string>
     <string name="navigationDrawer_respondRequests">Respond Requests</string>
     <string name="navigationDrawer_map">Map</string>
     <string name="navigationDrawer_takePicture">Take Picture</string>
@@ -31,12 +31,12 @@
     <string name="hint_measureUnits">Kilometers or Miles</string>
     <string name="header_settings">Settings</string>
     <string name="button_save">Save</string>
-    <string name="header_findNewBuddie">Find new Buddie</string>
+    <string name="header_findNewBuddy">Find new Buddy</string>
     <string name="hint_nickname">Nickname</string>
     <string name="button_search">Search</string>
     <string name="button_sendRequest">Send request</string>
     <string name="header_map">Map</string>
     <string name="button_find">Find</string>
-    <string name="hint_buddieNickname">Enter buddie nickname</string>
+    <string name="hint_buddyNickname">Enter buddy nickname</string>
 
 </resources>

@@ -23,7 +23,7 @@ import com.gercho.findmybuddies.helpers.NavigationDrawer;
 import com.gercho.findmybuddies.helpers.ProgressBarController;
 import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
-import com.gercho.findmybuddies.models.BuddieFoundModel;
+import com.gercho.findmybuddies.models.BuddyFoundModel;
 import com.gercho.findmybuddies.services.BuddiesService;
 import com.google.gson.Gson;
 
@@ -32,17 +32,17 @@ import com.google.gson.Gson;
  */
 public class FindNewBuddiesActivity extends FragmentActivity implements ListView.OnItemClickListener {
 
-    public static final String BUDDIE_FOUND = "Buddie found";
-    public static final String BUDDIE_NOT_FOUND = "Buddie not found";
-    public static final String BUDDIE_REQUEST_SUCCESSFULLY_SEND = "Buddie request successfully send";
-    public static final String BUDDIE_REQUEST_FAILED_ON_SEND = "Buddie request failed. Possible reason: " +
+    public static final String BUDDY_FOUND = "Buddie found";
+    public static final String BUDDY_NOT_FOUND = "Buddie not found";
+    public static final String BUDDY_REQUEST_SUCCESSFULLY_SEND = "Buddie request successfully send";
+    public static final String BUDDY_REQUEST_FAILED_ON_SEND = "Buddie request failed. Possible reason: " +
             "You have already send buddie request to this user";
 
     private BuddiesServiceUpdateReceiver mBuddiesServiceUpdateReceiver;
     private NavigationDrawer mNavigationDrawer;
     private ProgressBarController mProgressBarController;
     private boolean mIsConnectingActive;
-    private BuddieFoundModel mBuddie;
+    private BuddyFoundModel mBuddy;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,7 +50,7 @@ public class FindNewBuddiesActivity extends FragmentActivity implements ListView
 
         this.mNavigationDrawer = new NavigationDrawer();
         this.mNavigationDrawer.init(this, this);
-        this.mNavigationDrawer.setSelection(NavigationDrawer.DRAWER_OPTION_FIND_NEW_BUDDIE);
+        this.mNavigationDrawer.setSelection(NavigationDrawer.DRAWER_OPTION_FIND_NEW_BUDDY);
 
         ProgressBar progressBar = (ProgressBar) this.findViewById(R.id.progressBar_search);
         this.mProgressBarController = new ProgressBarController(this, progressBar);
@@ -144,7 +144,7 @@ public class FindNewBuddiesActivity extends FragmentActivity implements ListView
         }
 
         this.mIsConnectingActive = true;
-        this.mBuddie = null;
+        this.mBuddy = null;
         this.mProgressBarController.startProgressBar(ProgressBarController.SEARCHING_TOAST_MESSAGE);
         EditText nicknameEditText = (EditText) this.findViewById(R.id.editText_searchNickname);
         CharSequence nickname = nicknameEditText.getText();
@@ -154,21 +154,21 @@ public class FindNewBuddiesActivity extends FragmentActivity implements ListView
         }
 
         Intent intent = new Intent();
-        intent.setAction(ServiceActions.SEARCH_FOR_NEW_BUDDIE);
-        intent.putExtra(BuddiesService.BUDDIE_NICKNAME_EXTRA, nickname.toString());
+        intent.setAction(ServiceActions.SEARCH_FOR_NEW_BUDDY);
+        intent.putExtra(BuddiesService.BUDDY_NICKNAME_EXTRA, nickname.toString());
         this.startService(intent);
     }
 
-    private void handleSearchResult(BuddieFoundModel buddie, boolean isStatusOk) {
+    private void handleSearchResult(BuddyFoundModel buddy, boolean isStatusOk) {
         this.mIsConnectingActive = false;
         this.mProgressBarController.stopProgressBar();
 
-        if (buddie != null && isStatusOk) {
-            this.mBuddie = buddie;
+        if (buddy != null && isStatusOk) {
+            this.mBuddy = buddy;
             this.setFriendRequestUiVisibility(true);
         } else {
-            this.mProgressBarController.changeActiveToastMessage(BUDDIE_NOT_FOUND);
-            ToastNotifier.makeToast(this, BUDDIE_NOT_FOUND);
+            this.mProgressBarController.changeActiveToastMessage(BUDDY_NOT_FOUND);
+            ToastNotifier.makeToast(this, BUDDY_NOT_FOUND);
             this.setFriendRequestUiVisibility(false);
         }
     }
@@ -178,7 +178,7 @@ public class FindNewBuddiesActivity extends FragmentActivity implements ListView
         Button sendRequestButton = (Button) this.findViewById(R.id.button_sendRequest);
 
         if (isVisible) {
-            searchResultTextView.setText(BUDDIE_FOUND + ": " + this.mBuddie.getNickname());
+            searchResultTextView.setText(BUDDY_FOUND + ": " + this.mBuddy.getNickname());
             searchResultTextView.setVisibility(View.VISIBLE);
             sendRequestButton.setVisibility(View.VISIBLE);
         } else {
@@ -188,20 +188,20 @@ public class FindNewBuddiesActivity extends FragmentActivity implements ListView
     }
 
     private void handleSendFriendRequest() {
-        if (!this.mIsConnectingActive && this.mBuddie != null) {
+        if (!this.mIsConnectingActive && this.mBuddy != null) {
             Intent intent = new Intent();
-            intent.setAction(ServiceActions.SEND_BUDDIE_REQUEST);
-            intent.putExtra(BuddiesService.BUDDIE_ID_EXTRA, this.mBuddie.getId());
-            intent.putExtra(BuddiesService.BUDDIE_NICKNAME_EXTRA, this.mBuddie.getNickname());
+            intent.setAction(ServiceActions.SEND_BUDDY_REQUEST);
+            intent.putExtra(BuddiesService.BUDDY_ID_EXTRA, this.mBuddy.getId());
+            intent.putExtra(BuddiesService.BUDDY_NICKNAME_EXTRA, this.mBuddy.getNickname());
             this.startService(intent);
         }
     }
 
     private void handleSendFriendRequestResponse(boolean isStatusOk) {
         if (isStatusOk) {
-            ToastNotifier.makeToast(this, BUDDIE_REQUEST_SUCCESSFULLY_SEND);
+            ToastNotifier.makeToast(this, BUDDY_REQUEST_SUCCESSFULLY_SEND);
         } else {
-            ToastNotifier.makeToast(this, BUDDIE_REQUEST_FAILED_ON_SEND);
+            ToastNotifier.makeToast(this, BUDDY_REQUEST_FAILED_ON_SEND);
         }
 
         this.setFriendRequestUiVisibility(false);
@@ -220,12 +220,12 @@ public class FindNewBuddiesActivity extends FragmentActivity implements ListView
             String action = intent.getAction();
             if (action != null && action.equals(BuddiesService.BUDDIES_SERVICE_BROADCAST)) {
                 boolean isStatusOk = intent.getBooleanExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, false);
-                String buddieSearchResultAsJson = intent.getStringExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA);
+                String buddySearchResultAsJson = intent.getStringExtra(BuddiesService.BUDDY_SEARCH_RESULT_EXTRA);
                 String responseMessage = intent.getStringExtra(BuddiesService.REQUESTS_SEND_RESULT_EXTRA);
 
-                if (buddieSearchResultAsJson != null) {
-                    BuddieFoundModel buddie = this.mGson.fromJson(buddieSearchResultAsJson, BuddieFoundModel.class);
-                    FindNewBuddiesActivity.this.handleSearchResult(buddie, isStatusOk);
+                if (buddySearchResultAsJson != null) {
+                    BuddyFoundModel buddy = this.mGson.fromJson(buddySearchResultAsJson, BuddyFoundModel.class);
+                    FindNewBuddiesActivity.this.handleSearchResult(buddy, isStatusOk);
                 } else if (responseMessage != null) {
                     FindNewBuddiesActivity.this.handleSendFriendRequestResponse(isStatusOk);
                 }

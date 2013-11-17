@@ -18,26 +18,26 @@ public class BuddiesServiceBroadcast {
         this.mService = service;
     }
 
-    public void sendBuddiesInfoUpdate(String buddieModelsAsJson, MeasureUnits measureUnits, int newBuddieRequestsCount) {
+    public void sendBuddiesInfoUpdate(String buddyModelsAsJson, MeasureUnits measureUnits, int newBuddyRequestsCount) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
-        intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, buddieModelsAsJson);
+        intent.putExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA, buddyModelsAsJson);
         intent.putExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, measureUnits.ordinal());
-        intent.putExtra(BuddiesService.NEW_BUDDIE_REQUESTS_EXTRA, newBuddieRequestsCount);
+        intent.putExtra(BuddiesService.NEW_BUDDY_REQUESTS_EXTRA, newBuddyRequestsCount);
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendBuddieSearchResult(String buddieSearchResultAsJson, boolean isStatusOk) {
+    public void sendBuddySearchResult(String buddySearchResultAsJson, boolean isStatusOk) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
-        intent.putExtra(BuddiesService.BUDDIE_SEARCH_RESULT_EXTRA, buddieSearchResultAsJson);
+        intent.putExtra(BuddiesService.BUDDY_SEARCH_RESULT_EXTRA, buddySearchResultAsJson);
         intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendBuddieRemoveResult(int buddieId, String buddieNickname, boolean isStatusOk) {
+    public void sendBuddyRemoveResult(int buddyId, String buddyNickname, boolean isStatusOk) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
-        intent.putExtra(BuddiesService.BUDDIE_REMOVED_RESULT_EXTRA, true);
-        intent.putExtra(BuddiesService.BUDDIE_ID_EXTRA, buddieId);
-        intent.putExtra(BuddiesService.BUDDIE_NICKNAME_EXTRA, buddieNickname);
+        intent.putExtra(BuddiesService.BUDDY_REMOVED_RESULT_EXTRA, true);
+        intent.putExtra(BuddiesService.BUDDY_ID_EXTRA, buddyId);
+        intent.putExtra(BuddiesService.BUDDY_NICKNAME_EXTRA, buddyNickname);
         intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
         this.mService.sendBroadcast(intent);
     }
@@ -49,23 +49,23 @@ public class BuddiesServiceBroadcast {
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendBuddieRequestSendResult(String responseMessage, boolean isStatusOk) {
+    public void sendBuddyRequestSendResult(String responseMessage, boolean isStatusOk) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.REQUESTS_SEND_RESULT_EXTRA, responseMessage);
         intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendResponseToBuddieRequest(String responseMessage, boolean isStatusOk) {
+    public void sendResponseToBuddyRequest(String responseMessage, boolean isStatusOk) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
         intent.putExtra(BuddiesService.RESPONSE_TO_REQUEST_EXTRA, responseMessage);
         intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
         this.mService.sendBroadcast(intent);
     }
 
-    public void sendBuddieImages(String buddieImagesAsJson, boolean isStatusOk) {
+    public void sendBuddyImages(String buddyImagesAsJson, boolean isStatusOk) {
         Intent intent = new Intent(BuddiesService.BUDDIES_SERVICE_BROADCAST);
-        intent.putExtra(BuddiesService.BUDDIE_IMAGES_EXTRA, buddieImagesAsJson);
+        intent.putExtra(BuddiesService.BUDDY_IMAGES_EXTRA, buddyImagesAsJson);
         intent.putExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, isStatusOk);
         this.mService.sendBroadcast(intent);
     }

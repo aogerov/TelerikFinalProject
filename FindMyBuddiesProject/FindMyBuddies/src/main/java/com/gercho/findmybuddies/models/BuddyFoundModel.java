@@ -3,19 +3,19 @@ package com.gercho.findmybuddies.models;
 /**
  * Created by Gercho on 11/15/13.
  */
-public class BuddieFoundModel {
+public class BuddyFoundModel {
 
     private int id;
     private String nickname;
     private boolean isOnline;
 
-    public BuddieFoundModel(int id, String nickname, boolean isOnline) {
+    public BuddyFoundModel(int id, String nickname, boolean isOnline) {
         this.id = id;
         this.nickname = nickname;
         this.isOnline = isOnline;
     }
 
-    public BuddieFoundModel(int id, String nickname) {
+    public BuddyFoundModel(int id, String nickname) {
         this.id = id;
         this.nickname = nickname;
     }

@@ -51,18 +51,18 @@ public class DataPersister {
 
     }
 
-    public static HttpResponse removeExistingBuddie(String sessionKey, String buddieAsJson) {
+    public static HttpResponse removeExistingBuddy(String sessionKey, String buddyAsJson) {
         return HttpRequester.post(String.format(
                 "friends/remove?sessionKey=%s",
                 sessionKey),
-                buddieAsJson);
+                buddyAsJson);
 
     }
 
-    public static HttpResponse searchForNewBuddie(String buddieNickname, String sessionKey) {
+    public static HttpResponse searchForNewBuddy(String buddyNickname, String sessionKey) {
         return HttpRequester.get(String.format(
                 "friends/find?friendNickname=%s&sessionKey=%s",
-                buddieNickname, sessionKey));
+                buddyNickname, sessionKey));
     }
 
     public static HttpResponse getAllRequests(String sessionKey) {
@@ -71,14 +71,14 @@ public class DataPersister {
                 sessionKey));
     }
 
-    public static HttpResponse sendBuddieRequest(String sessionKey, String buddieAsJson) {
+    public static HttpResponse sendBuddyRequest(String sessionKey, String buddyAsJson) {
         return HttpRequester.post(String.format(
                 "requests/add?sessionKey=%s",
                 sessionKey),
-                buddieAsJson);
+                buddyAsJson);
     }
 
-    public static HttpResponse respondToBuddieRequest(String sessionKey, String responseAsJson) {
+    public static HttpResponse respondToBuddyRequest(String sessionKey, String responseAsJson) {
         return HttpRequester.post(String.format(
                 "requests/response?sessionKey=%s",
                 sessionKey),
@@ -92,10 +92,10 @@ public class DataPersister {
                 imageModelAsJson);
     }
 
-    public static HttpResponse getBuddieImages(int imagesToShowCount, String sessionKey, String buddieAsJson) {
+    public static HttpResponse getBuddyImages(int imagesToShowCount, String sessionKey, String buddyAsJson) {
         return HttpRequester.post(String.format(
                 "images/get?imagesCount=%s&sessionKey=%s",
                 imagesToShowCount, sessionKey),
-                buddieAsJson);
+                buddyAsJson);
     }
 }

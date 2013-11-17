@@ -3,11 +3,18 @@
 
     <string-array name="navigation_drawer_options">
         <item>@string/navigationDrawer_myBuddies</item>
-        <item>@string/navigationDrawer_findNewBuddie</item>
+        <item>@string/navigationDrawer_findNewBuddy</item>
         <item>@string/navigationDrawer_respondRequests</item>
         <item>@string/navigationDrawer_map</item>
         <item>@string/navigationDrawer_takePicture</item>
         <item>@string/navigationDrawer_setting</item>
+    </string-array>
+
+    <string-array name="buddy_commands_array">
+        <item>Show on Map</item>
+        <item>Show Images</item>
+        <item> </item>
+        <item>No more buddies…</item>
     </string-array>
 
     <string-array name="respond_requests_array">

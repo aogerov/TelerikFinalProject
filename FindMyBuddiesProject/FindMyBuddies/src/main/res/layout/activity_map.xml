@@ -57,7 +57,7 @@
             android:id="@+id/editText_nicknameMap"
             android:background="#19197020"
             android:textColor="#000000"
-            android:hint="@string/hint_buddieNickname"
+            android:hint="@string/hint_buddyNickname"
             android:layout_below="@+id/homeActivity_map"
             android:layout_alignParentLeft="true"
             android:padding="@dimen/activity_all_margin" />

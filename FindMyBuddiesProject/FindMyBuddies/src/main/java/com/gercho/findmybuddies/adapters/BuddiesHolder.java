@@ -6,7 +6,7 @@ import android.widget.TextView;
 
 import com.gercho.findmybuddies.R;
 import com.gercho.findmybuddies.enums.MeasureUnits;
-import com.gercho.findmybuddies.models.BuddieModel;
+import com.gercho.findmybuddies.models.BuddyModel;
 
 /**
  * Created by Gercho on 11/17/13.
@@ -21,7 +21,7 @@ public class BuddiesHolder {
     private TextView mDistance;
 
     public BuddiesHolder (View row) {
-        this.mNickname = (TextView) row.findViewById(R.id.textView_buddieNickname);
+        this.mNickname = (TextView) row.findViewById(R.id.textView_buddyNickname);
         this.mIsOnline = (TextView) row.findViewById(R.id.textView_isOnline);
         this.mCoordinatesAccuracy = (TextView) row.findViewById(R.id.textView_coordinatesAccuracy);
         this.mLatitude = (TextView) row.findViewById(R.id.textView_latitude);
@@ -29,14 +29,14 @@ public class BuddiesHolder {
         this.mDistance = (TextView) row.findViewById(R.id.textView_distance);
     }
 
-    public void setValues(BuddieModel buddie, MeasureUnits measureUnits) {
+    public void setValues(BuddyModel buddy, MeasureUnits measureUnits) {
 
-        this.mNickname.setText(buddie.getNickname());
-        this.mCoordinatesAccuracy.setText(buddie.getCoordinatesTimestampDifference());
-        this.mLatitude.setText(String.valueOf(buddie.getLatitude()));
-        this.mLongitude.setText(String.valueOf(buddie.getLongitude()));
+        this.mNickname.setText(buddy.getNickname());
+        this.mCoordinatesAccuracy.setText(buddy.getCoordinatesTimestampDifference());
+        this.mLatitude.setText(String.valueOf(buddy.getLatitude()));
+        this.mLongitude.setText(String.valueOf(buddy.getLongitude()));
 
-        if (buddie.isOnline()) {
+        if (buddy.isOnline()) {
             this.mIsOnline.setText("online");
             this.mIsOnline.setTextColor(Color.GREEN);
         } else {
@@ -45,9 +45,9 @@ public class BuddiesHolder {
         }
 
         if (measureUnits == MeasureUnits.KILOMETERS) {
-            this.mDistance.setText(buddie.getDistanceInKilometersAsString());
+            this.mDistance.setText(buddy.getDistanceInKilometersAsString());
         } else {
-            this.mDistance.setText(buddie.getDistanceInMilesAsString());
+            this.mDistance.setText(buddy.getDistanceInMilesAsString());
         }
     }
 }

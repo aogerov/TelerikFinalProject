@@ -38,7 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="@string/header_findNewBuddie"
+            android:text="@string/header_findNewBuddy"
             android:id="@+id/homeActivity_pageName"
             android:gravity="center_horizontal"/>
 

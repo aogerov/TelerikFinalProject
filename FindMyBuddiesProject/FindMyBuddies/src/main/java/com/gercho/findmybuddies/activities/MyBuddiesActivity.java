@@ -5,8 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,7 +23,7 @@ import com.gercho.findmybuddies.helpers.LogoutAssistant;
 import com.gercho.findmybuddies.helpers.NavigationDrawer;
 import com.gercho.findmybuddies.helpers.ServiceActions;
 import com.gercho.findmybuddies.helpers.ToastNotifier;
-import com.gercho.findmybuddies.models.BuddieModel;
+import com.gercho.findmybuddies.models.BuddyModel;
 import com.gercho.findmybuddies.models.ImageModel;
 import com.gercho.findmybuddies.services.BuddiesService;
 import com.google.gson.Gson;
@@ -31,8 +33,12 @@ import com.google.gson.Gson;
  */
 public class MyBuddiesActivity extends FragmentActivity implements ListView.OnItemClickListener {
 
+    private static final int SHOW_ON_MAP = 0;
+    private static final int SHOW_IMAGES = 1;
+    private static final int NO_MORE_BUDDIES = 3;
+
     private NavigationDrawer mNavigationDrawer;
-    private BuddieModel[] mBuddies;
+    private BuddyModel[] mBuddies;
     private MyBuddiesArrayAdapter mMyBuddiesArrayAdapter;
     private BuddiesServiceUpdateReceiver mBuddiesServiceUpdateReceiver;
 
@@ -112,6 +118,24 @@ public class MyBuddiesActivity extends FragmentActivity implements ListView.OnIt
     }
 
     @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        switch (item.getItemId()) {
+            case SHOW_ON_MAP:
+                this.handleShowOnMap(this.mBuddies[info.position]);
+                return true;
+            case SHOW_IMAGES:
+                this.handleShowImages(this.mBuddies[info.position]);
+                return true;
+            case NO_MORE_BUDDIES:
+                this.handleNoMoreBuddies(this.mBuddies[info.position]);
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+
+    @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int optionsLib, long l) {
         this.mNavigationDrawer.handleSelect(optionsLib);
     }
@@ -122,13 +146,51 @@ public class MyBuddiesActivity extends FragmentActivity implements ListView.OnIt
         this.mNavigationDrawer.syncState();
     }
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        if (view.getId() == R.id.list_buddies) {
+            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+            menu.setHeaderTitle(this.mBuddies[info.position].getNickname());
+            String[] menuItems = getResources().getStringArray(R.array.buddy_commands_array);
+
+            for (int i = 0; i < menuItems.length; i++) {
+                menu.add(Menu.NONE, i, i, menuItems[i]);
+            }
+        }
+    }
+
     private void forceUpdate() {
         Intent userServiceIntent = new Intent();
         userServiceIntent.setAction(ServiceActions.FORCE_UPDATING_BUDDIES_SERVICE);
         this.startService(userServiceIntent);
     }
 
-    private void handleBuddiesUpdated(BuddieModel[] buddies, MeasureUnits measureUnits, int newBuddieRequestsCount) {
+    private void handleShowOnMap(BuddyModel buddy) {
+        Intent intent = new Intent(this, MapActivity.class);
+        intent.putExtra(BuddiesService.BUDDY_ID_EXTRA, buddy.getId());
+        this.startActivity(intent);
+    }
+
+    private void handleShowImages(BuddyModel buddy) {
+        Intent intent = this.getBuddyIntent(buddy);
+        intent.setAction(ServiceActions.GET_BUDDY_IMAGES);
+        this.startService(intent);
+    }
+
+    private void handleNoMoreBuddies(BuddyModel buddy) {
+        Intent intent = this.getBuddyIntent(buddy);
+        intent.setAction(ServiceActions.REMOVE_EXISTING_BUDDY);
+        this.startService(intent);
+    }
+
+    private Intent getBuddyIntent(BuddyModel buddy){
+        Intent intent = new Intent();
+        intent.putExtra(BuddiesService.BUDDY_ID_EXTRA, buddy.getId());
+        intent.putExtra(BuddiesService.BUDDY_NICKNAME_EXTRA, buddy.getNickname());
+        return intent;
+    }
+
+    private void handleBuddiesUpdated(BuddyModel[] buddies, MeasureUnits measureUnits, int newBuddyRequestsCount) {
         this.mBuddies = buddies;
         this.mMyBuddiesArrayAdapter = new MyBuddiesArrayAdapter(
                 this, R.layout.item_row_buddies_list, this.mBuddies, measureUnits);
@@ -136,18 +198,25 @@ public class MyBuddiesActivity extends FragmentActivity implements ListView.OnIt
         ListView buddiesList = (ListView) this.findViewById(R.id.list_buddies);
         buddiesList.setAdapter(this.mMyBuddiesArrayAdapter);
 
-        this.updateNewRequests(newBuddieRequestsCount);
+        this.registerForContextMenu(buddiesList);
+        this.updateNewRequests(newBuddyRequestsCount);
     }
 
-    private void updateNewRequests(int newBuddieRequestsCount) {
+    private void updateNewRequests(int newBuddyRequestsCount) {
         TextView newRequestsTextView = (TextView) this.findViewById(R.id.textView_newRequests);
-        if (newBuddieRequestsCount <= 0){
+        if (newBuddyRequestsCount <= 0){
             newRequestsTextView.setText("");
-        } else if(newBuddieRequestsCount == 1) {
-            newRequestsTextView.setText(String.format("You have %d new buddie request", newBuddieRequestsCount));
+        } else if(newBuddyRequestsCount == 1) {
+            newRequestsTextView.setText(String.format("You have %d new buddy request", newBuddyRequestsCount));
         } else {
-            newRequestsTextView.setText(String.format("You have %d new buddie requests", newBuddieRequestsCount));
+            newRequestsTextView.setText(String.format("You have %d new buddy requests", newBuddyRequestsCount));
         }
+    }
+
+    private void handleBuddyImages(ImageModel[] images) {
+        Uri uri = Uri.parse(images[0].getUrl());
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        this.startActivity(intent);
     }
 
     private class BuddiesServiceUpdateReceiver extends BroadcastReceiver {
@@ -162,21 +231,21 @@ public class MyBuddiesActivity extends FragmentActivity implements ListView.OnIt
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action != null && action.equals(BuddiesService.BUDDIES_SERVICE_BROADCAST)) {
-                String buddieModelsAsJson = intent.getStringExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA);
+                String buddYModelsAsJson = intent.getStringExtra(BuddiesService.BUDDIES_INFO_UPDATE_EXTRA);
                 int measureUnitsAsInt = intent.getIntExtra(BuddiesService.BUDDIES_MEASURE_UNITS_EXTRA, Integer.MIN_VALUE);
-                int newBuddieRequestsCount = intent.getIntExtra(BuddiesService.NEW_BUDDIE_REQUESTS_EXTRA, 0);
-                if (buddieModelsAsJson != null && measureUnitsAsInt != Integer.MIN_VALUE) {
-                    this.handleBuddiesUpdated(buddieModelsAsJson, measureUnitsAsInt, newBuddieRequestsCount);
+                int newBuddyRequestsCount = intent.getIntExtra(BuddiesService.NEW_BUDDY_REQUESTS_EXTRA, 0);
+                if (buddYModelsAsJson != null && measureUnitsAsInt != Integer.MIN_VALUE) {
+                    this.handleBuddiesUpdated(buddYModelsAsJson, measureUnitsAsInt, newBuddyRequestsCount);
                     return;
                 }
 
                 boolean isStatusOk = intent.getBooleanExtra(BuddiesService.IS_HTTP_STATUS_OK_EXTRA, false);
 
-                boolean buddieRemovedResult = intent.getBooleanExtra(BuddiesService.BUDDIE_REMOVED_RESULT_EXTRA, false);
-                if (buddieRemovedResult) {
-                    int buddieId = intent.getIntExtra(BuddiesService.BUDDIE_ID_EXTRA, Integer.MIN_VALUE);
-                    String buddieNickname = intent.getStringExtra(BuddiesService.BUDDIE_NICKNAME_EXTRA);
-                    this.handleBuddieRemovedResult(buddieId, buddieNickname, isStatusOk);
+                boolean buddyRemovedResult = intent.getBooleanExtra(BuddiesService.BUDDY_REMOVED_RESULT_EXTRA, false);
+                if (buddyRemovedResult) {
+                    int buddyId = intent.getIntExtra(BuddiesService.BUDDY_ID_EXTRA, Integer.MIN_VALUE);
+                    String buddyNickname = intent.getStringExtra(BuddiesService.BUDDY_NICKNAME_EXTRA);
+                    this.handleBuddyRemovedResult(buddyId, buddyNickname, isStatusOk);
                     return;
                 }
 
@@ -186,9 +255,9 @@ public class MyBuddiesActivity extends FragmentActivity implements ListView.OnIt
                     return;
                 }
 
-                String buddieImagesAsJson = intent.getStringExtra(BuddiesService.BUDDIE_IMAGES_EXTRA);
-                if (buddieImagesAsJson != null) {
-                    this.handleBuddieImagesResult(buddieImagesAsJson, isStatusOk);
+                String buddyImagesAsJson = intent.getStringExtra(BuddiesService.BUDDY_IMAGES_EXTRA);
+                if (buddyImagesAsJson != null) {
+                    this.handleBuddyImagesResult(buddyImagesAsJson, isStatusOk);
                     return;
                 }
 
@@ -199,19 +268,19 @@ public class MyBuddiesActivity extends FragmentActivity implements ListView.OnIt
             }
         }
 
-        private void handleBuddiesUpdated(String buddieModelsAsJson, int measureUnitsAsInt, int newBuddieRequestsCount) {
-            BuddieModel[] buddies = this.mGson.fromJson(buddieModelsAsJson, BuddieModel[].class);
+        private void handleBuddiesUpdated(String buddyModelsAsJson, int measureUnitsAsInt, int newBuddyRequestsCount) {
+            BuddyModel[] buddies = this.mGson.fromJson(buddyModelsAsJson, BuddyModel[].class);
             MeasureUnits measureUnits = MeasureUnits.values()[measureUnitsAsInt];
             if (buddies != null && buddies.length > 0) {
-                MyBuddiesActivity.this.handleBuddiesUpdated(buddies, measureUnits, newBuddieRequestsCount);
+                MyBuddiesActivity.this.handleBuddiesUpdated(buddies, measureUnits, newBuddyRequestsCount);
             }
         }
 
-        private void handleBuddieRemovedResult(int buddieId, String buddieNickname, boolean isStatusOk) {
+        private void handleBuddyRemovedResult(int buddyId, String buddyNickname, boolean isStatusOk) {
             if (isStatusOk) {
-                ToastNotifier.makeToast(MyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " successfully removed");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, buddyNickname + " with id " + buddyId + " successfully removed");
             } else {
-                ToastNotifier.makeToast(MyBuddiesActivity.this, buddieNickname + " with id " + buddieId + " was not removed");
+                ToastNotifier.makeToast(MyBuddiesActivity.this, buddyNickname + " with id " + buddyId + " was not removed");
             }
         }
 
@@ -223,15 +292,15 @@ public class MyBuddiesActivity extends FragmentActivity implements ListView.OnIt
             }
         }
 
-        private void handleBuddieImagesResult(String buddieImagesAsJson, boolean isStatusOk) {
+        private void handleBuddyImagesResult(String buddyImagesAsJson, boolean isStatusOk) {
             if (!isStatusOk) {
                 ToastNotifier.makeToast(MyBuddiesActivity.this, "Occurred error in connecting the database");
                 return;
             }
 
-            ImageModel[] images = this.mGson.fromJson(buddieImagesAsJson, ImageModel[].class);
+            ImageModel[] images = this.mGson.fromJson(buddyImagesAsJson, ImageModel[].class);
             if (images != null && images.length > 0) {
-                ToastNotifier.makeToast(MyBuddiesActivity.this, "images count: " + images.length);
+                MyBuddiesActivity.this.handleBuddyImages(images);
             }
         }
 

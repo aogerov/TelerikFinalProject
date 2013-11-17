@@ -29,10 +29,11 @@ import com.google.gson.Gson;
  */
 public class RespondRequestsActivity extends FragmentActivity implements ListView.OnItemClickListener {
 
-    public static final int ACCEPT_REQUEST = 0;
-    public static final int DECLINE_REQUEST = 1;
-    public static final int LEAVE_FOR_LATER = 2;
-    public static final String ERROR_CONNECTING_DATABASE = "Occurred error in connecting the database";
+    private static final int ACCEPT_REQUEST = 0;
+    private static final int DECLINE_REQUEST = 1;
+    private static final int LEAVE_FOR_LATER = 2;
+
+    private static final String ERROR_CONNECTING_DATABASE = "Occurred error in connecting the database";
 
     private NavigationDrawer mNavigationDrawer;
     private RequestModel[] mAllRequests;
@@ -122,6 +123,30 @@ public class RespondRequestsActivity extends FragmentActivity implements ListVie
         }
     }
 
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int optionsLib, long l) {
+        this.mNavigationDrawer.handleSelect(optionsLib);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        this.mNavigationDrawer.syncState();
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        if (view.getId() == R.id.list_requests) {
+            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+            menu.setHeaderTitle(this.mAllRequests[info.position].getFromUserNickname());
+            String[] menuItems = getResources().getStringArray(R.array.respond_requests_array);
+
+            for (int i = 0; i < menuItems.length; i++) {
+                menu.add(Menu.NONE, i, i, menuItems[i]);
+            }
+        }
+    }
+
     private void getRequestsFromServer() {
         Intent buddiesServiceIntent = new Intent();
         buddiesServiceIntent.setAction(ServiceActions.GET_ALL_REQUESTS);
@@ -154,34 +179,10 @@ public class RespondRequestsActivity extends FragmentActivity implements ListVie
 
     private Intent getRequestResponseIntent(RequestModel request) {
         Intent intent = new Intent();
-        intent.setAction(ServiceActions.RESPOND_TO_BUDDIE_REQUEST);
-        intent.putExtra(BuddiesService.BUDDIE_ID_EXTRA, request.getFromUserId());
-        intent.putExtra(BuddiesService.BUDDIE_NICKNAME_EXTRA, request.getFromUserNickname());
+        intent.setAction(ServiceActions.RESPOND_TO_BUDDY_REQUEST);
+        intent.putExtra(BuddiesService.BUDDY_ID_EXTRA, request.getFromUserId());
+        intent.putExtra(BuddiesService.BUDDY_NICKNAME_EXTRA, request.getFromUserNickname());
         return intent;
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int optionsLib, long l) {
-        this.mNavigationDrawer.handleSelect(optionsLib);
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        this.mNavigationDrawer.syncState();
-    }
-
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-        if (view.getId() == R.id.list_requests) {
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            menu.setHeaderTitle(this.mAllRequests[info.position].getFromUserNickname());
-            String[] menuItems = getResources().getStringArray(R.array.respond_requests_array);
-
-            for (int i = 0; i < menuItems.length; i++) {
-                menu.add(Menu.NONE, i, i, menuItems[i]);
-            }
-        }
     }
 
     private void handleAllRequestsResult(RequestModel[] allRequests) {

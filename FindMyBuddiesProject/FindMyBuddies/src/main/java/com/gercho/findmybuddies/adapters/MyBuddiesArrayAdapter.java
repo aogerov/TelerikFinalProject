@@ -7,20 +7,20 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import com.gercho.findmybuddies.enums.MeasureUnits;
-import com.gercho.findmybuddies.models.BuddieModel;
+import com.gercho.findmybuddies.models.BuddyModel;
 
 /**
  * Created by Gercho on 11/16/13.
  */
-public class MyBuddiesArrayAdapter extends ArrayAdapter<BuddieModel> {
+public class MyBuddiesArrayAdapter extends ArrayAdapter<BuddyModel> {
 
     private Context mContext;
     private int mTextViewResourceId;
-    private BuddieModel[] mBuddies;
+    private BuddyModel[] mBuddies;
     private MeasureUnits mMeasureUnits;
 
     public MyBuddiesArrayAdapter(Context context, int textViewResourceId,
-                                 BuddieModel[] buddies, MeasureUnits measureUnits) {
+                                 BuddyModel[] buddies, MeasureUnits measureUnits) {
         super(context, textViewResourceId, buddies);
 
         this.mContext = context;
@@ -46,8 +46,8 @@ public class MyBuddiesArrayAdapter extends ArrayAdapter<BuddieModel> {
             buddiesHolder = (BuddiesHolder) row.getTag();
         }
 
-        BuddieModel buddie = this.mBuddies[position];
-        buddiesHolder.setValues(buddie, this.mMeasureUnits);
+        BuddyModel buddy = this.mBuddies[position];
+        buddiesHolder.setValues(buddy, this.mMeasureUnits);
         return row;
     }
 }
