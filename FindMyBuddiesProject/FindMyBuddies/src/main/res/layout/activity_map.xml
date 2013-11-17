@@ -1,13 +1,89 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MapActivity" >
+    android:layout_height="match_parent">
 
-    <fragment
-        android:id="@+id/map"
+    <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        class="com.google.android.gms.maps.SupportMapFragment" />
+        tools:context=".MapActivity">
 
-</RelativeLayout> 
+        <!--
+        This title strip will display the currently visible page title, as well as the page
+        titles for adjacent pages.
+        -->
+
+        <android.support.v4.view.PagerTitleStrip
+            android:id="@+id/pager_title_strip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:background="#33b5e5"
+            android:paddingBottom="4dp"
+            android:paddingTop="4dp"
+            android:textColor="#fff" />
+
+    </android.support.v4.view.ViewPager>
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusableInTouchMode="false"
+        android:clickable="false">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="@string/header_map"
+            android:id="@+id/homeActivity_map"
+            android:gravity="center_horizontal" />
+
+        <fragment
+            android:id="@+id/map"
+            android:layout_below="@+id/homeActivity_map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            class="com.google.android.gms.maps.MapFragment" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:ems="10"
+            android:id="@+id/editText_nicknameMap"
+            android:background="#19197020"
+            android:textColor="#000000"
+            android:hint="@string/hint_buddieNickname"
+            android:layout_below="@+id/homeActivity_map"
+            android:layout_alignParentLeft="true"
+            android:padding="@dimen/activity_all_margin" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_find"
+            android:id="@+id/button_find"
+            android:background="#19197020"
+            android:textColor="#000000"
+            android:minWidth="100dp"
+            android:layout_alignTop="@+id/editText_nicknameMap"
+            android:layout_alignParentRight="true"
+            android:padding="@dimen/activity_all_margin" />
+
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/left_drawer"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:choiceMode="singleChoice"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp"
+        android:background="#111" />
+
+</android.support.v4.widget.DrawerLayout>

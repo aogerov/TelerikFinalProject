@@ -64,8 +64,7 @@
                 android:layout_alignParentTop="true"
                 android:layout_marginRight="@dimen/activity_all_margin"
                 android:layout_marginBottom="@dimen/activity_all_margin"
-                android:hint="@string/hint_Nickname"
-                android:text="ferdis" />
+                android:hint="@string/hint_nickname" />
 
             <Button
                 android:layout_width="wrap_content"

@@ -31,8 +31,11 @@
     <string name="header_settings">Settings</string>
     <string name="button_save">Save</string>
     <string name="header_findNewBuddie">Find new Buddie</string>
-    <string name="hint_Nickname">Nickname</string>
+    <string name="hint_nickname">Nickname</string>
     <string name="button_search">Search</string>
     <string name="button_sendRequest">Send request</string>
+    <string name="header_map">Map</string>
+    <string name="button_find">Find</string>
+    <string name="hint_buddieNickname">Enter buddie nickname</string>
 
 </resources>

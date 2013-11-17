@@ -1,6 +1,5 @@
 package com.gercho.findmybuddies.devices;
 
-import android.app.Service;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
@@ -20,12 +19,12 @@ public class LocationInfo implements LocationListener {
     private static final int UPDATES_MIN_TIME = 1000 * 20; // 20 seconds
     private static final int UPDATES_MIN_DISTANCE = 5; // 5 meters
 
-    Service mService;
+    Context mContext;
     LocationManager mLocationManager;
 
-    public LocationInfo(Service service) {
-        this.mService = service;
-        this.mLocationManager = (LocationManager) this.mService.getSystemService(Context.LOCATION_SERVICE);
+    public LocationInfo(Context context) {
+        this.mContext = context;
+        this.mLocationManager = (LocationManager) this.mContext.getSystemService(Context.LOCATION_SERVICE);
         this.mLocationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, UPDATES_MIN_TIME, UPDATES_MIN_DISTANCE, this);
     }
