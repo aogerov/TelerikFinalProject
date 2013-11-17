@@ -79,6 +79,8 @@ public class LoginRegisterActivity extends Activity {
             this.unregisterReceiver(this.mUserServiceUpdateReceiver);
             this.mUserServiceUpdateReceiver = null;
         }
+
+        this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     @Override
