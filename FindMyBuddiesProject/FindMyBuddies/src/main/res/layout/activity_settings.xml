@@ -53,7 +53,9 @@
 
             <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/activity_vertical_margin"
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -61,7 +63,8 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/textView_updateFrequency"
                     android:text="@string/textView_updateFrequency"
-                    android:layout_margin="@dimen/activity_all_margin" />
+                    android:layout_margin="@dimen/activity_all_margin"
+                    android:paddingBottom="@dimen/spinner_text_bottom" />
 
                 <Spinner
                     android:layout_width="@dimen/spinner_width"
@@ -69,15 +72,19 @@
                     android:id="@+id/spinner_updateFrequency"
                     android:layout_gravity="center_horizontal"
                     android:spinnerMode="dialog"
-                    android:layout_alignParentTop="true"
+                    android:layout_alignParentTop="false"
                     android:layout_alignParentRight="true"
-                    android:layout_marginRight="@dimen/activity_horizontal_margin" />
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"
+                    android:layout_centerInParent="true"
+                    android:layout_alignParentBottom="false" />
 
             </RelativeLayout>
 
             <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/activity_vertical_margin"
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -85,7 +92,8 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="@string/textView_measureUnits"
                     android:id="@+id/textView_measureUnits"
-                    android:layout_margin="@dimen/activity_all_margin" />
+                    android:layout_margin="@dimen/activity_all_margin"
+                    android:paddingBottom="@dimen/spinner_text_bottom" />
 
                 <Spinner
                     android:layout_width="@dimen/spinner_width"
@@ -93,15 +101,19 @@
                     android:id="@+id/spinner_measureUnits"
                     android:layout_gravity="center_horizontal"
                     android:spinnerMode="dialog"
-                    android:layout_alignParentTop="true"
+                    android:layout_alignParentTop="false"
                     android:layout_alignParentRight="true"
-                    android:layout_marginRight="@dimen/activity_horizontal_margin" />
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"
+                    android:layout_centerInParent="true"
+                    android:layout_alignParentBottom="false" />
 
             </RelativeLayout>
 
             <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/activity_vertical_margin"
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -109,7 +121,8 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="@string/textView_orderBy"
                     android:id="@+id/textView_orderBy"
-                    android:layout_margin="@dimen/activity_all_margin" />
+                    android:layout_margin="@dimen/activity_all_margin"
+                    android:paddingBottom="@dimen/spinner_text_bottom" />
 
                 <Spinner
                     android:layout_width="@dimen/spinner_width"
@@ -117,15 +130,19 @@
                     android:id="@+id/spinner_orderBy"
                     android:layout_gravity="center_horizontal"
                     android:spinnerMode="dialog"
-                    android:layout_alignParentTop="true"
+                    android:layout_alignParentTop="false"
                     android:layout_alignParentRight="true"
-                    android:layout_marginRight="@dimen/activity_horizontal_margin" />
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"
+                    android:layout_centerInParent="true"
+                    android:layout_alignParentBottom="false" />
 
             </RelativeLayout>
 
             <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/activity_vertical_margin"
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -133,7 +150,8 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="@string/textView_imagesShowCount"
                     android:id="@+id/textView_imagesShowCount"
-                    android:layout_margin="@dimen/activity_all_margin" />
+                    android:layout_margin="@dimen/activity_all_margin"
+                    android:paddingBottom="@dimen/spinner_text_bottom" />
 
                 <Spinner
                     android:layout_width="@dimen/spinner_width"
@@ -141,11 +159,22 @@
                     android:id="@+id/spinner_imagesCount"
 
                     android:spinnerMode="dialog"
-                    android:layout_alignParentTop="true"
+                    android:layout_alignParentTop="false"
                     android:layout_alignParentRight="true"
-                    android:layout_marginRight="@dimen/activity_horizontal_margin" />
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"
+                    android:layout_centerInParent="true"
+                    android:layout_alignParentBottom="false" />
 
             </RelativeLayout>
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/button_save"
+                android:id="@+id/button_save"
+                android:layout_marginRight="@dimen/settings_button_right"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:layout_marginTop="@dimen/activity_vertical_margin" />
 
         </LinearLayout>
 

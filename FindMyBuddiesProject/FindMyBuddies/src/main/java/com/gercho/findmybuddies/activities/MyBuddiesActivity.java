@@ -132,7 +132,7 @@ public class MyBuddiesActivity extends FragmentActivity implements ListView.OnIt
     private void handleBuddiesUpdated(BuddieModel[] buddies, MeasureUnits measureUnits, int newBuddieRequestsCount) {
         this.mBuddies = buddies;
         this.mMyBuddiesArrayAdapter = new MyBuddiesArrayAdapter(
-                this, R.layout.subject_list_item_row, this.mBuddies, measureUnits);
+                this, R.layout.buddies_list_item_row, this.mBuddies, measureUnits);
 
         ListView buddiesList = (ListView) this.findViewById(R.id.list_buddies);
         buddiesList.setAdapter(this.mMyBuddiesArrayAdapter);

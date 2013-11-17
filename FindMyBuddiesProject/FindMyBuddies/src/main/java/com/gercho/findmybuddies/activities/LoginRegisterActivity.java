@@ -32,7 +32,7 @@ public class LoginRegisterActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setContentView(R.layout.activity_main);
+        this.setContentView(R.layout.activity_login_register);
 
         ProgressBar progressBar = (ProgressBar) this.findViewById(R.id.progressBar_main);
         this.mProgressBarController = new ProgressBarController(this, progressBar);
