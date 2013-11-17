@@ -11,8 +11,10 @@ import android.widget.ProgressBar;
  */
 public class ProgressBarController {
 
+    public static final String DEFAULT_TOAST_MESSAGE = "Connecting, please wait...";
+    public static final String SEARCHING_TOAST_MESSAGE = "Searching, please wait...";
+
     private static final int MAX_PROGRESS_BAR_WRITES = 300;
-    private static final String DEFAULT_TOAST_MESSAGE = "Connecting, please wait...";
 
     private Context mContext;
     private ProgressBar mProgressBar;
@@ -26,8 +28,8 @@ public class ProgressBarController {
         this.mProgressBar.setVisibility(View.INVISIBLE);
     }
 
-    public void startProgressBar() {
-        this.mToastMessage = DEFAULT_TOAST_MESSAGE;
+    public void startProgressBar(String toastMessage) {
+        this.mToastMessage = toastMessage;
         this.mIsProgressBarActive = true;
         this.executeProcess();
     }

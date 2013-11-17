@@ -181,7 +181,7 @@ public class LoginRegisterActivity extends Activity {
     }
 
     private void startProgressBar() {
-        this.mProgressBarController.startProgressBar();
+        this.mProgressBarController.startProgressBar(ProgressBarController.DEFAULT_TOAST_MESSAGE);
     }
 
     private void stopProgressBar() {
