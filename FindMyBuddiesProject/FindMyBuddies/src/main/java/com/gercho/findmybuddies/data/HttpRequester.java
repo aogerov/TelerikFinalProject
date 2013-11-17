@@ -42,8 +42,8 @@ public class HttpRequester {
             httpGet.setHeader("Content-type", "application/json");
             ResponseHandler<String> responseHandler = new BasicResponseHandler();
             content = client.execute(httpGet, responseHandler);
-        } catch (Exception e) {
-            error = e.getMessage();
+        } catch (Exception ex) {
+            error = ex.getMessage();
         }
 
         if (error != null) {
@@ -66,8 +66,8 @@ public class HttpRequester {
             httpPost.setHeader("Content-type", "application/json");
             ResponseHandler<String> responseHandler = new BasicResponseHandler();
             content = client.execute(httpPost, responseHandler);
-        } catch (Exception e) {
-            error = e.getMessage();
+        } catch (Exception ex) {
+            error = ex.getMessage();
         }
 
         if (error != null) {

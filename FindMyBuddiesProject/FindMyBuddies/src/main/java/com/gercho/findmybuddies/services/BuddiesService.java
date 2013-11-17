@@ -420,8 +420,10 @@ public class BuddiesService extends Service {
             this.mUserHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    // TODO still not finished
-                    new ImageUploader().sendImage(BuddiesService.this, imageUri);
+                    HttpResponse response = ImageUploader.sendImage(
+                            BuddiesService.this, imageUri);
+
+                    String test = response.getMessage();
                 }
             });
         }
