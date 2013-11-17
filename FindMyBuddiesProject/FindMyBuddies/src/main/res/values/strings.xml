@@ -33,6 +33,6 @@
     <string name="header_findNewBuddie">Find new Buddie</string>
     <string name="hint_Nickname">Nickname</string>
     <string name="button_search">Search</string>
-    <string name="button_addBuddie">Send request</string>
+    <string name="button_sendRequest">Send request</string>
 
 </resources>

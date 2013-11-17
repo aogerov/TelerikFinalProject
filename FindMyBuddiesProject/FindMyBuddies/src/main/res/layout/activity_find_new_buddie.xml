@@ -64,7 +64,8 @@
                 android:layout_alignParentTop="true"
                 android:layout_marginRight="@dimen/activity_all_margin"
                 android:layout_marginBottom="@dimen/activity_all_margin"
-                android:hint="@string/hint_Nickname" />
+                android:hint="@string/hint_Nickname"
+                android:text="ferdis" />
 
             <Button
                 android:layout_width="wrap_content"
@@ -81,7 +82,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textAppearance="?android:attr/textAppearanceSmall"
                 android:layout_below="@+id/button_search"
                 android:id="@+id/textView_searchResult"
                 android:gravity="center_horizontal"/>
@@ -89,8 +90,8 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/button_addBuddie"
-                android:id="@+id/button_addBuddie"
+                android:text="@string/button_sendRequest"
+                android:id="@+id/button_sendRequest"
                 android:layout_below="@+id/textView_searchResult"
                 android:layout_centerVertical="true"
                 android:layout_centerHorizontal="true"
