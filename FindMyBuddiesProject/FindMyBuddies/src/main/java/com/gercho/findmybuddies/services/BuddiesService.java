@@ -27,6 +27,7 @@ import com.gercho.findmybuddies.models.BuddieFoundModel;
 import com.gercho.findmybuddies.models.BuddieModel;
 import com.gercho.findmybuddies.models.CoordinatesModel;
 import com.gercho.findmybuddies.models.ResponseModel;
+import com.gercho.findmybuddies.models.UploadsImResponseModel;
 import com.gercho.findmybuddies.validators.BuddiesValidator;
 import com.google.gson.Gson;
 
@@ -69,6 +70,8 @@ public class BuddiesService extends Service {
     private static final MeasureUnits MEASURE_UNITS_DEFAULT = MeasureUnits.KILOMETERS;
 
     private static final String MESSAGE_SYNCHRONIZING = "Synchronizing";
+    private static final String IMAGE_SUCCESSFULLY_SEND = "Image successfully send";
+    private static final String IMAGE_UPLOADING_FAILED = "Image uploading failed";
     private static final String ERROR_MESSAGE_NO_NETWORK = "Find My Buddies: Can't access buddies, no network available";
     private static final String ERROR_MESSAGE_NO_GPS = "Find My Buddies: Please turn on your GPS";
 
@@ -423,10 +426,22 @@ public class BuddiesService extends Service {
                     HttpResponse response = ImageUploader.sendImage(
                             BuddiesService.this, imageUri);
 
-                    String test = response.getMessage();
+                    if (response.isStatusOk()) {
+                        BuddiesService.this.saveImageInfoOnServer(response);
+                    } else {
+                        BuddiesService.this.mBroadcast.sendInfoMessage(IMAGE_UPLOADING_FAILED);
+                    }
                 }
             });
         }
+    }
+
+    private void saveImageInfoOnServer(HttpResponse response) {
+        UploadsImResponseModel uploadsImResponse =
+                this.mGson.fromJson(response.getMessage(), UploadsImResponseModel.class);
+
+        String str = uploadsImResponse.getStatus_txt();
+        DataPersister.sendNewImage();
     }
 
     private void getBuddieImages(Intent intent) {

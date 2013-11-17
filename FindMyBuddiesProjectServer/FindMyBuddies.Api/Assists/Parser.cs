@@ -88,12 +88,20 @@ namespace FindMyBuddies.Api.Assists
             CalculateTimestampDifferences(onlineFriends);
             CalculateTimestampDifferences(offlineFriends);
 
-            SortFriendLists(onlineFriends, orderBy);
-            SortFriendLists(offlineFriends, orderBy);
+            var sortedOnlineFriends = SortFriendLists(onlineFriends, orderBy);
+            var sortedOfflineFriends = SortFriendLists(offlineFriends, orderBy);
 
             var friendModels = new List<FriendModel>();
-            friendModels.AddRange(onlineFriends);
-            friendModels.AddRange(offlineFriends);
+            if (sortedOnlineFriends != null)
+            {
+                friendModels.AddRange(sortedOnlineFriends);
+            }
+
+            if (sortedOfflineFriends != null)
+            {
+                friendModels.AddRange(sortedOfflineFriends);
+            }
+
             return friendModels;
         }
 
@@ -156,6 +164,7 @@ namespace FindMyBuddies.Api.Assists
             return new ImageModel
             {
                 Url = image.Url,
+                ThumbUrl = image.ThumbUrl,
                 ImageDateAsString = image.ImageDateAsString,
                 TimestampDifferenceWithCoordinates = image.TimestampDifferenceWithCoordinates,
                 CoordinatesAccuracy = image.CoordinatesAccuracy,
@@ -169,6 +178,7 @@ namespace FindMyBuddies.Api.Assists
             return new Image
             {
                 Url = imageModel.Url,
+                ThumbUrl = imageModel.ThumbUrl,
                 ImageDateAsString = imageModel.ImageDateAsString,
                 TimestampDifferenceWithCoordinates = imageModel.TimestampDifferenceWithCoordinates,
                 CoordinatesAccuracy = imageModel.CoordinatesAccuracy,
@@ -258,23 +268,27 @@ namespace FindMyBuddies.Api.Assists
             }
         }
 
-        private static void SortFriendLists(List<FriendModel> friends, string orderBy)
+        private static List<FriendModel> SortFriendLists(List<FriendModel> friends, string orderBy)
         {
             if (orderBy.ToLower() == Nickname.ToLower())
             {
-                var orderedFriends = friends.OrderBy(f => f.Nickname);
-                friends = orderedFriends.ToList();
+                var sortedFriends = friends.OrderBy(f => f.Nickname);
+                return sortedFriends.ToList();
             }
-            else if (orderBy.ToLower() == CoordinatesTimestamp.ToLower())
+
+            if (orderBy.ToLower() == CoordinatesTimestamp.ToLower())
             {
-                var orderedFriends = friends.OrderByDescending(f => f.CoordinatesTimestamp);
-                friends = orderedFriends.ToList();
+                var sortedFriends = friends.OrderByDescending(f => f.CoordinatesTimestamp);
+                return sortedFriends.ToList();
             }
-            else if (orderBy.ToLower() == Distance.ToLower())
+
+            if (orderBy.ToLower() == Distance.ToLower())
             {
-                var orderedFriends = friends.OrderBy(f => f.DistanceInMeters);
-                friends = orderedFriends.ToList();
+                var sortedFriends = friends.OrderBy(f => f.DistanceInMeters);
+                return sortedFriends.ToList();
             }
+
+            return null;
         }
     }
 }

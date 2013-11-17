@@ -32,8 +32,7 @@
         android:layout_alignLeft="@+id/editText_password"
         android:layout_marginRight="@dimen/activity_all_margin"
         android:layout_marginBottom="@dimen/activity_all_margin"
-        android:hint="@string/editText_username"
-        android:text="gercho" />
+        android:hint="@string/editText_username" />
 
     <EditText
         android:layout_width="wrap_content"

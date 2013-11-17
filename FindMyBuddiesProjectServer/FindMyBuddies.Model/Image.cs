@@ -12,6 +12,9 @@ namespace FindMyBuddies.Model
         public string Url { get; set; }
 
         [Required]
+        public string ThumbUrl { get; set; }
+
+        [Required]
         public String ImageDateAsString { get; set; }
 
         [Required]

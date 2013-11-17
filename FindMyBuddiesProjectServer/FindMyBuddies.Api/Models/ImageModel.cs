@@ -9,6 +9,9 @@ namespace FindMyBuddies.Api.Models
         [DataMember(Name = "url")]
         public string Url { get; set; }
 
+        [DataMember(Name = "thumbUrl")]
+        public string ThumbUrl { get; set; }
+
         [DataMember(Name = "imageDateAsString")]
         public String ImageDateAsString { get; set; }
 

@@ -6,15 +6,18 @@ package com.gercho.findmybuddies.models;
 public class ImageModel {
 
     private String url;
+    private String thumbUrl;
     private String imageDateAsString;
     private String timestampDifferenceWithCoordinates;
     private String coordinatesAccuracy;
     private double latitude;
     private double longitude;
 
-    public ImageModel(String url, String imageDateAsString, String timestampDifferenceWithCoordinates,
-                      String coordinatesAccuracy, double latitude, double longitude) {
+    public ImageModel(String url, String thumbUrl, String imageDateAsString,
+                      String timestampDifferenceWithCoordinates, String coordinatesAccuracy,
+                      double latitude, double longitude) {
         this.url = url;
+        this.thumbUrl = thumbUrl;
         this.imageDateAsString = imageDateAsString;
         this.timestampDifferenceWithCoordinates = timestampDifferenceWithCoordinates;
         this.coordinatesAccuracy = coordinatesAccuracy;
@@ -28,6 +31,14 @@ public class ImageModel {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getThumbUrl() {
+        return thumbUrl;
+    }
+
+    public void setThumbUrl(String thumbUrl) {
+        this.thumbUrl = thumbUrl;
     }
 
     public String getImageDateAsString() {

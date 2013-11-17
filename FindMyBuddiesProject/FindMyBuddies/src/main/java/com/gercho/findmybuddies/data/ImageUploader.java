@@ -31,12 +31,13 @@ public class ImageUploader {
         int bytesRead, bytesAvailable, bufferSize;
         byte[] buffer;
         int maxBufferSize = 1 * 1024 * 1024;
-        File sourceFile = new File(fileName);
 
+        File sourceFile = new File(fileName);
         if (!sourceFile.isFile())
         {
             Log.e("uploadFile", "Source File Does not exist");
         }
+
         try {
             FileInputStream fileInputStream = new FileInputStream(sourceFile);
             URL url = new URL(BASE_URI);
